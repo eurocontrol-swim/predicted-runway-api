@@ -1,0 +1,120 @@
+{
+    "meta": {
+        "timestamp": "2022-03-21T09:03:14.401472Z",
+        "stations_updated": "2022-02-05"
+    },
+    "raw": "EHAM 210510Z 2106/2212 14006KT CAVOK PROB30 2203/2207 5000 BR MIFG",
+    "sanitized": "EHAM 210510Z 2106/2212 14006KT CAVOK PROB30 2203/2207 5000 BR MIFG",
+    "station": "EHAM",
+    "time": {
+        "repr": "210510Z",
+        "dt": "2022-03-21T05:10:00Z"
+    },
+    "remarks": "",
+    "forecast": [
+        {
+            "altimeter": null,
+            "clouds": [],
+            "flight_rules": "VFR",
+            "other": [],
+            "visibility": {
+                "repr": "CAVOK",
+                "value": 9999,
+                "spoken": "ceiling and visibility ok"
+            },
+            "wind_direction": {
+                "repr": "140",
+                "value": 140,
+                "spoken": "one four zero"
+            },
+            "wind_gust": null,
+            "wind_speed": {
+                "repr": "06",
+                "value": 6,
+                "spoken": "six"
+            },
+            "wx_codes": [],
+            "end_time": {
+                "repr": "2212",
+                "dt": "2022-03-22T12:00:00Z"
+            },
+            "icing": [],
+            "probability": null,
+            "raw": "2106/2212 14006KT CAVOK",
+            "sanitized": "2106/2212 14006KT CAVOK",
+            "start_time": {
+                "repr": "2106",
+                "dt": "2022-03-21T06:00:00Z"
+            },
+            "transition_start": null,
+            "turbulence": [],
+            "type": "FROM",
+            "wind_shear": null
+        },
+        {
+            "altimeter": null,
+            "clouds": [],
+            "flight_rules": "MVFR",
+            "other": [],
+            "visibility": {
+                "repr": "5000",
+                "value": 5000,
+                "spoken": "five thousand"
+            },
+            "wind_direction": null,
+            "wind_gust": null,
+            "wind_speed": null,
+            "wx_codes": [
+                {
+                    "repr": "BR",
+                    "value": "Mist"
+                },
+                {
+                    "repr": "MIFG",
+                    "value": "Shallow Fog"
+                }
+            ],
+            "end_time": {
+                "repr": "2207",
+                "dt": "2022-03-22T07:00:00Z"
+            },
+            "icing": [],
+            "probability": {
+                "repr": "30",
+                "value": 30,
+                "spoken": "three zero"
+            },
+            "raw": "PROB30 2203/2207 5000 BR MIFG",
+            "sanitized": "PROB30 2203/2207 5000 BR MIFG",
+            "start_time": {
+                "repr": "2203",
+                "dt": "2022-03-22T03:00:00Z"
+            },
+            "transition_start": null,
+            "turbulence": [],
+            "type": "FROM",
+            "wind_shear": null
+        }
+    ],
+    "start_time": {
+        "repr": "2106",
+        "dt": "2022-03-21T06:00:00Z"
+    },
+    "end_time": {
+        "repr": "2212",
+        "dt": "2022-03-22T12:00:00Z"
+    },
+    "max_temp": null,
+    "min_temp": null,
+    "alts": null,
+    "temps": null,
+    "remarks_info": null,
+    "units": {
+        "accumulation": "in",
+        "altimeter": "hPa",
+        "altitude": "ft",
+        "temperature": "C",
+        "visibility": "m",
+        "wind_speed": "kt"
+    }
+}

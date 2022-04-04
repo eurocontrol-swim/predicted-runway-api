@@ -1,0 +1,97 @@
+{
+    "meta": {
+        "timestamp": "2022-03-18T13:00:04.522430Z",
+        "stations_updated": "2022-02-05"
+    },
+    "altimeter": {
+        "repr": "Q1044",
+        "value": 1044,
+        "spoken": "one zero four four"
+    },
+    "clouds": [
+        {
+            "repr": "FEW033",
+            "type": "FEW",
+            "altitude": 33,
+            "modifier": null,
+            "direction": null
+        }
+    ],
+    "flight_rules": "VFR",
+    "other": [],
+    "visibility": {
+        "repr": "9999",
+        "value": 9999,
+        "spoken": "nine nine nine nine"
+    },
+    "wind_direction": {
+        "repr": "060",
+        "value": 60,
+        "spoken": "zero six zero"
+    },
+    "wind_gust": null,
+    "wind_speed": {
+        "repr": "08",
+        "value": 8,
+        "spoken": "eight"
+    },
+    "wx_codes": [],
+    "raw": "EHAM 181255Z 06008KT 030V120 9999 FEW033 14/05 Q1044 NOSIG",
+    "sanitized": "EHAM 181255Z 06008KT 030V120 9999 FEW033 14/05 Q1044 NOSIG",
+    "station": "EHAM",
+    "time": {
+        "repr": "181255Z",
+        "dt": "2022-03-18T12:55:00Z"
+    },
+    "remarks": "NOSIG",
+    "dewpoint": {
+        "repr": "05",
+        "value": 5,
+        "spoken": "five"
+    },
+    "relative_humidity": 0.5459838786631855,
+    "remarks_info": {
+        "maximum_temperature_6": null,
+        "minimum_temperature_6": null,
+        "pressure_tendency": null,
+        "precip_36_hours": null,
+        "precip_24_hours": null,
+        "sunshine_minutes": null,
+        "codes": [],
+        "dewpoint_decimal": null,
+        "maximum_temperature_24": null,
+        "minimum_temperature_24": null,
+        "precip_hourly": null,
+        "sea_level_pressure": null,
+        "snow_depth": null,
+        "temperature_decimal": null
+    },
+    "runway_visibility": [],
+    "temperature": {
+        "repr": "14",
+        "value": 14,
+        "spoken": "one four"
+    },
+    "wind_variable_direction": [
+        {
+            "repr": "030",
+            "value": 30,
+            "spoken": "zero three zero"
+        },
+        {
+            "repr": "120",
+            "value": 120,
+            "spoken": "one two zero"
+        }
+    ],
+    "density_altitude": -1043,
+    "pressure_altitude": -920,
+    "units": {
+        "accumulation": "in",
+        "altimeter": "hPa",
+        "altitude": "ft",
+        "temperature": "C",
+        "visibility": "m",
+        "wind_speed": "kt"
+    }
+}

@@ -1,0 +1,78 @@
+{
+    "meta": {
+        "timestamp": "2022-03-18T16:30:05.481364Z",
+        "stations_updated": "2022-02-05"
+    },
+    "altimeter": {
+        "repr": "Q1043",
+        "value": 1043,
+        "spoken": "one zero four three"
+    },
+    "clouds": [],
+    "flight_rules": "VFR",
+    "other": [],
+    "visibility": {
+        "repr": "CAVOK",
+        "value": 9999,
+        "spoken": "ceiling and visibility ok"
+    },
+    "wind_direction": {
+        "repr": "359",
+        "value": 359,
+        "spoken": "zero five zero"
+    },
+    "wind_gust": null,
+    "wind_speed": {
+        "repr": "13",
+        "value": 13,
+        "spoken": "one zero"
+    },
+    "wx_codes": [],
+    "raw": "EHAM 181625Z 05010KT CAVOK 13/05 Q1043 NOSIG",
+    "sanitized": "EHAM 181625Z 05010KT CAVOK 13/05 Q1043 NOSIG",
+    "station": "EHAM",
+    "time": {
+        "repr": "181625Z",
+        "dt": "2022-03-18T16:25:00Z"
+    },
+    "remarks": "NOSIG",
+    "dewpoint": {
+        "repr": "05",
+        "value": 5,
+        "spoken": "five"
+    },
+    "relative_humidity": 0.5827352243896758,
+    "remarks_info": {
+        "maximum_temperature_6": null,
+        "minimum_temperature_6": null,
+        "pressure_tendency": null,
+        "precip_36_hours": null,
+        "precip_24_hours": null,
+        "sunshine_minutes": null,
+        "codes": [],
+        "dewpoint_decimal": null,
+        "maximum_temperature_24": null,
+        "minimum_temperature_24": null,
+        "precip_hourly": null,
+        "sea_level_pressure": null,
+        "snow_depth": null,
+        "temperature_decimal": null
+    },
+    "runway_visibility": [],
+    "temperature": {
+        "repr": "13",
+        "value": 13,
+        "spoken": "one three"
+    },
+    "wind_variable_direction": [],
+    "density_altitude": -1134,
+    "pressure_altitude": -891,
+    "units": {
+        "accumulation": "in",
+        "altimeter": "hPa",
+        "altitude": "ft",
+        "temperature": "C",
+        "visibility": "m",
+        "wind_speed": "kt"
+    }
+}
