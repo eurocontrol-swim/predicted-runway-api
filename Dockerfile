@@ -7,8 +7,8 @@ ADD app.py /predicted_runway/app.py
 ADD app.ini /predicted_runway/app.ini
 ADD requirements.txt /predicted_runway/requirements.txt
 
-RUN mkdir "/data"
-VOLUME ["/data"]
+RUN mkdir "/data" && mkdir "/data/met" && mkdir "/data/models"
+VOLUME ["/data/met", "/data/models"]
 
 WORKDIR /predicted_runway
 RUN pip install -r ./requirements.txt
