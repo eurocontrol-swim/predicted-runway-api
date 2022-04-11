@@ -36,30 +36,40 @@
         {% endwith %}
         <div class="container-sm">
             <form method="post">
-                <div class="row mb-3" id="date-container">
-                    <label for="date" class="form-label">Date</label>
-                    <input type="text" name="date" class="form-control"
-                           placeholder="Date of arrival"></input>
-                </div>
+{#                <div class="row mb-3" id="date-container">#}
+{#                    <label for="date" class="form-label">Date</label>#}
+{#                    <input type="text" name="date" class="form-control"#}
+{#                           placeholder="Date of arrival"></input>#}
+{#                </div>#}
+{#                <div class="row mb-3">#}
+{#                    <label for="hour" class="form-label">Hour</label>#}
+{#                    <input type="text" name="hour" class="form-control"#}
+{#                           placeholder="Estimated hour of arrival in 24H format (UTC)"></input>#}
+{#                </div>#}
+{#                <div class="row mb-3">#}
+{#                    <label for="origin" class="form-label">Origin</label>#}
+{#                    <input type="text" name="origin" class="form-control"#}
+{#                           placeholder="ICAO Code of the origin airport"></input>#}
+{#                </div>#}
+{#                <div class="row mb-3">#}
+{#                    <label for="wind-dir" class="form-label">Wind Direction</label>#}
+{#                    <input type="text" name="wind-dir" class="form-control"#}
+{#                           placeholder="(Optional) Wind direction in sexagesimal degrees"></input>#}
+{#                </div>#}
+{#                <div class="row mb-3">#}
+{#                    <label for="wind-speed" class="form-label">Wind Speed</label>#}
+{#                    <input type="text" name="wind-speed" class="form-control"#}
+{#                           placeholder="(Optional) Wind speed in Knots"></input>#}
+{#                </div>#}
                 <div class="row mb-3">
-                    <label for="hour" class="form-label">Hour</label>
-                    <input type="text" name="hour" class="form-control"
-                           placeholder="Estimated hour of arrival in 24H format (UTC)"></input>
-                </div>
-                <div class="row mb-3">
-                    <label for="origin" class="form-label">Origin</label>
-                    <input type="text" name="origin" class="form-control"
-                           placeholder="ICAO Code of the origin airport"></input>
-                </div>
-                <div class="row mb-3">
-                    <label for="wind-dir" class="form-label">Wind Direction</label>
-                    <input type="text" name="wind-dir" class="form-control"
-                           placeholder="(Optional) Wind direction in sexagesimal degrees"></input>
-                </div>
-                <div class="row mb-3">
-                    <label for="wind-speed" class="form-label">Wind Speed</label>
-                    <input type="text" name="wind-speed" class="form-control"
-                           placeholder="(Optional) Wind speed in Knots"></input>
+                    <label for="originAirports" class="form-label">Choose origin airport</label>
+                    <input class="form-control" list="originAirportOptions" id="originAirports" name="origin" placeholder="Type to search...">
+
+                    <datalist id="originAirportOptions">
+                        {% for data in origin_airports_data %}
+                            <option label="{{ data['label'] }}" value="{{ data['icao'] }}"></option>
+                        {% endfor %}
+                    </datalist>
                 </div>
                 <div class="mb-3">
                     <button type="submit" class="btn btn-primary">Submit</button>

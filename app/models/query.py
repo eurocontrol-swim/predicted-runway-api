@@ -1,6 +1,6 @@
 from datetime import datetime
 import pandas as pd
-from .runway import TRAINED_MODELS_PER_AIRPORT
+from .runway import TRAINED_MODELS_PER_DESTINATION_AIRPORT
 
 
 class ModelNotFound(Exception):
@@ -15,7 +15,7 @@ def predict_runway(airport: str,
                    wind_direction: float=None,
                    wind_speed: float=None):
     airport = airport.upper()
-    if airport not in TRAINED_MODELS_PER_AIRPORT.keys():
+    if airport not in TRAINED_MODELS_PER_DESTINATION_AIRPORT.keys():
         raise ModelNotFound(f'No model exists for airport = {airport}')
 
     if not origin.isalpha():
@@ -24,7 +24,7 @@ def predict_runway(airport: str,
     if not len(origin) == 4:
         raise ValueError(f"Origin is not a valid ICAO code")
 
-    predictor = TRAINED_MODELS_PER_AIRPORT[airport]
+    predictor = TRAINED_MODELS_PER_DESTINATION_AIRPORT[airport]
     _result = predictor.predict_proba({"dt": dt,
                                        "origin": origin,
                                        "wind_direction": wind_direction,

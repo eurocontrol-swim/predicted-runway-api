@@ -6,10 +6,10 @@ from app.config.file_dir import icao_airports_catalog_path
 from app.config.file_dir import meteo_dir
 from app.met_api.query import (get_last_wind_dir,
                                get_last_wind_speed)
+from app.models.airports import get_airport_data
 
 
-with icao_airports_catalog_path.open('r', encoding="utf-8") as f:
-    icao_airports_dict = json.load(f)
+icao_airports_dict = get_airport_data()
 
 
 def process_datetime(dt: datetime) -> List:
