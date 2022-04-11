@@ -26,19 +26,50 @@ def index():
     return render_template('index.html', airports=AIRPORTS)
 
 
+@web_blueprint.route("/runway-prediction/airport/<string:airport>", methods=['GET'])
+def web_runway_prediction(airport: str):
+    origin = request.args.get('origin')
+    dt = datetime.fromisoformat(request.args.get('dt'))
+    wind_direction = request.args.get('wind_direction')
+    wind_speed = request.args.get('wind_speed')
+
+    try:
+        response = predict_runway(airport=airport,
+                                  dt=dt,
+                                  origin=origin,
+                                  wind_direction=wind_direction,
+                                  wind_speed=wind_speed)
+        return render_template('runwayPrediction.html', response=response)
+    except METException as e:
+        logger.exception(e)
+        flash(
+            "We don't have meteorological information available for the given date and hour. You can use the optional fields to introduce your own estimates.",
+            category="warning")
+        # return redirect(url_for('web.web_runway_prediction_form', airport=airport))
+    except ValueError as e:
+        logger.exception(e)
+        flash("Invalid data", category='warning')
+        return redirect(url_for('web.web_runway_prediction_form', airport=airport))
+        # return abort(400)
+    except Exception as e:
+        logger.exception(e)
+        return abort(500)
+
+
 @web_blueprint.route("/runway-prediction/airport/<string:airport>/form", methods=['GET', 'POST'])
 def web_runway_prediction_form(airport: str):
     if request.method == 'GET':
         return render_template('runwayPredictionForm.html', airport=airport)
+
     if request.method == 'POST':
         origin = request.form.get('origin')
         if not valid_icao_code(icao_code=origin):
             flash("ICAO code not valid.",
                   category="warning")
             return redirect(url_for('web.web_runway_prediction_form', airport=airport))
+
         date_input = request.form.get('date', type=str)
         hour = request.form.get('hour', type=int)
-
         try:
             parsed_date = datetime.strptime(date_input, "%Y/%m/%d")
             parsed_hour = time(hour=hour)
@@ -62,21 +93,13 @@ def web_runway_prediction_form(airport: str):
                       category="warning")
                 return redirect(url_for('web.web_runway_prediction_form', airport=airport))
 
-        try:
-            response = predict_runway(airport=airport,
-                                      dt=dt,
-                                      origin=origin,
-                                      wind_direction=wind_direction,
-                                      wind_speed=wind_speed)
-            return render_template('runwayPrediction.html', response=response)
-        except METException as e:
-            logger.exception(e)
-            flash("We don't have meteorological information available for the given date and hour. You can use the optional fields to introduce your own estimates.",
-                  category="warning")
-            return redirect(url_for('web.web_runway_prediction_form', airport=airport))
-        except ValueError as e:
-            logger.exception(e)
-            return abort(400)
-        except Exception as e:
-            logger.exception(e)
-            return abort(500)
+        return redirect(
+            url_for(
+                'web.web_runway_prediction',
+                airport=airport,
+                dt=datetime.isoformat(dt),
+                origin=origin,
+                wind_direction=wind_direction,
+                wind_speed=wind_speed
+            )
+        )
