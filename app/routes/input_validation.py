@@ -1,8 +1,5 @@
 def valid_icao_code(icao_code: str) -> bool:
-    if not isinstance(icao_code, str):
-        return False
-    else:
-        return icao_code.isalpha() and len(icao_code) == 4
+    return isinstance(icao_code, str) and len(icao_code) == 4
 
 
 def valid_wind_speed(wind_speed: float) -> bool:

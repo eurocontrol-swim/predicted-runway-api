@@ -10,6 +10,7 @@ class TestICAOCode(unittest.TestCase):
         with self.subTest():
             valid = 'LEMD'
             self.assertTrue(valid_icao_code(valid))
+
         with self.subTest():
             valid = 'LOWW'
             self.assertTrue(valid_icao_code(valid))
@@ -18,19 +19,18 @@ class TestICAOCode(unittest.TestCase):
             valid = 'KJFK'
             self.assertTrue(valid_icao_code(valid))
 
+        with self.subTest():
+            valid = 'L0WW'
+            self.assertTrue(valid_icao_code(valid))
+
     def test_invalid_icao_code(self):
         with self.subTest():
             invalid = 'ILEMD'
             self.assertFalse(valid_icao_code(invalid))
 
         with self.subTest():
-            invalid = 'L0WW'
-            self.assertFalse(valid_icao_code(invalid))
-
-        with self.subTest():
             invalid = 1234
             self.assertFalse(valid_icao_code(invalid))
-
 
 
 class TestWindSpeed(unittest.TestCase):
