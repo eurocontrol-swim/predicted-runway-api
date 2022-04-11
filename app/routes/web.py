@@ -26,8 +26,8 @@ def index():
     return render_template('index.html', airports=AIRPORTS)
 
 
-@web_blueprint.route("/runway-prediction/airport/<string:airport>", methods=['GET', 'POST'])
-def web_runway_prediction(airport: str):
+@web_blueprint.route("/runway-prediction/airport/<string:airport>/form", methods=['GET', 'POST'])
+def web_runway_prediction_form(airport: str):
     if request.method == 'GET':
         return render_template('runwayPredictionForm.html', airport=airport)
     if request.method == 'POST':
@@ -35,7 +35,7 @@ def web_runway_prediction(airport: str):
         if not valid_icao_code(icao_code=origin):
             flash("ICAO code not valid.",
                   category="warning")
-            return redirect(url_for('web.web_runway_prediction', airport=airport))
+            return redirect(url_for('web.web_runway_prediction_form', airport=airport))
         date_input = request.form.get('date', type=str)
         hour = request.form.get('hour', type=int)
 
@@ -46,21 +46,21 @@ def web_runway_prediction(airport: str):
         except Exception:
             flash("Date and/or hour format not valid.",
                   category="warning")
-            return redirect(url_for('web.web_runway_prediction', airport=airport))
+            return redirect(url_for('web.web_runway_prediction_form', airport=airport))
 
         wind_direction = request.form.get('wind-dir', type=float, default=None)
         if wind_direction is not None:
             if not valid_wind_direction(wind_direction):
                 flash("Wind direction must be a number in the range [0, 360)",
                       category="warning")
-                return redirect(url_for('web.web_runway_prediction', airport=airport))
+                return redirect(url_for('web.web_runway_prediction_form', airport=airport))
 
         wind_speed = request.form.get('wind-speed', type=float, default=None)
         if wind_speed is not None:
             if not valid_wind_speed(wind_speed):
                 flash("Wind speed must be a positive number",
                       category="warning")
-                return redirect(url_for('web.web_runway_prediction', airport=airport))
+                return redirect(url_for('web.web_runway_prediction_form', airport=airport))
 
         try:
             response = predict_runway(airport=airport,
@@ -73,7 +73,7 @@ def web_runway_prediction(airport: str):
             logger.exception(e)
             flash("We don't have meteorological information available for the given date and hour. You can use the optional fields to introduce your own estimates.",
                   category="warning")
-            return redirect(url_for('web.web_runway_prediction', airport=airport))
+            return redirect(url_for('web.web_runway_prediction_form', airport=airport))
         except ValueError as e:
             logger.exception(e)
             return abort(400)
