@@ -1,43 +1,33 @@
-<!doctype html>
-<head>
-    <title>Predicted Runway In-Use {{ response['airport'] }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
-</head>
-
-<body>
+{% extends 'base.html' %}
 
 <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
 {% block content %}
-<div class="container">
-    <h1>Predicted Runway In-Use {{ response['airport'] }}</h1>
-    <table class="table">
-        <thead>
-        <tr>
-            <th scope="col">Timestamp</th>
-            <th scope="col">Predicted Arrival Runway</th>
-            <th scope="col">Predicted Probability</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for prediction in response['predictions'] %}
+    <div class="container">
+        <h1>Predicted Runway In-Use {{ response['airport'] }}</h1>
+        <table class="table">
+            <thead>
             <tr>
-                <td>{{ prediction['timestamp'] }}</td>
-                <td></td>
-                <td></td>
+                <th scope="col">Timestamp</th>
+                <th scope="col">Predicted Arrival Runway</th>
+                <th scope="col">Predicted Probability</th>
             </tr>
-            {% for runway in prediction['arrivalRunways'] %}
-            <tr>
-                <td></td>
-                <td>{{ runway['runway'] }}</td>
-                <td>{{ "{:.0%}".format(runway['probability']) }}</td>
-            </tr>
+            </thead>
+            <tbody>
+            {% for prediction in response['predictions'] %}
+                <tr>
+                    <td>{{ prediction['timestamp'] }}</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                {% for runway in prediction['arrivalRunways'] %}
+                <tr>
+                    <td></td>
+                    <td>{{ runway['runway'] }}</td>
+                    <td>{{ "{:.0%}".format(runway['probability']) }}</td>
+                </tr>
+                {% endfor %}
             {% endfor %}
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
-</body>
+            </tbody>
+        </table>
+    </div>
 {% endblock %}
-
-</html>
