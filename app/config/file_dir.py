@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 
@@ -5,7 +6,7 @@ current_path = Path(__file__)
 current_dir = current_path.parent
 base_dir = current_dir.parent
 
-meteo_dir = Path("/data/met")
+meteo_dir = Path(os.getenv("MET_UPDATE_DIR", "/data/met"))
 metar_dir = meteo_dir.joinpath('metar')
 taf_dir = meteo_dir.joinpath('taf')
 
