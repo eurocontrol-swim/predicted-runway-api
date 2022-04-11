@@ -18,8 +18,8 @@ def predict_runway(airport: str,
     if airport not in TRAINED_MODELS_PER_DESTINATION_AIRPORT.keys():
         raise ModelNotFound(f'No model exists for airport = {airport}')
 
-    if not origin.isalpha():
-        raise ValueError('Origin = {} is not alphanumeric'.format(origin))
+    # if not origin.isalpha():
+    #     raise ValueError('Origin = {} is not alphanumeric'.format(origin))
 
     if not len(origin) == 4:
         raise ValueError(f"Origin is not a valid ICAO code")
