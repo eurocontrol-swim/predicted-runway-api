@@ -6,6 +6,8 @@ from flask import (render_template,
                    url_for,
                    Blueprint)
 from datetime import datetime, time, timezone
+
+from app.models.runway import AIRPORTS
 from app.routes.input_validation import *
 from app.met_api import METException
 from app.models.query import predict_runway
@@ -21,7 +23,7 @@ web_blueprint = Blueprint('web', __name__)
 
 @web_blueprint.route("/")
 def index():
-    return render_template('index.html')
+    return render_template('index.html', airports=AIRPORTS)
 
 
 @web_blueprint.route("/runway-prediction/airport/<string:airport>", methods=['GET', 'POST'])

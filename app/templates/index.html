@@ -10,23 +10,37 @@
 
 <body>
 
-<!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
-{% block content %}
-<div class="container">
-  <h1>Predicted Runway In-Use</h1>
-  <div class="dropdown">
-    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown"
-            aria-expanded="false">
-      Select Airport
-    </button>
-    <ul class="dropdown-menu bm-3" aria-labelledby="dropdownMenuButton1">
-      <li><a class="dropdown-item" href={{ url_for('web.web_runway_prediction', airport='EHAM') }}>EHAM</a></li>
-      <li><a class="dropdown-item" href={{ url_for('web.web_runway_prediction', airport='LFBO') }}>LFBO</a></li>
-      <li><a class="dropdown-item" href={{ url_for('web.web_runway_prediction', airport='LFPO') }}>LFPO</a></li>
-    </ul>
-  </div>
-</div>
-</body>
-{% endblock %}
-
+    <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
+    {% block content %}
+    <div class="container">
+      <h1>Predicted Runway In-Use</h1>
+      <div class="dropdown">
+        <button
+            id="dropdownMenuButton1"
+            class="btn btn-secondary dropdown-toggle"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+        >
+            Select Airport
+        </button>
+        <ul
+            class="dropdown-menu bm-3"
+            aria-labelledby="dropdownMenuButton1"
+        >
+            {% for airport in airports %}
+                <li>
+                    <a
+                        class="dropdown-item"
+                        href={{ url_for('web.web_runway_prediction', airport=airport) }}
+                    >
+                        {{ airport }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+      </div>
+    </div>
+    </body>
+    {% endblock %}
 </html>
