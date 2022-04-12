@@ -29,50 +29,51 @@ def index():
     return render_template('index.html', airports=DESTINATION_AIRPORTS)
 
 
-@web_blueprint.route("/runway-prediction/airport/<string:airport>", methods=['GET'])
-def web_runway_prediction(airport: str):
+@web_blueprint.route("/runway-prediction", methods=['GET'])
+def web_runway_prediction():
     origin = request.args.get('origin')
+    destination = request.args.get('destination')
     timestamp = request.args.get('timestamp', type=int)
     if timestamp:
         timestamp = datetime.fromtimestamp(timestamp, tz=timezone.utc)
     # wind_direction = request.args.get('wind_direction')
     # wind_speed = request.args.get('wind_speed')
 
-    if origin is None and timestamp is None:
-        return _load_prediction_template(airport=airport)
+    # TODO: validate input
+
+    if origin is None and destination is None and timestamp is None:
+        return _load_prediction_template()
 
     try:
-        response = predict_runway(airport=airport,
+        response = predict_runway(airport=destination,
                                   dt=timestamp,
                                   origin=origin,
                                   wind_direction=None,
                                   wind_speed=None)
-        return _load_prediction_template(airport=airport, response=response)
+        return _load_prediction_template(response=response)
     except METException as e:
         logger.exception(e)
         return _load_prediction_template_with_warning(
             f"We don't have meteorological information available at "
-            f"{timestamp.strftime('%d/%m/%Y %H:%M:%S')}",
-            airport=airport)
+            f"{timestamp.strftime('%d/%m/%Y %H:%M:%S')}")
     except ValueError as e:
         logger.exception(e)
-        return _load_prediction_template_with_warning("Invalid data", airport=airport)
+        return _load_prediction_template_with_warning("Invalid data")
     except Exception as e:
         logger.exception(e)
         return abort(500)
 
 
-def _load_prediction_template(airport: str, response: Optional[dict] = None):
+def _load_prediction_template(response: Optional[dict] = None):
     return render_template('runwayPrediction.html',
-                           airport=airport,
                            response=response,
                            origin_airports_data=_get_origin_airports_data(),
-                           airports=DESTINATION_AIRPORTS)
+                           destination_airports=DESTINATION_AIRPORTS)
 
 
-def _load_prediction_template_with_warning(message: str, airport: str):
+def _load_prediction_template_with_warning(message: str):
     flash(message, category="warning")
-    return _load_prediction_template(airport)
+    return _load_prediction_template()
 
 
 def _reload_form_with_warning(message: str, airport: str):

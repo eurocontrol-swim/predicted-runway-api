@@ -29,25 +29,104 @@
 <body>
   <nav class="navbar navbar-expand-lg sticky-top navbar-dark bg-dark" style="width: 100%">
     <div class="container-fluid">
-      <a class="navbar-brand" style="width: 100%" href="#">Predicted Runway</a>
+      <a class="navbar-brand"  href="#">Predicted Runway</a>
       <div class="collapse navbar-collapse" id="navbarNavDropdown">
-        <ul class="navbar-nav" style="float: right;">
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              Destination Airports
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-              {% for airport in airports %}
-                <li><a class="dropdown-item" href="{{ url_for('web.web_runway_prediction', airport=airport) }}">{{ airport }}</a></li>
-              {% endfor %}
-            </ul>
-          </li>
-        </ul>
+        <a class="btn btn-primary" data-bs-toggle="modal" href="#newPredictionForm" role="button">New prediction</a>
+{#        <button class="btn btn-primary" data-bs-toggle="modal" href="#newPredictionForm">New prediction</button>#}
+{#        <button class="btn btn-primary d-flex">New prediction</button>#}
+{#        <ul class="navbar-nav" style="float: right;">#}
+{#          <li class="nav-item dropdown">#}
+{#            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">#}
+{#              Destination Airports#}
+{#            </a>#}
+{#            <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">#}
+{#              {% for airport in airports %}#}
+{#                <li><a class="dropdown-item" href="{{ url_for('web.web_runway_prediction', airport=airport) }}">{{ airport }}</a></li>#}
+{#              {% endfor %}#}
+{#            </ul>#}
+{#          </li>#}
+{#        </ul>#}
       </div>
     </div>
   </nav>
 
+  <div class="modal fade" id="newPredictionForm" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalToggleLabel">New prediction</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
 
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="destinationAirports" class="form-label">Select destination airport</label>
+              <select class="form-select" aria-label="Default select example" id="destination" name="destination">
+                {% for destination in destination_airports %}
+                  <option label="{{ destination }}" value="{{ destination }}"></option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="originAirports" class="form-label">Select origin airport</label>
+              <input class="form-control" list="originAirportOptions" id="origin" name="origin" placeholder="Type to search">
+              <datalist id="originAirportOptions">
+                {% for data in origin_airports_data %}
+                  <option label="{{ data['label'] }}" value="{{ data['icao'] }}"></option>
+                {% endfor %}
+              </datalist>
+            </div>
+            <div class="mb-3">
+              <label for="dateTimeRange" class="form-label">Select prediction date and time</label>
+              <input type="range" class="form-range" min="0" max="48" id="dateTimeRange" value="0" onchange="sliderMoved()">
+              <input type="text" id="timestamp" name="timestamp" hidden>
+              <span id="date_time"></span>
+            </div>
+          </div>
+        <div class="modal-footer">
+          <div class="mb-3">
+              <a class="btn btn-primary" id="formButton" role="button" href="">Submit</a>
+          </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+    <script>
+      function getCurrentTimestamp() {
+        return Math.ceil(new Date().getTime() / 1000);
+      }
+
+      function sliderMoved() {
+        updateCurrentTimestamp();
+        updateFormButtonHref();
+      }
+
+      function updateCurrentTimestamp() {
+        const sliderValue = window.document.getElementById('dateTimeRange').value;
+        window.document.getElementById('timestamp').value = getCurrentTimestamp() + (3600 * sliderValue);
+        window.document.getElementById('date_time').innerHTML = `Currently selected: <strong>${new Date(window.document.getElementById('timestamp').value * 1000).toUTCString()}</strong>`;
+      }
+      function updateFormButtonHref() {
+        const url = "{{ url_for('web.web_runway_prediction') }}";
+        const origin = window.document.getElementById('origin').value;
+        const destination = window.document.getElementById('destination').value;
+        const timestamp = window.document.getElementById('timestamp').value;
+
+        window.document.getElementById('formButton').href = `${url}?origin=${origin}&destination=${destination}&timestamp=${timestamp}`;
+      }
+
+      $( document ).ready(function() {
+          const alertList = document.querySelectorAll('.alert')
+          if (alertList.length > 0) {
+            setTimeout(() => {
+                alertList.forEach((a) =>  new bootstrap.Alert(a).close())
+            },
+            5000);
+          }
+      });
+
+    </script>
   {% block content %}
   {% endblock %}
 </body>

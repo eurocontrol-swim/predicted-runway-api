@@ -2,54 +2,8 @@
 
 <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
 {% block content %}
-  <div class="modal fade" id="newPredictionForm" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalToggleLabel">New prediction</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="originAirports" class="form-label">Select origin airport</label>
-              <input class="form-control" list="originAirportOptions" id="origin" name="origin" placeholder="Origin airport...type to search">
-              <datalist id="originAirportOptions">
-                {% for data in origin_airports_data %}
-                  <option label="{{ data['label'] }}" value="{{ data['icao'] }}"></option>
-                {% endfor %}
-              </datalist>
-            </div>
-            <div class="mb-3">
-              <label for="dateTimeRange" class="form-label">Select prediction date and time</label>
-              <input type="range" class="form-range" min="0" max="48" id="dateTimeRange" value="0" onchange="sliderMoved()">
-              <input type="text" id="timestamp" name="timestamp" hidden>
-              <span id="date_time"></span>
-            </div>
-          </div>
-        <div class="modal-footer">
-          <div class="mb-3">
-              <a class="btn btn-primary" id="formButton" role="button" href="">Submit</a>
-          </div>
-      </div>
-    </div>
-  </div>
-  </div>
   <div class="container-fluid">
     <div class="d-grid gap-3">
-      <div class="p-2">
-        <div class="row justify-content-end">
-{#          <div class="col-4">#}
-{#          </div>#}
-          <div class="col-2">
-            <h3>Destination airport {{ airport }}</h3>
-          </div>
-          <div class="col-1">
-            <a class="btn btn-primary" data-bs-toggle="modal" href="#newPredictionForm" role="button">New prediction</a>
-          </div>
-        <div class="col-9"></div>
-        </div>
-      </div>
       <div class="p-2">
           {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -91,7 +45,7 @@
             <div class="col-4">
             </div>
             <div class="col-4">
-                <h6>Prediction results | Origin: <strong>{{ response['origin'] }}</strong> | Timestamp: <strong>{{ response['predictions'][0]['timestamp'] }}</strong></h6>
+                <h6>Prediction results | Origin: <strong>{{ response['origin'] }}</strong> | Destination: <strong>{{ response['airport'] }}</strong> | Timestamp: <strong>{{ response['predictions'][0]['timestamp'] }}</strong></h6>
               <table class="table table-sm">
                 <thead>
                   <tr>
@@ -132,37 +86,4 @@
     {% endif %}
     </div>
   </div>
-    <script>
-      function getCurrentTimestamp() {
-        return Math.ceil(new Date().getTime() / 1000);
-      }
-
-      function sliderMoved() {
-        updateCurrentTimestamp();
-        updateFormButtonHref();
-      }
-
-      function updateCurrentTimestamp() {
-        const sliderValue = window.document.getElementById('dateTimeRange').value;
-        window.document.getElementById('timestamp').value = getCurrentTimestamp() + (3600 * sliderValue);
-        window.document.getElementById('date_time').innerHTML = `Currently selected: <strong>${new Date(window.document.getElementById('timestamp').value * 1000).toUTCString()}</strong>`;
-      }
-      function updateFormButtonHref() {
-        const url = "{{ url_for('web.web_runway_prediction', airport=airport) }}";
-        const origin = window.document.getElementById('origin').value;
-        const timestamp = window.document.getElementById('timestamp').value;
-
-        window.document.getElementById('formButton').href = `${url}?origin=${origin}&timestamp=${timestamp}`;
-      }
-      $( document ).ready(function() {
-          const alertList = document.querySelectorAll('.alert')
-          if (alertList.length > 0) {
-            setTimeout(() => {
-                alertList.forEach((a) =>  new bootstrap.Alert(a).close())
-            },
-            5000);
-          }
-      });
-
-    </script>
 {% endblock %}
