@@ -2,32 +2,167 @@
 
 <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
 {% block content %}
-    <div class="container">
-        <h1>Predicted Runway In-Use {{ response['airport'] }}</h1>
-        <table class="table">
-            <thead>
-            <tr>
-                <th scope="col">Timestamp</th>
-                <th scope="col">Predicted Arrival Runway</th>
-                <th scope="col">Predicted Probability</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for prediction in response['predictions'] %}
-                <tr>
-                    <td>{{ prediction['timestamp'] }}</td>
-                    <td></td>
-                    <td></td>
-                </tr>
-                {% for runway in prediction['arrivalRunways'] %}
-                <tr>
-                    <td></td>
-                    <td>{{ runway['runway'] }}</td>
-                    <td>{{ "{:.0%}".format(runway['probability']) }}</td>
-                </tr>
+  <div class="modal fade" id="newPredictionForm" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalToggleLabel">New prediction</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="originAirports" class="form-label">Select origin airport</label>
+              <input class="form-control" list="originAirportOptions" id="origin" name="origin" placeholder="Origin airport...type to search">
+              <datalist id="originAirportOptions">
+                {% for data in origin_airports_data %}
+                  <option label="{{ data['label'] }}" value="{{ data['icao'] }}"></option>
                 {% endfor %}
-            {% endfor %}
-            </tbody>
-        </table>
+              </datalist>
+            </div>
+            <div class="mb-3">
+              <label for="dateTimeRange" class="form-label">Select prediction date and time</label>
+              <input type="range" class="form-range" min="0" max="48" id="dateTimeRange" value="0" onchange="sliderMoved()">
+              <input type="text" id="timestamp" name="timestamp" hidden>
+              <span id="date_time"></span>
+            </div>
+          </div>
+        <div class="modal-footer">
+          <div class="mb-3">
+              <a class="btn btn-primary" id="formButton" role="button" href="">Submit</a>
+          </div>
+      </div>
     </div>
+  </div>
+  </div>
+  <div class="container-fluid">
+    <div class="d-grid gap-3">
+      <div class="p-2">
+        <div class="row justify-content-end">
+{#          <div class="col-4">#}
+{#          </div>#}
+          <div class="col-2">
+            <h3>Destination airport {{ airport }}</h3>
+          </div>
+          <div class="col-1">
+            <a class="btn btn-primary" data-bs-toggle="modal" href="#newPredictionForm" role="button">New prediction</a>
+          </div>
+        <div class="col-9"></div>
+        </div>
+      </div>
+      <div class="p-2">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div
+                class="alert alert-{{ category }} d-flex align-items-center alert-dismissible fade show"
+                role="alert"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                    class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2"
+                    viewBox="0 0 16 16"
+                    role="img"
+                    aria-label="Warning:"
+                >
+                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                </svg>
+                {{ message }}
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                ></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+          {% endwith %}
+      </div>
+    {% if response %}
+      <div class="p-2">
+        <div class="row">
+
+        <div class="table-responsive">
+          <div class="row">
+            <div class="col-4">
+            </div>
+            <div class="col-4">
+                <h6>Prediction results | Origin: <strong>{{ response['origin'] }}</strong> | Timestamp: <strong>{{ response['predictions'][0]['timestamp'] }}</strong></h6>
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+{#                    <th scope="col">Timestamp</th>#}
+                    <th scope="col">Runway</th>
+                    <th scope="col">Probability</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% for prediction in response['predictions'] %}
+                  <tr>
+{#                    <td>{{ prediction['timestamp'] }}</td>#}
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  {% for runway in prediction['arrivalRunways'] %}
+                    <tr>
+{#                      <td></td>#}
+                      {% if runway['probability'] > 0 %}
+                        <td class="table-primary">{{ runway['runway'] }}</td>
+                        <td class="table-primary">{{ "{:.0%}".format(runway['probability']) }}</td>
+                      {% else %}
+                        <td class="table-secondary">{{ runway['runway'] }}</td>
+                        <td class="table-secondary">{{ "{:.0%}".format(runway['probability']) }}</td>
+                      {% endif %}
+                    </tr>
+                  {% endfor %}
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="col-4">
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+    {% endif %}
+    </div>
+  </div>
+    <script>
+      function getCurrentTimestamp() {
+        return Math.ceil(new Date().getTime() / 1000);
+      }
+
+      function sliderMoved() {
+        updateCurrentTimestamp();
+        updateFormButtonHref();
+      }
+
+      function updateCurrentTimestamp() {
+        const sliderValue = window.document.getElementById('dateTimeRange').value;
+        window.document.getElementById('timestamp').value = getCurrentTimestamp() + (3600 * sliderValue);
+        window.document.getElementById('date_time').innerHTML = `Currently selected: <strong>${new Date(window.document.getElementById('timestamp').value * 1000).toUTCString()}</strong>`;
+      }
+      function updateFormButtonHref() {
+        const url = "{{ url_for('web.web_runway_prediction', airport=airport) }}";
+        const origin = window.document.getElementById('origin').value;
+        const timestamp = window.document.getElementById('timestamp').value;
+
+        window.document.getElementById('formButton').href = `${url}?origin=${origin}&timestamp=${timestamp}`;
+      }
+      $( document ).ready(function() {
+          const alertList = document.querySelectorAll('.alert')
+          if (alertList.length > 0) {
+            setTimeout(() => {
+                alertList.forEach((a) =>  new bootstrap.Alert(a).close())
+            },
+            5000);
+          }
+      });
+
+    </script>
 {% endblock %}

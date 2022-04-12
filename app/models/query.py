@@ -18,9 +18,6 @@ def predict_runway(airport: str,
     if airport not in TRAINED_MODELS_PER_DESTINATION_AIRPORT.keys():
         raise ModelNotFound(f'No model exists for airport = {airport}')
 
-    # if not origin.isalpha():
-    #     raise ValueError('Origin = {} is not alphanumeric'.format(origin))
-
     if not len(origin) == 4:
         raise ValueError(f"Origin is not a valid ICAO code")
 
@@ -32,8 +29,9 @@ def predict_runway(airport: str,
     result = pd.Series(_result[0], index=predictor.model.classes_)
 
     output = {'airport': airport,
+              'origin': origin,
               'predictions': [
-                  {"timestamp": dt.isoformat(),
+                  {"timestamp": dt.strftime('%d/%m/%Y %H:%M:%S'),
                    "arrivalRunways": [
                        {"runway": runway, "probability": probability} for runway, probability in
                        result.sort_values(ascending=False).iteritems()

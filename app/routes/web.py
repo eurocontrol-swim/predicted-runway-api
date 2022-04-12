@@ -1,3 +1,5 @@
+from typing import Optional
+
 from flask import (render_template,
                    abort,
                    request,
@@ -31,27 +33,46 @@ def index():
 def web_runway_prediction(airport: str):
     origin = request.args.get('origin')
     timestamp = request.args.get('timestamp', type=int)
+    if timestamp:
+        timestamp = datetime.fromtimestamp(timestamp, tz=timezone.utc)
     # wind_direction = request.args.get('wind_direction')
     # wind_speed = request.args.get('wind_speed')
 
+    if origin is None and timestamp is None:
+        return _load_prediction_template(airport=airport)
+
     try:
         response = predict_runway(airport=airport,
-                                  dt=datetime.fromtimestamp(timestamp),
+                                  dt=timestamp,
                                   origin=origin,
                                   wind_direction=None,
                                   wind_speed=None)
-        return render_template('runwayPrediction.html', response=response)
+        return _load_prediction_template(airport=airport, response=response)
     except METException as e:
         logger.exception(e)
-        return _reload_form_with_warning(
-            "We don't have meteorological information available for the given timestamp.",
+        return _load_prediction_template_with_warning(
+            f"We don't have meteorological information available at "
+            f"{timestamp.strftime('%d/%m/%Y %H:%M:%S')}",
             airport=airport)
     except ValueError as e:
         logger.exception(e)
-        return _reload_form_with_warning("Invalid data", airport=airport)
+        return _load_prediction_template_with_warning("Invalid data", airport=airport)
     except Exception as e:
         logger.exception(e)
         return abort(500)
+
+
+def _load_prediction_template(airport: str, response: Optional[dict] = None):
+    return render_template('runwayPrediction.html',
+                           airport=airport,
+                           response=response,
+                           origin_airports_data=_get_origin_airports_data(),
+                           airports=DESTINATION_AIRPORTS)
+
+
+def _load_prediction_template_with_warning(message: str, airport: str):
+    flash(message, category="warning")
+    return _load_prediction_template(airport)
 
 
 def _reload_form_with_warning(message: str, airport: str):
@@ -70,46 +91,3 @@ def _get_origin_airports_data():
 
         for icao, data in airport_data.items()
     ]
-
-
-@web_blueprint.route("/runway-prediction/airport/<string:airport>/form", methods=['GET', 'POST'])
-def web_runway_prediction_form(airport: str):
-    if request.method == 'GET':
-        return render_template('runwayPredictionForm.html',
-                               airport=airport,
-                               origin_airports_data=_get_origin_airports_data())
-
-    if request.method == 'POST':
-        origin = request.form.get('origin')
-        if not valid_icao_code(icao_code=origin):
-            return _reload_form_with_warning("ICAO code not valid.", airport=airport)
-
-        timestamp = request.form.get('timestamp', type=int)
-        try:
-            datetime.fromtimestamp(timestamp)
-        except Exception:
-            return _reload_form_with_warning("Timestamp not valid.", airport=airport)
-
-        # wind_direction = request.form.get('wind-dir', type=float, default=None)
-        # if wind_direction is not None:
-        #     if not valid_wind_direction(wind_direction):
-        #         return _reload_form_with_warning(
-        #             "Wind direction must be a number in the range [0, 360)",
-        #             airport=airport)
-        #
-        # wind_speed = request.form.get('wind-speed', type=float, default=None)
-        # if wind_speed is not None:
-        #     if not valid_wind_speed(wind_speed):
-        #         return _reload_form_with_warning("Wind speed must be a positive number",
-        #                                          airport=airport)
-
-        return redirect(
-            url_for(
-                'web.web_runway_prediction',
-                airport=airport,
-                timestamp=timestamp,
-                origin=origin,
-                # wind_direction=wind_direction,
-                # wind_speed=wind_speed
-            )
-        )
