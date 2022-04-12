@@ -30,26 +30,25 @@ def index():
 @web_blueprint.route("/runway-prediction/airport/<string:airport>", methods=['GET'])
 def web_runway_prediction(airport: str):
     origin = request.args.get('origin')
-    dt = datetime.fromisoformat(request.args.get('dt'))
-    wind_direction = request.args.get('wind_direction')
-    wind_speed = request.args.get('wind_speed')
+    timestamp = request.args.get('timestamp', type=int)
+    # wind_direction = request.args.get('wind_direction')
+    # wind_speed = request.args.get('wind_speed')
 
     try:
         response = predict_runway(airport=airport,
-                                  dt=dt,
+                                  dt=datetime.fromtimestamp(timestamp),
                                   origin=origin,
-                                  wind_direction=wind_direction,
-                                  wind_speed=wind_speed)
+                                  wind_direction=None,
+                                  wind_speed=None)
         return render_template('runwayPrediction.html', response=response)
     except METException as e:
         logger.exception(e)
-        _reload_form_with_warning(
-            "We don't have meteorological information available for the given date and hour. "
-            "You can use the optional fields to introduce your own estimates.",
+        return _reload_form_with_warning(
+            "We don't have meteorological information available for the given timestamp.",
             airport=airport)
     except ValueError as e:
         logger.exception(e)
-        _reload_form_with_warning("Invalid data", airport=airport)
+        return _reload_form_with_warning("Invalid data", airport=airport)
     except Exception as e:
         logger.exception(e)
         return abort(500)
@@ -85,35 +84,32 @@ def web_runway_prediction_form(airport: str):
         if not valid_icao_code(icao_code=origin):
             return _reload_form_with_warning("ICAO code not valid.", airport=airport)
 
-        date_input = request.form.get('date', type=str)
-        hour = request.form.get('hour', type=int)
+        timestamp = request.form.get('timestamp', type=int)
         try:
-            parsed_date = datetime.strptime(date_input, "%Y/%m/%d")
-            parsed_hour = time(hour=hour)
-            dt = datetime.combine(parsed_date, parsed_hour, tzinfo=timezone.utc)
+            datetime.fromtimestamp(timestamp)
         except Exception:
-            return _reload_form_with_warning("Date and/or hour format not valid.", airport=airport)
+            return _reload_form_with_warning("Timestamp not valid.", airport=airport)
 
-        wind_direction = request.form.get('wind-dir', type=float, default=None)
-        if wind_direction is not None:
-            if not valid_wind_direction(wind_direction):
-                return _reload_form_with_warning(
-                    "Wind direction must be a number in the range [0, 360)",
-                    airport=airport)
-
-        wind_speed = request.form.get('wind-speed', type=float, default=None)
-        if wind_speed is not None:
-            if not valid_wind_speed(wind_speed):
-                return _reload_form_with_warning("Wind speed must be a positive number",
-                                                 airport=airport)
+        # wind_direction = request.form.get('wind-dir', type=float, default=None)
+        # if wind_direction is not None:
+        #     if not valid_wind_direction(wind_direction):
+        #         return _reload_form_with_warning(
+        #             "Wind direction must be a number in the range [0, 360)",
+        #             airport=airport)
+        #
+        # wind_speed = request.form.get('wind-speed', type=float, default=None)
+        # if wind_speed is not None:
+        #     if not valid_wind_speed(wind_speed):
+        #         return _reload_form_with_warning("Wind speed must be a positive number",
+        #                                          airport=airport)
 
         return redirect(
             url_for(
                 'web.web_runway_prediction',
                 airport=airport,
-                dt=datetime.isoformat(dt),
+                timestamp=timestamp,
                 origin=origin,
-                wind_direction=wind_direction,
-                wind_speed=wind_speed
+                # wind_direction=wind_direction,
+                # wind_speed=wind_speed
             )
         )
