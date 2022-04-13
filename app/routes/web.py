@@ -58,7 +58,8 @@ def web_runway_prediction(airport_icao: str):
         logger.exception(e)
         return _load_prediction_template_with_warning(
             message=f"There is no meteorological information available at "
-                    f"{timestamp.strftime('%d/%m/%Y %H:%M:%S')}",
+                    f"{timestamp.strftime('%d/%m/%Y %H:%M:%S')}. "
+                    f"Please try another arrival time and/or departure airport.",
             airport_icao=airport_icao)
     except ValueError as e:
         logger.exception(e)
@@ -87,6 +88,8 @@ def airports_data(search_value: str):
 
 def _enhance_response_with_geodata(response: dict) -> dict:
     airport_data = _get_destination_airports_data()[response['airport']]
+
+    response['airport_coordinates'] = [airport_data['lat'], airport_data['lon']]
 
     for i, prediction in enumerate(response['predictions']):
         for j, runway in enumerate(prediction['arrivalRunways']):
@@ -120,10 +123,7 @@ def _airport_data_matches(data: dict, search_value: str) -> bool:
 
 
 def _reverse_coordinates_geojson(coordinates_geojson: list[list]) -> list[list]:
-    return [
-        [coord[1], coord[0]]
-        for coord in coordinates_geojson
-    ]
+    return [[coord[1], coord[0]] for coord in coordinates_geojson]
 
 
 def _extract_airport_data(data: dict, with_geodata: bool = False) -> dict:

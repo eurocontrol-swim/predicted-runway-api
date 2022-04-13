@@ -107,11 +107,11 @@
                           {% for runway in prediction['arrivalRunways'] %}
                             <tr>
                               {% if runway['probability'] > 0.5 %}
-                                <td class="table-primary">{{ runway['runway'] }}</td>
-                                <td class="table-primary">{{ "{:.0%}".format(runway['probability']) }}</td>
+                                <td class="table-success">{{ runway['runway'] }}</td>
+                                <td class="table-success">{{ "{:.0%}".format(runway['probability']) }}</td>
                               {% else %}
-                                <td class="table-secondary">{{ runway['runway'] }}</td>
-                                <td class="table-secondary">{{ "{:.0%}".format(runway['probability']) }}</td>
+                                <td class="table-danger">{{ runway['runway'] }}</td>
+                                <td class="table-danger">{{ "{:.0%}".format(runway['probability']) }}</td>
                               {% endif %}
                             </tr>
                           {% endfor %}
@@ -134,21 +134,17 @@
     <script>
         let map = null;
 
-        function addRunwayPolyline(map, geojson_coordinates) {
-            const polyline = L.polyline(geojson_coordinates, {color: 'red'}).bindPopup('alex')
-            polyline.addTo(map);
+        function addRunwayPolyline(map, runway) {
+            const color = runway.probability > 0.5 ? 'green' : 'red';
+            const popupContent = `<strong>${runway.runway} | ${runway.probability * 100}%</strong>`;
+
+            const polyline = L.polyline(runway.coordinates_geojson, {color})
+                              .bindPopup(popupContent)
+                              .addTo(map);
 
             polyline.on('mouseover', () => {
                 polyline.openPopup();
             })
-            // zoom the map to the polyline
-            map.fitBounds(polyline.getBounds());
-        }
-        function updateMapWithRunways(map) {
-            const runways = JSON.parse('{{ response["predictions"][0]["arrivalRunways"]|tojson }}');
-            runways.forEach((r) => {
-                addRunwayPolyline(map, r.coordinates_geojson);
-            });
         }
         function initMap() {
           const map = L.map('map');
@@ -189,17 +185,27 @@
 
           L.control.layers(baseMaps).addTo(map);
 
-          const mapCenter = [50.824713, 4.514118];
-          const mapZoom = 2;
-          map.setView(mapCenter, mapZoom);
-          map.scrollWheelZoom.disable();
+          {#map.scrollWheelZoom.disable();#}
 
           return map;
         }
 
-          $( document ).ready(function() {
-              map = initMap();
-              updateMapWithRunways(map);
+        $( document ).ready(function() {
+          map = initMap();
+
+          const response = JSON.parse('{{ response|tojson }}');
+          const reversrSortedRunways = response.predictions[0].arrivalRunways.sort((a, b) => {
+            return a.probability - b.probability;
           });
+
+          reversrSortedRunways.forEach((runway) => {
+            addRunwayPolyline(map, runway);
+          });
+
+          const mapCenter = response.airport_coordinates;
+          const mapZoom = 12;
+          map.setView(mapCenter, mapZoom);
+
+        });
     </script>
 {% endblock %}
