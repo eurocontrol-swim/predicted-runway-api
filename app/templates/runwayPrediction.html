@@ -90,7 +90,24 @@
     </div>
   </div>
     <script>
+        let map = null;
 
+        function addRunwayPolyline(map, geojson_coordinates) {
+            const polyline = L.polyline(geojson_coordinates, {color: 'red'}).bindPopup('alex')
+            polyline.addTo(map);
+
+            polyline.on('mouseover', () => {
+                polyline.openPopup();
+            })
+            // zoom the map to the polyline
+            map.fitBounds(polyline.getBounds());
+        }
+        function updateMapWithRunways(map) {
+            const runways = JSON.parse('{{ response["predictions"][0]["arrivalRunways"]|tojson }}');
+            runways.forEach((r) => {
+                addRunwayPolyline(map, r.coordinates_geojson);
+            });
+        }
         function initMap() {
           const map = L.map('map');
           map.createPane('labels');
@@ -107,6 +124,29 @@
             attribution: cartodbAttribution,
           }).addTo(map);
 
+          const grayscale = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png', {
+            attribution: cartodbAttribution,
+            pane: 'labels',
+          }).addTo(map);
+
+          const googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+          });
+
+          const googleTerrain = L.tileLayer('http://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+          });
+
+          const baseMaps = {
+            Grayscale: grayscale,
+            Satelite: googleSat,
+            Terrain: googleTerrain,
+          };
+
+          L.control.layers(baseMaps).addTo(map);
+
           const mapCenter = [50.824713, 4.514118];
           const mapZoom = 2;
           map.setView(mapCenter, mapZoom);
@@ -116,7 +156,8 @@
         }
 
           $( document ).ready(function() {
-              initMap();
+              map = initMap();
+              updateMapWithRunways(map);
           });
     </script>
 {% endblock %}

@@ -51,6 +51,8 @@ def web_runway_prediction(airport_icao: str):
                                   origin=origin,
                                   wind_direction=None,
                                   wind_speed=None)
+        response = _enhance_response_with_geodata(response)
+
         return _load_prediction_template(airport_icao=airport_icao, response=response)
     except METException as e:
         logger.exception(e)
@@ -83,11 +85,24 @@ def airports_data(search_value: str):
     ), 200
 
 
+def _enhance_response_with_geodata(response: dict) -> dict:
+    airport_data = _get_destination_airports_data()[response['airport']]
+
+    for i, prediction in enumerate(response['predictions']):
+        for j, runway in enumerate(prediction['arrivalRunways']):
+            response['predictions'][i]['arrivalRunways'][j]['coordinates_geojson'] = \
+                airport_data['runways_geojson'][runway['runway']]
+
+    return response
+
+
 def _load_prediction_template(airport_icao: str, response: Optional[dict] = None):
+    destination_airports_data = _get_destination_airports_data()
+
     return render_template('runwayPrediction.html',
                            airport_icao=airport_icao,
                            response=response,
-                           destination_airports_data=_get_destination_airports_data())
+                           destination_airports_data=destination_airports_data)
 
 
 def _load_prediction_template_with_warning(message: str, airport_icao: str):
@@ -104,21 +119,33 @@ def _airport_data_matches(data: dict, search_value: str) -> bool:
     )
 
 
-def _extract_airport_data(data: dict, with_runways: bool = False) -> dict:
+def _reverse_coordinates_geojson(coordinates_geojson: list[list]) -> list[list]:
+    return [
+        [coord[1], coord[0]]
+        for coord in coordinates_geojson
+    ]
+
+
+def _extract_airport_data(data: dict, with_geodata: bool = False) -> dict:
     extracted = {
         "icao": data['icao'],
         "label": f"{data['icao']}: {data['name']}, {data['city']}, {data['state']}, {data['country']}"
     }
 
-    if with_runways:
-        extracted["runways"] = data.get('runways', {})
+    if with_geodata:
+        extracted["lat"] = data["lat"]
+        extracted["lon"] = data["lon"]
+        extracted["runways_geojson"] = {
+            runway: _reverse_coordinates_geojson(data["coordinates_geojson"])
+            for runway, data in data.get("runways", {}).items()
+        }
 
     return extracted
 
 
 def _get_destination_airports_data():
-    return [
-        _extract_airport_data(data, with_runways=True)
+    return {
+        icao: _extract_airport_data(data, with_geodata=True)
         for icao, data in get_airport_data().items()
         if icao in DESTINATION_AIRPORTS
-    ]
+    }
