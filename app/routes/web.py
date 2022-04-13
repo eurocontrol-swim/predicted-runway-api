@@ -6,7 +6,7 @@ from flask import (render_template,
                    flash,
                    redirect,
                    url_for,
-                   Blueprint)
+                   Blueprint, jsonify)
 from datetime import datetime, time, timezone
 
 from app.models.airports import get_airport_data
@@ -27,14 +27,12 @@ web_blueprint = Blueprint('web', __name__)
 @web_blueprint.route("/")
 def index():
     return render_template('index.html',
-                           origin_airports_data=_get_origin_airports_data(),
-                           destination_airports=DESTINATION_AIRPORTS)
+                           destination_airports_data=_get_destination_airports_data())
 
 
 @web_blueprint.route("/runway-prediction/arrivals/<string:airport_icao>", methods=['GET'])
 def web_runway_prediction(airport_icao: str):
     origin = request.args.get('origin')
-    # destination = request.args.get('destination')
     timestamp = request.args.get('timestamp', type=int)
     if timestamp:
         timestamp = datetime.fromtimestamp(timestamp, tz=timezone.utc)
@@ -71,12 +69,25 @@ def web_runway_prediction(airport_icao: str):
         return abort(500)
 
 
+@web_blueprint.route("/airports-data/<string:search_value>", methods=['GET'])
+def airports_data(search_value: str):
+    if not search_value:
+        return []
+
+    return jsonify(
+        [
+            _extract_airport_data(data)
+            for _, data in get_airport_data().items()
+            if _airport_data_matches(data, search_value)
+        ]
+    ), 200
+
+
 def _load_prediction_template(airport_icao: str, response: Optional[dict] = None):
     return render_template('runwayPrediction.html',
                            airport_icao=airport_icao,
                            response=response,
-                           origin_airports_data=_get_origin_airports_data(),
-                           destination_airports=DESTINATION_AIRPORTS)
+                           destination_airports_data=_get_destination_airports_data())
 
 
 def _load_prediction_template_with_warning(message: str, airport_icao: str):
@@ -84,14 +95,30 @@ def _load_prediction_template_with_warning(message: str, airport_icao: str):
     return _load_prediction_template(airport_icao)
 
 
-def _get_origin_airports_data():
-    airport_data = get_airport_data()
+def _airport_data_matches(data: dict, search_value: str) -> bool:
+    search_value = search_value.lower()
+    searchable_keys = ['icao', 'name', 'city', 'state', 'country']
 
+    return any(
+        [search_value in data[key].lower() for key in searchable_keys]
+    )
+
+
+def _extract_airport_data(data: dict, with_runways: bool = False) -> dict:
+    extracted = {
+        "icao": data['icao'],
+        "label": f"{data['icao']}: {data['name']}, {data['city']}, {data['state']}, {data['country']}"
+    }
+
+    if with_runways:
+        extracted["runways"] = data.get('runways', {})
+
+    return extracted
+
+
+def _get_destination_airports_data():
     return [
-        {
-            "icao": icao,
-            "label": f"{icao}: {data['name']}, {data['city']}, {data['state']}, {data['country']}"
-        }
-
-        for icao, data in airport_data.items()
+        _extract_airport_data(data, with_runways=True)
+        for icao, data in get_airport_data().items()
+        if icao in DESTINATION_AIRPORTS
     ]

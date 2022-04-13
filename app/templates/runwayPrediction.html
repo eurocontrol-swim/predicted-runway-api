@@ -120,29 +120,6 @@
             attribution: cartodbAttribution,
           }).addTo(map);
 
-          const grayscale = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png', {
-            attribution: cartodbAttribution,
-            pane: 'labels',
-          }).addTo(map);
-
-          const googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-            maxZoom: 20,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-          });
-
-          const googleTerrain = L.tileLayer('http://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
-            maxZoom: 20,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-          });
-
-          const baseMaps = {
-            Grayscale: grayscale,
-            Satelite: googleSat,
-            Terrain: googleTerrain,
-          };
-
-          L.control.layers(baseMaps).addTo(map);
-
           const mapCenter = [50.824713, 4.514118];
           const mapZoom = 2;
           map.setView(mapCenter, mapZoom);

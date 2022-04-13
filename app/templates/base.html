@@ -45,8 +45,14 @@
                 New prediction
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  {% for airport in destination_airports %}
-                    <li><a class="dropdown-item" data-bs-toggle="modal" href="#newPredictionForm" onclick="updateDestinationAirport('{{ airport }}')">{{ airport }}</a></li>
+                  {% for airport_data in destination_airports_data %}
+                    <li>
+                        <a class="dropdown-item"
+                           data-bs-toggle="modal"
+                           href="#newPredictionForm"
+                           onclick="onSelectingDestinationAirport('{{ airport_data["icao"] }}')">{{ airport_data["label"] }}
+                        </a>
+                    </li>
                   {% endfor %}
               </ul>
             </li>
@@ -55,27 +61,24 @@
     </div>
   </nav>
 
-  <div class="modal fade" id="newPredictionForm" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+  <div class="modal fade" id="newPredictionForm" aria-hidden="true" aria-labelledby="predictionForm" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalToggleLabel">New prediction</h5>
+          <h5 class="modal-title" id="predictionForm">New Runway Prediction</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
           <div class="modal-body">
             <div class="mb-3">
               <input type="text" id="destination" hidden>
-              <label for="originAirports" class="form-label">Select origin airport</label>
-              <input class="form-control" list="originAirportOptions" id="origin" name="origin" placeholder="Type to search">
+              <label for="originAirports" class="form-label">Departing from</label>
+              <input class="form-control" list="originAirportOptions" id="origin" name="origin" placeholder="Type to search" onkeyup="updateOriginAirports()">
               <datalist id="originAirportOptions">
-                {% for data in origin_airports_data %}
-                  <option label="{{ data['label'] }}" value="{{ data['icao'] }}"></option>
-                {% endfor %}
               </datalist>
             </div>
             <div class="mb-3">
-              <label for="dateTimeRange" class="form-label">Select prediction date and time</label>
+              <label for="dateTimeRange" class="form-label">Arriving at</label>
               <input type="range" class="form-range" min="0" max="48" id="dateTimeRange" value="0" onchange="sliderMoved()">
               <input type="text" id="timestamp" name="timestamp" hidden>
               <span id="date_time"></span>
@@ -83,7 +86,7 @@
           </div>
         <div class="modal-footer">
           <div class="mb-3">
-              <a class="btn btn-primary" id="formButton" role="button" href="">Predict</a>
+              <a class="btn btn-primary" id="formButton" role="button" href="" onclick="resetForm()">Predict</a>
           </div>
       </div>
     </div>
@@ -105,6 +108,7 @@
         window.document.getElementById('timestamp').value = getCurrentTimestamp() + (3600 * sliderValue);
         window.document.getElementById('date_time').innerHTML = `Currently selected: <strong>${new Date(window.document.getElementById('timestamp').value * 1000).toUTCString()}</strong>`;
       }
+
       function updateFormButtonHref() {
         const origin = window.document.getElementById('origin').value;
         const destination = window.document.getElementById('destination').value;
@@ -114,10 +118,41 @@
         window.document.getElementById('formButton').href = `${url}?origin=${origin}&timestamp=${timestamp}`;
       }
 
+      function resetForm() {
+        window.document.getElementById('origin').value = '';
+        window.document.getElementById('timestamp').value = '';
+      }
+
+      function onSelectingDestinationAirport(airport) {
+          updateFormTitle(airport);
+          updateDestinationAirport(airport);
+      }
+
+      function updateFormTitle(airport) {
+          window.document.getElementById('predictionForm').innerHTML = `New Runway Prediction | Arriving in ${airport}`;
+      }
+
       function updateDestinationAirport(airport) {
-        console.log(airport);
         window.document.getElementById('destination').value = airport;
       }
+
+      function updateOriginAirports() {
+          const search_value = window.document.getElementById('origin').value;
+
+          if (search_value.length < 2) {
+              return;
+          }
+
+          $.ajax({url: `/airports-data/${search_value}`, success: function(res){
+              let optionsHtml = '';
+              res.forEach((r) => {
+                 optionsHtml += `<option label="${r.label}" value="${r.icao}"></option>`
+              });
+
+              window.document.getElementById('originAirportOptions').innerHTML = optionsHtml;
+          }});
+      }
+
       $( document ).ready(function() {
           const alertList = document.querySelectorAll('.alert')
           if (alertList.length > 0) {
