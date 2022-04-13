@@ -25,13 +25,35 @@
         integrity="sha512-mSYUmp1HYZDFaVKK//63EcZq4iFWFjxSL+Z3T/aCt4IO9Cejm03q3NKKYN6pFQzY0SBOr8h+eCIAZHPXcpZaNw=="
         crossorigin="anonymous"
         referrerpolicy="no-referrer"/>
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+            integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+            crossorigin="">
+    </script>
 </head>
 <body>
   <nav class="navbar navbar-expand-lg sticky-top navbar-dark bg-dark" style="width: 100%">
     <div class="container-fluid">
       <a class="navbar-brand"  href="#">Predicted Runway</a>
       <div class="collapse navbar-collapse" id="navbarNavDropdown">
-        <a class="btn btn-primary" data-bs-toggle="modal" href="#newPredictionForm" role="button">New prediction</a>
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+{#            <li class="nav-item">#}
+{#                <a class="btn btn-primary" data-bs-toggle="modal" href="#newPredictionForm" role="button">New prediction</a>#}
+{#            </li>#}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                New prediction
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" data-bs-toggle="modal" href="#newPredictionForm">EHAM</a></li>
+                <li><a class="dropdown-item" data-bs-toggle="modal" href="#newPredictionForm">LFBO</a></li>
+                <li><a class="dropdown-item" data-bs-toggle="modal" href="#newPredictionForm">LFPO</a></li>
+              </ul>
+            </li>
+          </ul>
 {#        <button class="btn btn-primary" data-bs-toggle="modal" href="#newPredictionForm">New prediction</button>#}
 {#        <button class="btn btn-primary d-flex">New prediction</button>#}
 {#        <ul class="navbar-nav" style="float: right;">#}
@@ -85,7 +107,7 @@
           </div>
         <div class="modal-footer">
           <div class="mb-3">
-              <a class="btn btn-primary" id="formButton" role="button" href="">Submit</a>
+              <a class="btn btn-primary" id="formButton" role="button" href="">Predict</a>
           </div>
       </div>
     </div>
@@ -122,7 +144,7 @@
             setTimeout(() => {
                 alertList.forEach((a) =>  new bootstrap.Alert(a).close())
             },
-            5000);
+            10000);
           }
       });
 

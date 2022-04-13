@@ -29,7 +29,7 @@ def index():
     return render_template('index.html', airports=DESTINATION_AIRPORTS)
 
 
-@web_blueprint.route("/runway-prediction", methods=['GET'])
+@web_blueprint.route("/runway-prediction/arrivals", methods=['GET'])
 def web_runway_prediction():
     origin = request.args.get('origin')
     destination = request.args.get('destination')
