@@ -2,7 +2,7 @@
 
 <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
 {% block content %}
-  <div class="container-fluid">
+  <div class="container">
     <div class="d-grid gap-3">
       <div class="p-2">
           {% with messages = get_flashed_messages(with_categories=true) %}
@@ -38,12 +38,7 @@
       </div>
     {% if response %}
       <div class="p-2">
-        <div class="row">
         <div class="table-responsive">
-          <div class="row">
-            <div class="col-3">
-            </div>
-            <div class="col-6">
             <div class="accordion" id="accordionExample">
 
             {% for prediction in response['predictions'] %}
@@ -86,11 +81,6 @@
             {% endfor %}
 
             </div>
-            </div>
-            <div class="col-3">
-            </div>
-          </div>
-        </div>
         </div>
       </div>
 
