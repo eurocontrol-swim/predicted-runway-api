@@ -40,34 +40,17 @@
       <a class="navbar-brand"  href="#">Predicted Runway</a>
       <div class="collapse navbar-collapse" id="navbarNavDropdown">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-{#            <li class="nav-item">#}
-{#                <a class="btn btn-primary" data-bs-toggle="modal" href="#newPredictionForm" role="button">New prediction</a>#}
-{#            </li>#}
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 New prediction
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" data-bs-toggle="modal" href="#newPredictionForm">EHAM</a></li>
-                <li><a class="dropdown-item" data-bs-toggle="modal" href="#newPredictionForm">LFBO</a></li>
-                <li><a class="dropdown-item" data-bs-toggle="modal" href="#newPredictionForm">LFPO</a></li>
+                  {% for airport in destination_airports %}
+                    <li><a class="dropdown-item" data-bs-toggle="modal" href="#newPredictionForm" onclick="updateDestinationAirport('{{ airport }}')">{{ airport }}</a></li>
+                  {% endfor %}
               </ul>
             </li>
           </ul>
-{#        <button class="btn btn-primary" data-bs-toggle="modal" href="#newPredictionForm">New prediction</button>#}
-{#        <button class="btn btn-primary d-flex">New prediction</button>#}
-{#        <ul class="navbar-nav" style="float: right;">#}
-{#          <li class="nav-item dropdown">#}
-{#            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">#}
-{#              Destination Airports#}
-{#            </a>#}
-{#            <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">#}
-{#              {% for airport in airports %}#}
-{#                <li><a class="dropdown-item" href="{{ url_for('web.web_runway_prediction', airport=airport) }}">{{ airport }}</a></li>#}
-{#              {% endfor %}#}
-{#            </ul>#}
-{#          </li>#}
-{#        </ul>#}
       </div>
     </div>
   </nav>
@@ -82,14 +65,7 @@
 
           <div class="modal-body">
             <div class="mb-3">
-              <label for="destinationAirports" class="form-label">Select destination airport</label>
-              <select class="form-select" aria-label="Default select example" id="destination" name="destination">
-                {% for destination in destination_airports %}
-                  <option label="{{ destination }}" value="{{ destination }}"></option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="mb-3">
+              <input type="text" id="destination" hidden>
               <label for="originAirports" class="form-label">Select origin airport</label>
               <input class="form-control" list="originAirportOptions" id="origin" name="origin" placeholder="Type to search">
               <datalist id="originAirportOptions">
@@ -130,14 +106,18 @@
         window.document.getElementById('date_time').innerHTML = `Currently selected: <strong>${new Date(window.document.getElementById('timestamp').value * 1000).toUTCString()}</strong>`;
       }
       function updateFormButtonHref() {
-        const url = "{{ url_for('web.web_runway_prediction') }}";
         const origin = window.document.getElementById('origin').value;
         const destination = window.document.getElementById('destination').value;
         const timestamp = window.document.getElementById('timestamp').value;
+        const url = `{{ url_for('web.web_runway_prediction', airport_icao='') }}/${destination}`;
 
-        window.document.getElementById('formButton').href = `${url}?origin=${origin}&destination=${destination}&timestamp=${timestamp}`;
+        window.document.getElementById('formButton').href = `${url}?origin=${origin}&timestamp=${timestamp}`;
       }
 
+      function updateDestinationAirport(airport) {
+        console.log(airport);
+        window.document.getElementById('destination').value = airport;
+      }
       $( document ).ready(function() {
           const alertList = document.querySelectorAll('.alert')
           if (alertList.length > 0) {
