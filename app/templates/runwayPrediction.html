@@ -3,35 +3,34 @@
 <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
 
 {% block modelInfo %}
-
-    <button class="btn btn-outline-info"
-            type="button"
-            data-bs-toggle="modal"
-            data-bs-target="#modelInfoModal"
-    >
-        <i class="bi bi-info-circle"></i> Model details
-    </button>
-    <div class="modal fade" id="modelInfoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modelInfoModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="modelInfoModalLabel">Model details</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-              <table>
-
-              </table>
+    {% if response %}
+        <button class="btn btn-outline-info"
+                type="button"
+                data-bs-toggle="modal"
+                data-bs-target="#modelInfoModal"
+        >
+            <i class="bi bi-info-circle"></i> Model metrics
+        </button>
+        <div class="modal fade" id="modelInfoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modelInfoModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="modelInfoModalLabel">Model metrics</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                {{ response['metrics'] }}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-    <style>
-    .modal-backdrop {
-        {# fixing modal misbehaviour #}
-        top: initial;
-    }
-    </style>
+        <style>
+        .modal-backdrop {
+            {# fixing modal misbehaviour #}
+            width: 0;
+        }
+        </style>
+    {% endif %}
 {% endblock %}
 
 {% block content %}

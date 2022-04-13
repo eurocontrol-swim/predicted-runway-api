@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 from flask import (render_template,
@@ -9,6 +10,7 @@ from flask import (render_template,
                    Blueprint, jsonify)
 from datetime import datetime, time, timezone
 
+from app.config.file_dir import runway_model_metrics_dir
 from app.models.airports import get_airport_data
 from app.models.runway import DESTINATION_AIRPORTS
 from app.routes.input_validation import *
@@ -52,6 +54,7 @@ def web_runway_prediction(airport_icao: str):
                                   wind_direction=None,
                                   wind_speed=None)
         response = _enhance_response_with_geodata(response)
+        response = _enhance_response_with_metrics(response)
 
         return _load_prediction_template(airport_icao=airport_icao, response=response)
     except METException as e:
@@ -84,6 +87,19 @@ def airports_data(search_value: str):
             if _airport_data_matches(data, search_value)
         ]
     ), 200
+
+
+def _get_airport_metrics(airport: str):
+    path = runway_model_metrics_dir.joinpath(f"CV-Test_results_{airport}_100.json")
+
+    with open(path, 'r') as f:
+        return json.load(f)
+
+
+def _enhance_response_with_metrics(response):
+    response['metrics'] = _get_airport_metrics(response['airport'])
+
+    return response
 
 
 def _enhance_response_with_geodata(response: dict) -> dict:

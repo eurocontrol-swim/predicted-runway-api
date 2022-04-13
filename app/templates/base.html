@@ -161,16 +161,6 @@
           }});
       }
 
-      $( document ).ready(function() {
-          const alertList = document.querySelectorAll('.alert')
-          if (alertList.length > 0) {
-            setTimeout(() => {
-                alertList.forEach((a) =>  new bootstrap.Alert(a).close())
-            },
-            10000);
-          }
-      });
-
     </script>
   {% block content %}
   {% endblock %}
