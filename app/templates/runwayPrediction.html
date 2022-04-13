@@ -1,6 +1,39 @@
 {% extends 'base.html' %}
 
 <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
+
+{% block modelInfo %}
+
+    <button class="btn btn-outline-info"
+            type="button"
+            data-bs-toggle="modal"
+            data-bs-target="#modelInfoModal"
+    >
+        <i class="bi bi-info-circle"></i> Model details
+    </button>
+    <div class="modal fade" id="modelInfoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modelInfoModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modelInfoModalLabel">Model details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <table>
+
+              </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <style>
+    .modal-backdrop {
+        {# fixing modal misbehaviour #}
+        top: initial;
+    }
+    </style>
+{% endblock %}
+
 {% block content %}
   <div class="container">
     <div class="d-grid gap-3">
@@ -38,43 +71,52 @@
       </div>
     {% if response %}
       <div class="p-2">
-        <div class="table-responsive">
-            <div class="accordion" id="accordionExample">
+        <div class="accordion" id="accordionExample">
 
             {% for prediction in response['predictions'] %}
               <div class="accordion-item">
                 <h2 class="accordion-header" id="headingOne">
-                  <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                    <span>Prediction results | Departure: <strong>{{ response['origin'] }}</strong> | Destination: <strong>{{ response['airport'] }}</strong> | Arrival at: <strong>{{ prediction['timestamp'] }}</strong></span>
+                  <button class="accordion-button"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#collapseOne"
+                          aria-expanded="false"
+                          aria-controls="collapseOne"
+                  >
+                      <span>
+                          <strong>{{ response['origin'] }}</strong> <i class="bi-arrow-right"></i> <strong>{{ response['airport'] }}</strong> | {{ prediction['timestamp'] }}
+                      </span>
                   </button>
                 </h2>
                 <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                    <table class="table table-sm">
-                    <thead>
-                      <tr>
-                        <th scope="col">Runway</th>
-                        <th scope="col">Probability</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td></td>
-                        <td></td>
-                      </tr>
-                      {% for runway in prediction['arrivalRunways'] %}
-                        <tr>
-                          {% if runway['probability'] > 0.5 %}
-                            <td class="table-primary">{{ runway['runway'] }}</td>
-                            <td class="table-primary">{{ "{:.0%}".format(runway['probability']) }}</td>
-                          {% else %}
-                            <td class="table-secondary">{{ runway['runway'] }}</td>
-                            <td class="table-secondary">{{ "{:.0%}".format(runway['probability']) }}</td>
-                          {% endif %}
-                        </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
+                      <div class="table-responsive">
+
+                        <table class="table table-sm">
+                        <thead>
+                          <tr>
+                            <th scope="col">Runway</th>
+                            <th scope="col">Probability</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td></td>
+                            <td></td>
+                          </tr>
+                          {% for runway in prediction['arrivalRunways'] %}
+                            <tr>
+                              {% if runway['probability'] > 0.5 %}
+                                <td class="table-primary">{{ runway['runway'] }}</td>
+                                <td class="table-primary">{{ "{:.0%}".format(runway['probability']) }}</td>
+                              {% else %}
+                                <td class="table-secondary">{{ runway['runway'] }}</td>
+                                <td class="table-secondary">{{ "{:.0%}".format(runway['probability']) }}</td>
+                              {% endif %}
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
                   </div>
                 </div>
               </div>
