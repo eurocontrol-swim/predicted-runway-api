@@ -135,7 +135,7 @@
 
         function addRunwayPolyline(map, runway) {
             const color = runway.probability > 0.5 ? '#93cab1' : '#dda0a4';
-            const popupContent = `<strong>${runway.runway} | ${runway.probability * 100}%</strong>`;
+            const popupContent = `Runway: <strong>${runway.runway}</strong> | Probability: <strong>${runway.probability * 100}%</strong>`;
 
             const polyline = L.polyline(runway.coordinates_geojson, {color})
                               .bindPopup(popupContent)

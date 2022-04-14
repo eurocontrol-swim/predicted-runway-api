@@ -88,14 +88,14 @@
                      name="origin"
                      placeholder="Type to search"
                      onkeyup="updateOriginAirports()">
-              <datalist id="originAirportOptions">
+              <datalist id="originAirportOptions" onselect="alert(1)">
               </datalist>
             </div>
             <div class="mb-3">
               <label for="dateTimeRange" class="form-label">Arriving at</label>
               <input type="range" class="form-range" min="0" max="48" id="dateTimeRange" value="0" onchange="sliderMoved()">
               <input type="text" id="timestamp" name="timestamp" hidden>
-              <span id="date_time"></span>
+              <span id="dateTime"></span>
             </div>
           </div>
         <div class="modal-footer">
@@ -108,6 +108,15 @@
   </div>
 
     <script>
+      const $dateTimeRange = window.document.getElementById('dateTimeRange');
+      const $timestamp = window.document.getElementById('timestamp');
+      const $dateTime = window.document.getElementById('dateTime');
+      const $origin = window.document.getElementById('origin');
+      const $destination = window.document.getElementById('destination');
+      const $predictionForm = window.document.getElementById('predictionForm');
+      const $originAirportOptions = window.document.getElementById('originAirportOptions');
+      const $formButton = window.document.getElementById('formButton');
+
       function getCurrentTimestamp() {
         return Math.ceil(new Date().getTime() / 1000);
       }
@@ -118,42 +127,42 @@
       }
 
       function updateCurrentTimestamp() {
-        const sliderValue = window.document.getElementById('dateTimeRange').value;
-        window.document.getElementById('timestamp').value = getCurrentTimestamp() + (3600 * sliderValue);
-        window.document.getElementById('date_time').innerHTML = `Currently selected: <strong>${new Date(window.document.getElementById('timestamp').value * 1000).toUTCString()}</strong>`;
+        const startTimestamp = $dateTimeRange.getAttribute('data-start-timestamp');
+        $timestamp.value = Number(startTimestamp) + (3600 * $dateTimeRange.value);
+        $dateTime.innerHTML = `Currently selected: <strong>${new Date($timestamp.value * 1000).toUTCString()}</strong>`;
       }
 
       function updateFormButtonHref() {
-        const origin = window.document.getElementById('origin').value;
-        const destination = window.document.getElementById('destination').value;
-        const timestamp = window.document.getElementById('timestamp').value;
+        const origin = $origin.value;
+        const destination = $destination.value;
+        const timestamp = $timestamp.value;
         const url = `{{ url_for('web.web_runway_prediction', airport_icao='') }}/${destination}`;
 
-        window.document.getElementById('formButton').href = `${url}?origin=${origin}&timestamp=${timestamp}`;
+        $formButton.href = `${url}?origin=${origin}&timestamp=${timestamp}`;
       }
 
       function resetForm() {
-        window.document.getElementById('origin').value = '';
-        window.document.getElementById('timestamp').value = '';
+        $origin.value = '';
+        $timestamp.value = '';
       }
 
       function onSelectingDestinationAirport(airport) {
           updateFormTitle(airport);
           updateDestinationAirport(airport);
+          updateTimestamps(airport);
       }
 
       function updateFormTitle(airport) {
-          window.document.getElementById('predictionForm').innerHTML = `New Runway Prediction | Arriving in ${airport}`;
+          $predictionForm.innerHTML = `New Runway Prediction | Arriving in ${airport}`;
       }
 
       function updateDestinationAirport(airport) {
-        window.document.getElementById('destination').value = airport;
+        $destination.value = airport;
       }
 
       function updateOriginAirports() {
-          const datalist = window.document.getElementById('originAirportOptions');
-          datalist.innerHTML = "";
-          const search_value = window.document.getElementById('origin').value;
+          $originAirportOptions.innerHTML = "";
+          const search_value = $origin.value;
 
           if (search_value.length < 2) {
               return;
@@ -164,11 +173,19 @@
                   const option = window.document.createElement('option');
                   option.label = r.label;
                   option.value = r.icao;
-                  datalist.appendChild(option);
+                  $originAirportOptions.appendChild(option);
               });
           }});
       }
 
+      function updateTimestamps(airport) {
+          $.ajax({url: `/forecast-timestamp-range/${airport}`, success: function(res){
+              $timestamp.value = res.start_timestamp;
+              $dateTimeRange.setAttribute('max', res.delta_in_hours);
+              $dateTimeRange.setAttribute('data-start-timestamp', res.start_timestamp);
+              updateCurrentTimestamp();
+          }});
+      }
 
     </script>
   {% block content %}

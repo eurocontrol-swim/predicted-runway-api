@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Optional
 
 from flask import (render_template,
@@ -10,7 +11,7 @@ from flask import (render_template,
                    Blueprint, jsonify)
 from datetime import datetime, time, timezone
 
-from app.config.file_dir import runway_model_metrics_dir
+from app.config.file_dir import runway_model_metrics_dir, taf_dir
 from app.models.airports import get_airport_data
 from app.models.runway import DESTINATION_AIRPORTS
 from app.routes.input_validation import *
@@ -87,6 +88,36 @@ def airports_data(search_value: str):
             if _airport_data_matches(data, search_value)
         ]
     ), 200
+
+
+@web_blueprint.route("/forecast-timestamp-range/<string:airport_icao>", methods=['GET'])
+def get_forecast_timestamp_range(airport_icao: str):
+    start_time_datetime, end_time_datetime = _get_taf_datetime_range(airport_icao)
+
+    delta_in_hours = int((end_time_datetime - start_time_datetime).total_seconds() / 3600)
+
+    return {
+        'start_timestamp': int(start_time_datetime.timestamp()),
+        'end_timestamp': int(end_time_datetime.timestamp()),
+        'delta_in_hours': delta_in_hours
+    }, 200
+
+
+def _get_taf_datetime_range(airport_icao) -> tuple[datetime, datetime]:
+    path = taf_dir.joinpath(airport_icao)
+
+    first_file, *_, last_file = sorted(os.listdir(path))
+
+    with open(path.joinpath(first_file), 'r') as f:
+        first_file_data = json.load(f)
+
+    with open(path.joinpath(last_file), 'r') as f:
+        last_file_data = json.load(f)
+
+    start_time, end_time = first_file_data['start_time']['dt'], last_file_data['end_time']['dt']
+
+    return datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S%z"), \
+        datetime.strptime(end_time, "%Y-%m-%dT%H:%M:%S%z")
 
 
 def _get_airport_metrics(airport: str):
