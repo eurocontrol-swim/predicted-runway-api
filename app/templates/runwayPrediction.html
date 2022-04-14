@@ -134,7 +134,7 @@
         let map = null;
 
         function addRunwayPolyline(map, runway) {
-            const color = runway.probability > 0.5 ? 'green' : 'red';
+            const color = runway.probability > 0.5 ? '#93cab1' : '#dda0a4';
             const popupContent = `<strong>${runway.runway} | ${runway.probability * 100}%</strong>`;
 
             const polyline = L.polyline(runway.coordinates_geojson, {color})
@@ -183,8 +183,6 @@
           };
 
           L.control.layers(baseMaps).addTo(map);
-
-          {#map.scrollWheelZoom.disable();#}
 
           return map;
         }
