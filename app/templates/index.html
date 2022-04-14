@@ -1,34 +1,197 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Predicted Runway</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.js"
+          integrity="sha512-n/4gHW3atM3QqRcbCn6ewmpxcLAHGaDjpEBu4xZd47N0W2oQ+6q7oc3PXstrJYXcbNU1OHdQ1T7pAP+gi5Yu8g=="
+          crossorigin="anonymous" referrerpolicy="no-referrer">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+          crossorigin="anonymous">
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"
+          integrity="sha512-T/tUfKSV1bihCnd+MxKD0Hm1uBBroVYBOYSk1knyvQ9VyZJpc/ALb4P0r6ubwVPSGB2GvjeoMAJJImBG12TiaQ=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer">
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
+        integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x"
+        rel="stylesheet"
+        crossorigin="anonymous">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css"
+        integrity="sha512-mSYUmp1HYZDFaVKK//63EcZq4iFWFjxSL+Z3T/aCt4IO9Cejm03q3NKKYN6pFQzY0SBOr8h+eCIAZHPXcpZaNw=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+            integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+            crossorigin="">
+    </script>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg sticky-top navbar-dark bg-dark" style="width: 100%">
+    <div class="container">
+      <a class="navbar-brand"  href="{{ url_for('web.index') }}">Predicted Runway</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+      <div class="collapse navbar-collapse" id="navbarNavDropdown">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                New prediction
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  {% for _, airport_data in destination_airports_data.items() %}
+                    <li>
+                        <a class="dropdown-item"
+                           data-bs-toggle="modal"
+                           href="#newPredictionForm"
+                           onclick="onSelectingDestinationAirport('{{ airport_data["icao"] }}')">{{ airport_data["label"] }}
+                        </a>
+                    </li>
+                  {% endfor %}
+              </ul>
+            </li>
+          </ul>
+        <div class="d-flex">
+            {% block modelInfo %}
+            {% endblock %}
+        </div>
+      </div>
+    </div>
+  </nav>
 
-<!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
-{% block content %}
-{#    <div class="container">#}
-{#      <h1>Predicted Runway In-Use</h1>#}
-{#      <div class="dropdown">#}
-{#        <button#}
-{#            id="dropdownMenuButton1"#}
-{#            class="btn btn-secondary dropdown-toggle"#}
-{#            type="button"#}
-{#            data-bs-toggle="dropdown"#}
-{#            aria-expanded="false"#}
-{#        >#}
-{#            Select Airport#}
-{#        </button>#}
-{#        <ul#}
-{#            class="dropdown-menu bm-3"#}
-{#            aria-labelledby="dropdownMenuButton1"#}
-{#        >#}
-{#            {% for airport in airports %}#}
-{#                <li>#}
-{#                    <a#}
-{#                        class="dropdown-item"#}
-{#                        href={{ url_for('web.web_runway_prediction_form', airport=airport) }}#}
-{#                    >#}
-{#                        {{ airport }}#}
-{#                    </a>#}
-{#                </li>#}
-{#            {% endfor %}#}
-{#        </ul>#}
-{#      </div>#}
-{#    </div>#}
-{% endblock %}
+  <div class="modal fade" id="newPredictionForm" aria-hidden="true" aria-labelledby="predictionForm" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="predictionForm">New Runway Prediction</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+          <div class="modal-body">
+            <div class="mb-3">
+              <input type="text" id="destination" hidden>
+              <label for="originAirports" class="form-label">Departing from</label>
+              <input autoComplete="off"
+                     class="form-control"
+                     list="originAirportOptions"
+                     id="originAirportIcao"
+                     name="originAirportIcao"
+                     placeholder="Type to search"
+                     onkeyup="updateOriginAirports()"
+                     onchange="originAirportSelected()">
+              <datalist id="originAirportOptions" onselect="alert(1)">
+              </datalist>
+            </div>
+            <div class="mb-3">
+              <label for="dateTimeRange" class="form-label">Arriving at</label>
+              <input type="range" class="form-range" min="0" max="48" id="dateTimeRange" value="0" onchange="sliderMoved()">
+              <input type="text" id="timestamp" name="timestamp" hidden>
+              <span id="dateTime"></span>
+            </div>
+          </div>
+        <div class="modal-footer">
+          <div class="mb-3">
+              <a class="btn btn-primary" id="formButton" role="button" href="" onclick="resetForm()">Predict</a>
+          </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+    <script>
+      const $dateTimeRange = window.document.getElementById('dateTimeRange');
+      const $timestamp = window.document.getElementById('timestamp');
+      const $dateTime = window.document.getElementById('dateTime');
+      const $originAirportIcao = window.document.getElementById('originAirportIcao');
+      const $destination = window.document.getElementById('destination');
+      const $predictionForm = window.document.getElementById('predictionForm');
+      const $originAirportOptions = window.document.getElementById('originAirportOptions');
+      const $formButton = window.document.getElementById('formButton');
+
+      function getCurrentTimestamp() {
+        return Math.ceil(new Date().getTime() / 1000);
+      }
+
+      function originAirportSelected() {
+        updateFormButtonHref();
+      }
+
+      function sliderMoved() {
+        updateCurrentTimestamp();
+        updateFormButtonHref();
+      }
+
+      function updateCurrentTimestamp() {
+        const startTimestamp = $dateTimeRange.getAttribute('data-start-timestamp');
+        $timestamp.value = Number(startTimestamp) + (3600 * $dateTimeRange.value);
+        $dateTime.innerHTML = `<strong>${new Date($timestamp.value * 1000).toString()}</strong>`;
+      }
+
+      function updateFormButtonHref() {
+        const url = `{{ url_for('web.web_runway_prediction', destination_icao='') }}/${$destination.value}`;
+
+        $formButton.href = `${url}?origin_icao=${$originAirportIcao.value}&timestamp=${$timestamp.value}`;
+      }
+
+      function resetForm() {
+        $originAirportIcao.value = '';
+        $timestamp.value = '';
+        $dateTimeRange.value = 0;
+      }
+
+      function onSelectingDestinationAirport(airport) {
+          updateFormTitle(airport);
+          updateDestinationAirport(airport);
+          updateTimestamps(airport);
+      }
+
+      function updateFormTitle(airport) {
+          $predictionForm.innerHTML = `New Runway Prediction | Arriving in ${airport}`;
+      }
+
+      function updateDestinationAirport(airport) {
+        $destination.value = airport;
+      }
+
+      function updateOriginAirports() {
+          $originAirportOptions.innerHTML = "";
+          const search_value = $originAirportIcao.value;
+
+          if (search_value.length < 2) {
+              return;
+          }
+
+          $.ajax({url: `/airports-data/${search_value}`, success: function(res){
+              res.forEach((r) => {
+                  const option = window.document.createElement('option');
+                  option.label = r.label;
+                  option.value = r.icao;
+                  $originAirportOptions.appendChild(option);
+              });
+          }});
+      }
+
+      function updateTimestamps(airport) {
+          $.ajax({url: `/forecast-timestamp-range/${airport}`, success: function(res){
+              $timestamp.value = res.start_timestamp;
+              $dateTimeRange.setAttribute('max', res.delta_in_hours);
+              $dateTimeRange.setAttribute('data-start-timestamp', res.start_timestamp);
+              updateCurrentTimestamp();
+          }});
+      }
+
+    </script>
+  {% block content %}
+  {% endblock %}
+</body>
+</html>

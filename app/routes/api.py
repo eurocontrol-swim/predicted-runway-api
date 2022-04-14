@@ -2,7 +2,7 @@ from flask import (abort,
                    request,
                    jsonify,
                    Blueprint)
-from app.models.query import predict_runway
+from app.domain.query import predict_runway
 from datetime import datetime
 import logging
 
@@ -24,7 +24,7 @@ def api_runway_prediction(airport: str):
     wind_speed = args.get('wind-speed', type=float)
 
     try:
-        response = predict_runway(airport=airport,
+        response = predict_runway(destination_icao=airport,
                                   dt=datetime.now(),
                                   origin=origin)
         return jsonify(response)

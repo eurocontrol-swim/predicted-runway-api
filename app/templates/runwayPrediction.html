@@ -1,8 +1,8 @@
-{% extends 'base.html' %}
+{% extends 'index.html' %}
 <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
 
 {% block modelInfo %}
-    {% if response %}
+    {% if prediction_output %}
         <button class="btn btn-outline-info"
                 type="button"
                 data-bs-toggle="modal"
@@ -14,7 +14,7 @@
           <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="modelInfoModalLabel">Model metrics | {{ response['metrics']['airport'] }}</h5>
+                <h5 class="modal-title" id="modelInfoModalLabel">Model metrics | {{ prediction_output['metrics']['airport'] }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
@@ -24,19 +24,19 @@
                         <tbody>
                           <tr>
                             <td><strong>Estimators</strong></td>
-                            <td>{{ response['metrics']['number_estimators'] }}</td>
+                            <td>{{ prediction_output['metrics']['number_estimators'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>Criterion</strong></td>
-                            <td>{{ response['metrics']['criterion'] }}</td>
+                            <td>{{ prediction_output['metrics']['criterion'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>From date</strong></td>
-                            <td>{{ response['metrics']['date_from'] }}</td>
+                            <td>{{ prediction_output['metrics']['date_from'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>To date</strong></td>
-                            <td>{{ response['metrics']['date_to'] }}</td>
+                            <td>{{ prediction_output['metrics']['date_to'] }}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -51,7 +51,7 @@
                           </tr>
                         </thead>
                         <tbody>
-                          {% for feature in response['metrics']['features_importance'] %}
+                          {% for feature in prediction_output['metrics']['features_importance'] %}
                           <tr>
                             <td><strong>{{ feature[0] }}</strong></td>
                             <td>{{ feature[1] }}</td>
@@ -74,93 +74,93 @@
                         <tbody>
                           <tr>
                             <td><strong>f1_weighted</strong></td>
-                            <td>{{ response['metrics']['mean_results']['mean_f1_weighted'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['f1_weighted'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_f1_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_f1_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['f1_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_f1_weighted'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>balanced_accuracy</strong></td>
-                            <td>{{ response['metrics']['mean_results']['mean_balanced_accuracy'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['balanced_accuracy'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_balanced_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_balanced_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['balanced_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_balanced_accuracy'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>balanced_accuracy_over_random</strong></td>
-                            <td>{{ response['metrics']['mean_results']['mean_balanced_accuracy_over_random'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['balanced_accuracy_over_rand'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_balanced_accuracy_over_random'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_balanced_accuracy_over_random'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['balanced_accuracy_over_rand'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_balanced_accuracy_over_random'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>accuracy</strong></td>
-                            <td>{{ response['metrics']['mean_results']['mean_accuracy'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['accuracy'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_accuracy'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>recall_weighted</strong></td>
-                            <td>{{ response['metrics']['mean_results']['mean_recall_weighted'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['recall_weighted'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_recall_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_recall_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['recall_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_recall_weighted'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>precision_weighted</strong></td>
-                            <td>{{ response['metrics']['mean_results']['mean_precision_weighted'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['precision_weighted'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_precision_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_precision_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['precision_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_precision_weighted'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>top_2</strong></td>
-                            <td>{{ response['metrics']['mean_results']['mean_top_2'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['top_2'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_top_2'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_top_2'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['top_2'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_top_2'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>roc_auc</strong></td>
-                            <td>{{ response['metrics']['mean_results']['mean_roc_auc'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['roc_auc'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_roc_auc'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_roc_auc'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['roc_auc'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_roc_auc'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>log_loss_r_used</strong></td>
-                            <td>{{ response['metrics']['mean_results']['log_loss_r_used'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['log_loss_r_used'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_log_loss_r_used'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['log_loss_r_used'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['log_loss_r_used'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_log_loss_r_used'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_f1_weighted</strong></td>
-                            <td>{{ response['metrics']['mean_results']['parallel_f1_weighted'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['parallel_f1_weighted'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_parallel_f1_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['parallel_f1_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_f1_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_f1_weighted'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_balanced_accuracy</strong></td>
-                            <td>{{ response['metrics']['mean_results']['parallel_balanced_accuracy'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['parallel_balanced_accuracy'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_parallel_bal_acc_sc'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['parallel_balanced_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_balanced_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_bal_acc_sc'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_balanced_accuracy_over_random</strong></td>
-                            <td>{{ response['metrics']['mean_results']['parallel_balanced_accuracy_over_random'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['parallel_balanced_accuracy_over_random'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_parallel_bal_acc_sc_over_random'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['parallel_balanced_accuracy_over_random'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_balanced_accuracy_over_random'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_bal_acc_sc_over_random'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_accuracy</strong></td>
-                            <td>{{ response['metrics']['mean_results']['parallel_accuracy'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['parallel_accuracy'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_parallel_acc_sc'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['parallel_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_acc_sc'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_recall_weighted</strong></td>
-                            <td>{{ response['metrics']['mean_results']['parallel_recall_weighted'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['parallel_recall_weighted'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_parallel_recall_score_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['parallel_recall_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_recall_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_recall_score_weighted'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_precision_weighted</strong></td>
-                            <td>{{ response['metrics']['mean_results']['parallel_precision_weighted'] }}</td>
-                            <td>{{ response['metrics']['test_with_taf']['parallel_precision_weighted'] }}</td>
-                            <td>{{ response['metrics']['raw_results']['test_parallel_precision_score_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['mean_results']['parallel_precision_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_precision_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_precision_score_weighted'] }}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -216,11 +216,10 @@
             {% endif %}
           {% endwith %}
       </div>
-    {% if response %}
+    {% if prediction_output %}
       <div class="p-2">
         <div class="accordion" id="accordionExample">
 
-            {% for prediction in response['predictions'] %}
               <div class="accordion-item">
                 <h2 class="accordion-header" id="headingOne">
                   <button class="accordion-button"
@@ -231,7 +230,7 @@
                           aria-controls="collapseOne"
                   >
                       <span>
-                          <strong>{{ response['origin'] }}</strong> <i class="bi-arrow-right"></i> <strong>{{ response['airport'] }}</strong> | {{ prediction['timestamp'] }}
+                          <strong>{{ prediction_output['origin_icao'] }}</strong> <i class="bi-arrow-right"></i> <strong>{{ prediction_output['destination_icao'] }}</strong> | {{ prediction_output['date_time'] }}
                       </span>
                   </button>
                 </h2>
@@ -251,13 +250,13 @@
                             <td></td>
                             <td></td>
                           </tr>
-                          {% for runway in prediction['arrivalRunways'] %}
+                          {% for runway in prediction_output['runways'] %}
                             <tr>
                               {% if runway['probability'] > 0.5 %}
-                                <td class="table-success">{{ runway['runway'] }}</td>
+                                <td class="table-success">{{ runway['name'] }}</td>
                                 <td class="table-success">{{ "{:.0%}".format(runway['probability']) }}</td>
                               {% else %}
-                                <td class="table-danger">{{ runway['runway'] }}</td>
+                                <td class="table-danger">{{ runway['name'] }}</td>
                                 <td class="table-danger">{{ "{:.0%}".format(runway['probability']) }}</td>
                               {% endif %}
                             </tr>
@@ -267,7 +266,6 @@
                   </div>
                 </div>
               </div>
-            {% endfor %}
 
             </div>
         </div>
@@ -283,7 +281,7 @@
 
         function addRunwayPolyline(map, runway) {
             const color = runway.probability > 0.5 ? '#93cab1' : '#dda0a4';
-            const popupContent = `Runway: <strong>${runway.runway}</strong> | Probability: <strong>${runway.probability * 100}%</strong>`;
+            const popupContent = `Runway: <strong>${runway.name}</strong> | Probability: <strong>${runway.probability * 100}%</strong>`;
 
             const polyline = L.polyline(runway.coordinates_geojson, {color})
                               .bindPopup(popupContent)
@@ -338,16 +336,16 @@
         $( document ).ready(function() {
           map = initMap();
 
-          const response = JSON.parse('{{ response|tojson }}');
-          const reversrSortedRunways = response.predictions[0].arrivalRunways.sort((a, b) => {
+          const prediction_output = JSON.parse('{{ prediction_output|tojson }}');
+          const reverseSortedRunways = prediction_output.runways.sort((a, b) => {
             return a.probability - b.probability;
           });
 
-          reversrSortedRunways.forEach((runway) => {
+          reverseSortedRunways.forEach((runway) => {
             addRunwayPolyline(map, runway);
           });
 
-          const mapCenter = response.airport_coordinates;
+          const mapCenter = prediction_output.airport_coordinates;
           const mapZoom = 12;
           map.setView(mapCenter, mapZoom);
 

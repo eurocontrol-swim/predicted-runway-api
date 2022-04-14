@@ -91,7 +91,6 @@ def get_last_wind_speed(met_path: Path, airport: str, before: int) -> float:
         raise TAFNotAvailable()
 
 
-
 def get_last_wind_dir(met_path: Path, airport: str, before: int) -> float:
     metar_path = met_path.joinpath('metar').joinpath(airport)
     taf_path = met_path.joinpath('taf').joinpath(airport)

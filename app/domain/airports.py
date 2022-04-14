@@ -38,10 +38,47 @@ __author__ = "EUROCONTROL (SWIM)"
 import json
 from functools import lru_cache
 
-from app.config.file_dir import icao_airports_catalog_path
+from app.config.file_dir import icao_airports_catalog_path, runway_model_metrics_dir
+from app.domain import DESTINATION_ICAOS
 
 
 @lru_cache
 def get_airport_data():
     with open(icao_airports_catalog_path, 'r') as f:
+        return json.load(f)
+
+
+def _reverse_coordinates_geojson(coordinates_geojson: list[list]) -> list[list]:
+    return [[coord[1], coord[0]] for coord in coordinates_geojson]
+
+
+def extract_airport_data(data: dict, with_geodata: bool = False) -> dict:
+    extracted = {
+        "icao": data['icao'],
+        "label": f"{data['icao']}: {data['name']}, {data['city']}, {data['state']}, {data['country']}"
+    }
+
+    if with_geodata:
+        extracted["lat"] = data["lat"]
+        extracted["lon"] = data["lon"]
+        extracted["runways_geojson"] = {
+            runway: _reverse_coordinates_geojson(data["coordinates_geojson"])
+            for runway, data in data.get("runways", {}).items()
+        }
+
+    return extracted
+
+
+def get_destination_airports_data():
+    return {
+        icao: extract_airport_data(data, with_geodata=True)
+        for icao, data in get_airport_data().items()
+        if icao in DESTINATION_ICAOS
+    }
+
+
+def get_destination_airport_metrics(airport: str):
+    path = runway_model_metrics_dir.joinpath(f"CV-Test_results_{airport}_100.json")
+
+    with open(path, 'r') as f:
         return json.load(f)
