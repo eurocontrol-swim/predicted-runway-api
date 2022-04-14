@@ -31,7 +31,7 @@ def predict_runway(airport: str,
     output = {'airport': airport,
               'origin': origin,
               'predictions': [
-                  {"timestamp": dt.strftime('%d/%m/%Y %H:%M:%S'),
+                  {"timestamp": dt.strftime('%a, %d %b %Y - %H:%M:%S'),
                    "arrivalRunways": [
                        {"runway": runway, "probability": probability} for runway, probability in
                        result.sort_values(ascending=False).iteritems()

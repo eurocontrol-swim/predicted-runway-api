@@ -129,7 +129,7 @@
       function updateCurrentTimestamp() {
         const startTimestamp = $dateTimeRange.getAttribute('data-start-timestamp');
         $timestamp.value = Number(startTimestamp) + (3600 * $dateTimeRange.value);
-        $dateTime.innerHTML = `Currently selected: <strong>${new Date($timestamp.value * 1000).toUTCString()}</strong>`;
+        $dateTime.innerHTML = `<strong>${new Date($timestamp.value * 1000).toUTCString()}</strong>`;
       }
 
       function updateFormButtonHref() {
@@ -144,6 +144,7 @@
       function resetForm() {
         $origin.value = '';
         $timestamp.value = '';
+        $dateTimeRange.value = 0;
       }
 
       function onSelectingDestinationAirport(airport) {
