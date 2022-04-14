@@ -81,7 +81,13 @@
             <div class="mb-3">
               <input type="text" id="destination" hidden>
               <label for="originAirports" class="form-label">Departing from</label>
-              <input class="form-control" list="originAirportOptions" id="origin" name="origin" placeholder="Type to search" onkeyup="updateOriginAirports()">
+              <input autoComplete="off"
+                     class="form-control"
+                     list="originAirportOptions"
+                     id="origin"
+                     name="origin"
+                     placeholder="Type to search"
+                     onkeyup="updateOriginAirports()">
               <datalist id="originAirportOptions">
               </datalist>
             </div>
@@ -145,6 +151,8 @@
       }
 
       function updateOriginAirports() {
+          const datalist = window.document.getElementById('originAirportOptions');
+          datalist.innerHTML = "";
           const search_value = window.document.getElementById('origin').value;
 
           if (search_value.length < 2) {
@@ -152,12 +160,12 @@
           }
 
           $.ajax({url: `/airports-data/${search_value}`, success: function(res){
-              let optionsHtml = '';
               res.forEach((r) => {
-                 optionsHtml += `<option label="${r.label}" value="${r.icao}"></option>`
+                  const option = window.document.createElement('option');
+                  option.label = r.label;
+                  option.value = r.icao;
+                  datalist.appendChild(option);
               });
-
-              window.document.getElementById('originAirportOptions').innerHTML = optionsHtml;
           }});
       }
 
