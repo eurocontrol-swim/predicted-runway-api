@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-
 <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
 
 {% block modelInfo %}
@@ -12,14 +11,160 @@
             <i class="bi bi-info-circle"></i> Model metrics
         </button>
         <div class="modal fade" id="modelInfoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modelInfoModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="modelInfoModalLabel">Model metrics</h5>
+                <h5 class="modal-title" id="modelInfoModalLabel">Model metrics | {{ response['metrics']['airport'] }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
-                {{ response['metrics'] }}
+                  <div class="table-responsive">
+                    <table class="table table-sm caption-top metrics-table">
+                        <caption>General</caption>
+                        <tbody>
+                          <tr>
+                            <td><strong>Estimators</strong></td>
+                            <td>{{ response['metrics']['number_estimators'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>Criterion</strong></td>
+                            <td>{{ response['metrics']['criterion'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>From date</strong></td>
+                            <td>{{ response['metrics']['date_from'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>To date</strong></td>
+                            <td>{{ response['metrics']['date_to'] }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table table-sm caption-top metrics-table">
+                        <caption>Features</caption>
+                        <thead class="table-light">
+                          <tr>
+                              <th>Name</th>
+                              <th>Importance</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for feature in response['metrics']['features_importance'] %}
+                          <tr>
+                            <td><strong>{{ feature[0] }}</strong></td>
+                            <td>{{ feature[1] }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                  </div
+                  <div class="table-responsive">
+                    <table class="table table-sm caption-top metrics-table">
+                        <caption>Metrics</caption>
+                        <thead class="table-light">
+                          <tr>
+                              <th>Name</th>
+                              <th>Mean</th>
+                              <th>Test with TAF</th>
+                              <th>Raw results</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td><strong>f1_weighted</strong></td>
+                            <td>{{ response['metrics']['mean_results']['mean_f1_weighted'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['f1_weighted'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_f1_weighted'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>balanced_accuracy</strong></td>
+                            <td>{{ response['metrics']['mean_results']['mean_balanced_accuracy'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['balanced_accuracy'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_balanced_accuracy'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>balanced_accuracy_over_random</strong></td>
+                            <td>{{ response['metrics']['mean_results']['mean_balanced_accuracy_over_random'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['balanced_accuracy_over_rand'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_balanced_accuracy_over_random'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>accuracy</strong></td>
+                            <td>{{ response['metrics']['mean_results']['mean_accuracy'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['accuracy'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_accuracy'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>recall_weighted</strong></td>
+                            <td>{{ response['metrics']['mean_results']['mean_recall_weighted'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['recall_weighted'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_recall_weighted'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>precision_weighted</strong></td>
+                            <td>{{ response['metrics']['mean_results']['mean_precision_weighted'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['precision_weighted'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_precision_weighted'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>top_2</strong></td>
+                            <td>{{ response['metrics']['mean_results']['mean_top_2'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['top_2'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_top_2'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>roc_auc</strong></td>
+                            <td>{{ response['metrics']['mean_results']['mean_roc_auc'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['roc_auc'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_roc_auc'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>log_loss_r_used</strong></td>
+                            <td>{{ response['metrics']['mean_results']['log_loss_r_used'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['log_loss_r_used'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_log_loss_r_used'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>parallel_f1_weighted</strong></td>
+                            <td>{{ response['metrics']['mean_results']['parallel_f1_weighted'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['parallel_f1_weighted'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_parallel_f1_weighted'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>parallel_balanced_accuracy</strong></td>
+                            <td>{{ response['metrics']['mean_results']['parallel_balanced_accuracy'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['parallel_balanced_accuracy'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_parallel_bal_acc_sc'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>parallel_balanced_accuracy_over_random</strong></td>
+                            <td>{{ response['metrics']['mean_results']['parallel_balanced_accuracy_over_random'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['parallel_balanced_accuracy_over_random'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_parallel_bal_acc_sc_over_random'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>parallel_accuracy</strong></td>
+                            <td>{{ response['metrics']['mean_results']['parallel_accuracy'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['parallel_accuracy'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_parallel_acc_sc'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>parallel_recall_weighted</strong></td>
+                            <td>{{ response['metrics']['mean_results']['parallel_recall_weighted'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['parallel_recall_weighted'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_parallel_recall_score_weighted'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>parallel_precision_weighted</strong></td>
+                            <td>{{ response['metrics']['mean_results']['parallel_precision_weighted'] }}</td>
+                            <td>{{ response['metrics']['test_with_taf']['parallel_precision_weighted'] }}</td>
+                            <td>{{ response['metrics']['raw_results']['test_parallel_precision_score_weighted'] }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                  </div>
               </div>
             </div>
           </div>
@@ -28,6 +173,9 @@
         .modal-backdrop {
             {# fixing modal misbehaviour #}
             width: 0;
+        }
+        .metrics-table {
+            font-size: 0.9rem;
         }
         </style>
     {% endif %}
