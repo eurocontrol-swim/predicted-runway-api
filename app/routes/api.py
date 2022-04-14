@@ -2,7 +2,7 @@ from flask import (abort,
                    request,
                    jsonify,
                    Blueprint)
-from app.domain.query import predict_runway
+from app.domain.runway.predictor import predict_runway
 from datetime import datetime
 import logging
 

@@ -82,3 +82,20 @@ def get_destination_airport_metrics(airport: str):
 
     with open(path, 'r') as f:
         return json.load(f)
+
+
+def airport_data_matches(data: dict, search_value: str) -> bool:
+    search_value = search_value.lower()
+    searchable_keys = ['icao', 'name', 'city', 'state', 'country']
+
+    return any(
+        [search_value in data[key].lower() for key in searchable_keys]
+    )
+
+
+def search_airport_data(search_value: str) -> list:
+    return [
+        extract_airport_data(data)
+        for _, data in get_airport_data().items()
+        if airport_data_matches(data, search_value)
+    ]
