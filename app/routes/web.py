@@ -58,8 +58,7 @@ def web_runway_prediction(destination_icao: str):
         logger.exception(e)
         return abort(500)
 
-    prediction_output = get_web_prediction_output(destination_icao=destination_icao,
-                                                  prediction_input=prediction_input,
+    prediction_output = get_web_prediction_output(prediction_input=prediction_input,
                                                   prediction_result=prediction_result)
 
     return _load_prediction_template(destination_icao=destination_icao,

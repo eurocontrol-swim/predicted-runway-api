@@ -126,11 +126,9 @@ class PredictionInputSchema:
 
 class PredictionOutputContext:
     def __init__(self,
-                 destination_icao: str,
                  prediction_input: PredictionInput,
                  prediction_result: pd.Series,
                  ):
-        self.destination_icao = destination_icao
         self.prediction_input = prediction_input
         self.prediction_result = prediction_result
         self.prediction_output = {}
@@ -141,7 +139,7 @@ class BasicPredictionOutputBuilder:
     def build(cls, context: PredictionOutputContext):
         context.prediction_output = {
             "origin_icao": context.prediction_input.origin_icao,
-            "destination_icao": context.destination_icao,
+            "destination_icao": context.prediction_input.destination_icao,
             "date_time": context.prediction_input.date_time_str,
             "runways": [
                {"name": runway, "probability": probability} for runway, probability in
@@ -153,7 +151,7 @@ class BasicPredictionOutputBuilder:
 class GeodataPredictionOutputBuilder:
     @classmethod
     def build(cls, context: PredictionOutputContext):
-        airport_data = get_destination_airports_data()[context.destination_icao]
+        airport_data = get_destination_airports_data()[context.prediction_input.destination_icao]
 
         context.prediction_output['airport_coordinates'] = [airport_data['lat'], airport_data['lon']]
 
@@ -166,16 +164,14 @@ class MetricsPredictionOutputBuilder:
     @classmethod
     def build(cls, context: PredictionOutputContext):
         context.prediction_output['metrics'] = get_destination_airport_metrics(
-            context.destination_icao
+            context.prediction_input.destination_icao
         )
 
 
-def get_web_prediction_output(destination_icao: str,
-                              prediction_input: PredictionInput,
+def get_web_prediction_output(prediction_input: PredictionInput,
                               prediction_result: pd.Series):
 
-    context = PredictionOutputContext(destination_icao,
-                                      prediction_input,
+    context = PredictionOutputContext(prediction_input,
                                       prediction_result)
 
     for builder in [BasicPredictionOutputBuilder,
@@ -186,12 +182,10 @@ def get_web_prediction_output(destination_icao: str,
     return context.prediction_output
 
 
-def get_api_prediction_output(destination_icao: str,
-                              prediction_input: PredictionInput,
+def get_api_prediction_output(prediction_input: PredictionInput,
                               prediction_result: pd.Series):
 
-    context = PredictionOutputContext(destination_icao,
-                                      prediction_input,
+    context = PredictionOutputContext(prediction_input,
                                       prediction_result)
 
     for builder in [BasicPredictionOutputBuilder]:
