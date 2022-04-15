@@ -66,7 +66,7 @@ class PredictionInputSchema:
                   wind_speed: Optional[float] = None,
                   ) -> dict:
         return {
-            "origin_icao": self._validate_icao(origin_icao),
+            "origin_icao": self._validate_origin_icao(origin_icao),
             "destination_icao": self._validate_destination_icao(destination_icao),
             "date_time": self._validate_timestamp(timestamp),
             "wind_direction": self._validate_wind_direction(wind_direction) if wind_direction else None,
@@ -74,15 +74,20 @@ class PredictionInputSchema:
         }
 
     @staticmethod
-    def _validate_icao(value: Any) -> str:
-        if not (isinstance(value, str) and len(value) == 4):
+    def _is_valid_icao(icao: str):
+        return isinstance(icao, str) and len(icao) == 4
+
+    @staticmethod
+    def _validate_origin_icao(value: Any) -> str:
+        if not PredictionInputSchema._is_valid_icao(value):
             raise ValidationError("origin_icao should be a string of 4 characters.")
 
         return value.upper()
 
     @staticmethod
     def _validate_destination_icao(value: Any) -> str:
-        value = PredictionInputSchema._validate_icao(value)
+        if not PredictionInputSchema._is_valid_icao(value):
+            raise ValidationError("destination_icao should be a string of 4 characters.")
 
         if value not in DESTINATION_ICAOS:
             raise ValidationError(f"destination_icao should be one of {', '.join(DESTINATION_ICAOS)}.")
@@ -94,7 +99,7 @@ class PredictionInputSchema:
         if not (isinstance(value, int)):
             try:
                 value = int(value)
-            except ValueError:
+            except (ValueError, TypeError):
                 raise ValidationError("timestamp should be an integer.")
 
         try:
@@ -104,10 +109,10 @@ class PredictionInputSchema:
 
     @staticmethod
     def _validate_wind_direction(value: Any) -> float:
-        if not (isinstance(value, int)):
+        if not isinstance(value, int):
             try:
                 value = float(value)
-            except ValueError:
+            except (ValueError, TypeError):
                 raise ValidationError("wind_direction should be a float.")
 
         if not 0 <= value <= 360:
@@ -117,10 +122,10 @@ class PredictionInputSchema:
 
     @staticmethod
     def _validate_wind_speed(value: any) -> float:
-        if not (isinstance(value, int)):
+        if not isinstance(value, int):
             try:
                 value = float(value)
-            except ValueError:
+            except (ValueError, TypeError):
                 raise ValidationError("wind_speed should be a float.")
 
         if value < 0:
