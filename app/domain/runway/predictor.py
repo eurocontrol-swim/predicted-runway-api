@@ -47,27 +47,29 @@ from app.domain.runway.models import PredictionInput
 from app.met_api.query import get_last_wind_speed, get_last_wind_dir
 
 
-class Predictor:
+class RunwayPredictor:
 
-    @staticmethod
-    def predict(prediction_input: PredictionInput) -> pd.Series:
-        model_inputs = Predictor._get_model_inputs(prediction_input)
+    def __init__(self, trained_model: RandomForestClassifier):
+        self.trained_model = trained_model
 
-        model = Predictor._get_model(prediction_input.destination_icao)
+    @classmethod
+    def from_destination_icao(cls, destination_icao: str):
+        _trained_model_path = runway_models_dir.joinpath(f'{destination_icao}.pkl').absolute()
 
-        prediction_result = model.predict_proba(model_inputs)
+        trained_model: RandomForestClassifier = load(_trained_model_path)
 
-        return pd.Series(prediction_result[0], index=model.classes_)
+        return cls(trained_model)
 
-    @staticmethod
-    def _get_model(destination_icao: str) -> RandomForestClassifier:
-        _model_path = runway_models_dir.joinpath(f'{destination_icao}.pkl').absolute()
+    def predict(self, prediction_input: PredictionInput) -> pd.Series:
+        model_inputs = RunwayPredictor._get_model_inputs(prediction_input)
 
-        return load(_model_path)
+        prediction_result = self.trained_model.predict_proba(model_inputs)
+
+        return pd.Series(prediction_result[0], index=self.trained_model.classes_)
 
     @staticmethod
     def _get_model_inputs(prediction_input: PredictionInput) -> pd.DataFrame:
-        angle_icao_airports = Predictor._get_angle_icao_airports(
+        angle_icao_airports = RunwayPredictor._get_angle_icao_airports(
             origin_icao=prediction_input.origin_icao,
             destination_icao=prediction_input.destination_icao
         )
@@ -128,4 +130,6 @@ def predict_runway(prediction_input: PredictionInput) -> pd.Series:
     if prediction_input.wind_direction is None and prediction_input.wind_speed is None:
         prediction_input = _update_prediction_input_with_wind(prediction_input)
 
-    return Predictor.predict(prediction_input)
+    predictor = RunwayPredictor.from_destination_icao(prediction_input.destination_icao)
+
+    return predictor.predict(prediction_input)
