@@ -1,43 +1,354 @@
-<!doctype html>
-<head>
-    <title>Predicted Runway In-Use {{ response['airport'] }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
-</head>
-
-<body>
-
+{% extends 'index.html' %}
 <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
-{% block content %}
-<div class="container">
-    <h1>Predicted Runway In-Use {{ response['airport'] }}</h1>
-    <table class="table">
-        <thead>
-        <tr>
-            <th scope="col">Timestamp</th>
-            <th scope="col">Predicted Arrival Runway</th>
-            <th scope="col">Predicted Probability</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for prediction in response['predictions'] %}
-            <tr>
-                <td>{{ prediction['timestamp'] }}</td>
-                <td></td>
-                <td></td>
-            </tr>
-            {% for runway in prediction['arrivalRunways'] %}
-            <tr>
-                <td></td>
-                <td>{{ runway['runway'] }}</td>
-                <td>{{ "{:.0%}".format(runway['probability']) }}</td>
-            </tr>
-            {% endfor %}
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
-</body>
+
+{% block modelInfo %}
+    {% if prediction_output %}
+        <button class="btn btn-outline-info"
+                type="button"
+                data-bs-toggle="modal"
+                data-bs-target="#modelInfoModal"
+        >
+            <i class="bi bi-info-circle"></i> Model metrics
+        </button>
+        <div class="modal fade" id="modelInfoModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modelInfoModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="modelInfoModalLabel">Model metrics | {{ prediction_output['metrics']['airport'] }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                  <div class="table-responsive">
+                    <table class="table table-sm caption-top metrics-table">
+                        <caption>General</caption>
+                        <tbody>
+                          <tr>
+                            <td><strong>Estimators</strong></td>
+                            <td>{{ prediction_output['metrics']['number_estimators'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>Criterion</strong></td>
+                            <td>{{ prediction_output['metrics']['criterion'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>From date</strong></td>
+                            <td>{{ prediction_output['metrics']['date_from'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>To date</strong></td>
+                            <td>{{ prediction_output['metrics']['date_to'] }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table table-sm caption-top metrics-table">
+                        <caption>Features</caption>
+                        <thead class="table-light">
+                          <tr>
+                              <th>Name</th>
+                              <th>Importance</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for feature in prediction_output['metrics']['features_importance'] %}
+                          <tr>
+                            <td><strong>{{ feature[0] }}</strong></td>
+                            <td>{{ feature[1] }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                  </div
+                  <div class="table-responsive">
+                    <table class="table table-sm caption-top metrics-table">
+                        <caption>Metrics</caption>
+                        <thead class="table-light">
+                          <tr>
+                              <th>Name</th>
+                              <th>Mean</th>
+                              <th>Test with TAF</th>
+                              <th>Raw results</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td><strong>f1_weighted</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_f1_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['f1_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_f1_weighted'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>balanced_accuracy</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_balanced_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['balanced_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_balanced_accuracy'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>balanced_accuracy_over_random</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_balanced_accuracy_over_random'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['balanced_accuracy_over_rand'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_balanced_accuracy_over_random'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>accuracy</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_accuracy'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>recall_weighted</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_recall_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['recall_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_recall_weighted'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>precision_weighted</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_precision_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['precision_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_precision_weighted'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>top_2</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_top_2'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['top_2'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_top_2'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>roc_auc</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['mean_roc_auc'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['roc_auc'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_roc_auc'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>log_loss_r_used</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['log_loss_r_used'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['log_loss_r_used'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_log_loss_r_used'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>parallel_f1_weighted</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['parallel_f1_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_f1_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_f1_weighted'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>parallel_balanced_accuracy</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['parallel_balanced_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_balanced_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_bal_acc_sc'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>parallel_balanced_accuracy_over_random</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['parallel_balanced_accuracy_over_random'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_balanced_accuracy_over_random'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_bal_acc_sc_over_random'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>parallel_accuracy</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['parallel_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_accuracy'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_acc_sc'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>parallel_recall_weighted</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['parallel_recall_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_recall_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_recall_score_weighted'] }}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>parallel_precision_weighted</strong></td>
+                            <td>{{ prediction_output['metrics']['mean_results']['parallel_precision_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_precision_weighted'] }}</td>
+                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_precision_score_weighted'] }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <style>
+        .modal-backdrop {
+            {# fixing modal misbehaviour #}
+            width: 0;
+        }
+        .metrics-table {
+            font-size: 0.9rem;
+        }
+        </style>
+    {% endif %}
 {% endblock %}
 
-</html>
+{% block content %}
+  <div class="container">
+    <div class="d-grid gap-3">
+      <div class="p-2">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div
+                class="alert alert-{{ category }} d-flex align-items-center alert-dismissible fade show"
+                role="alert"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    fill="currentColor"
+                    class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2"
+                    viewBox="0 0 16 16"
+                    role="img"
+                    aria-label="Warning:"
+                >
+                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                </svg>
+                {{ message }}
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                ></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+          {% endwith %}
+      </div>
+    {% if prediction_output %}
+      <div class="p-2">
+        <div class="accordion" id="accordionExample">
+
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                  <button class="accordion-button"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#collapseOne"
+                          aria-expanded="false"
+                          aria-controls="collapseOne"
+                  >
+                      <span>
+                          <strong>{{ prediction_output['origin_icao'] }}</strong> <i class="bi-arrow-right"></i> <strong>{{ prediction_output['destination_icao'] }}</strong> | {{ prediction_output['date_time'] }}
+                      </span>
+                  </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                  <div class="accordion-body">
+                      <div class="table-responsive">
+
+                        <table class="table table-sm">
+                        <thead>
+                          <tr>
+                            <th scope="col">Runway</th>
+                            <th scope="col">Probability</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td></td>
+                            <td></td>
+                          </tr>
+                          {% for runway in prediction_output['runways'] %}
+                            <tr>
+                              {% if runway['probability'] > 0.5 %}
+                                <td class="table-success">{{ runway['name'] }}</td>
+                                <td class="table-success">{{ "{:.0%}".format(runway['probability']) }}</td>
+                              {% else %}
+                                <td class="table-danger">{{ runway['name'] }}</td>
+                                <td class="table-danger">{{ "{:.0%}".format(runway['probability']) }}</td>
+                              {% endif %}
+                            </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+        </div>
+      </div>
+      <div class="p-2">
+        <div id="map" style="height: 700px"></div>
+      </div>
+    {% endif %}
+    </div>
+  </div>
+    <script>
+        let map = null;
+
+        function addRunwayPolyline(map, runway) {
+            const color = runway.probability > 0.5 ? '#93cab1' : '#dda0a4';
+            const popupContent = `Runway: <strong>${runway.name}</strong> | Probability: <strong>${runway.probability * 100}%</strong>`;
+
+            const polyline = L.polyline(runway.coordinates_geojson, {color})
+                              .bindPopup(popupContent)
+                              .addTo(map);
+
+            polyline.on('mouseover', () => {
+                polyline.openPopup();
+            })
+        }
+        function initMap() {
+          const map = L.map('map');
+          map.createPane('labels');
+
+          // This pane is above markers but below popups
+          map.getPane('labels').style.zIndex = 650;
+
+          // Layers in this pane are non-interactive and do not obscure mouse/touch events
+          map.getPane('labels').style.pointerEvents = 'none';
+
+          const cartodbAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>';
+
+          L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+            attribution: cartodbAttribution,
+          }).addTo(map);
+
+          const grayscale = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png', {
+            attribution: cartodbAttribution,
+            pane: 'labels',
+          }).addTo(map);
+
+          const googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+          });
+
+          const googleTerrain = L.tileLayer('http://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+          });
+
+          const baseMaps = {
+            Grayscale: grayscale,
+            Satelite: googleSat,
+            Terrain: googleTerrain,
+          };
+
+          L.control.layers(baseMaps).addTo(map);
+
+          return map;
+        }
+
+        $( document ).ready(function() {
+          map = initMap();
+
+          const prediction_output = JSON.parse('{{ prediction_output|tojson }}');
+          const reverseSortedRunways = prediction_output.runways.sort((a, b) => {
+            return a.probability - b.probability;
+          });
+
+          reverseSortedRunways.forEach((runway) => {
+            addRunwayPolyline(map, runway);
+          });
+
+          const mapCenter = prediction_output.airport_coordinates;
+          const mapZoom = 12;
+          map.setView(mapCenter, mapZoom);
+
+        });
+    </script>
+{% endblock %}
