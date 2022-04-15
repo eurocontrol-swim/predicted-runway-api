@@ -45,20 +45,20 @@
       <div class="collapse navbar-collapse" id="navbarNavDropdown">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <a class="btn btn-primary" href="#newPredictionForm" id="navbarDropdown" role="button" data-bs-toggle="modal" aria-expanded="false">
                 New prediction
               </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  {% for _, airport_data in destination_airports_data.items() %}
-                    <li>
-                        <a class="dropdown-item"
-                           data-bs-toggle="modal"
-                           href="#newPredictionForm"
-                           onclick="onSelectingDestinationAirport('{{ airport_data["icao"] }}')">{{ airport_data["label"] }}
-                        </a>
-                    </li>
-                  {% endfor %}
-              </ul>
+{#              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">#}
+{#                  {% for _, airport_data in destination_airports_data.items() %}#}
+{#                    <li>#}
+{#                        <a class="dropdown-item"#}
+{#                           data-bs-toggle="modal"#}
+{#                           href="#newPredictionForm"#}
+{#                           onclick="onSelectingDestinationAirport('{{ airport_data["icao"] }}')">{{ airport_data["label"] }}#}
+{#                        </a>#}
+{#                    </li>#}
+{#                  {% endfor %}#}
+{#              </ul>#}
             </li>
           </ul>
         <div class="d-flex">
@@ -78,19 +78,29 @@
         </div>
 
           <div class="modal-body">
+
             <div class="mb-3">
-              <input type="text" id="destination" hidden>
               <label for="originAirports" class="form-label">Departing from</label>
               <input autoComplete="off"
                      class="form-control"
                      list="originAirportOptions"
-                     id="originAirportIcao"
-                     name="originAirportIcao"
+                     id="originIcaoListItem"
+                     name="originIcaoListItem"
                      placeholder="Type to search"
                      onkeyup="updateOriginAirports()"
                      onchange="originAirportSelected()">
-              <datalist id="originAirportOptions" onselect="alert(1)">
+              <datalist id="originAirportOptions">
               </datalist>
+              <input id="originIcao" type="text" hidden>
+            </div>
+            <div class="mb-3">
+            <label for="destinationIcao" class="form-label">Arriving to</label>
+                <select id="destinationIcao" class="form-control" onchange="destinationAirportSelected()">
+                    <option value=" " label=""></option>
+                  {% for icao, airport_data in destination_airports_data.items() %}
+                    <option value="{{ airport_data['icao'] }}" label="{{ airport_data['label'] }}"></option>
+                  {% endfor %}
+                </select>
             </div>
             <div class="mb-3">
               <label for="dateTimeRange" class="form-label">Arriving at</label>
@@ -112,8 +122,9 @@
       const $dateTimeRange = window.document.getElementById('dateTimeRange');
       const $timestamp = window.document.getElementById('timestamp');
       const $dateTime = window.document.getElementById('dateTime');
-      const $originAirportIcao = window.document.getElementById('originAirportIcao');
-      const $destination = window.document.getElementById('destination');
+      const $originIcaoListItem = window.document.getElementById('originIcaoListItem');
+      const $originIcao = window.document.getElementById('originIcao');
+      const $destinationIcao = window.document.getElementById('destinationIcao');
       const $predictionForm = window.document.getElementById('predictionForm');
       const $originAirportOptions = window.document.getElementById('originAirportOptions');
       const $formButton = window.document.getElementById('formButton');
@@ -123,6 +134,7 @@
       }
 
       function originAirportSelected() {
+        updateOriginIcao();
         updateFormButtonHref();
       }
 
@@ -131,6 +143,9 @@
         updateFormButtonHref();
       }
 
+      function updateOriginIcao() {
+          $originIcao.value = $originIcaoListItem.value.slice(0, 4);
+      }
       function updateCurrentTimestamp() {
         const startTimestamp = $dateTimeRange.getAttribute('data-start-timestamp');
         $timestamp.value = Number(startTimestamp) + (3600 * $dateTimeRange.value);
@@ -138,34 +153,28 @@
       }
 
       function updateFormButtonHref() {
-        const url = `{{ url_for('web.web_runway_prediction', destination_icao='') }}/${$destination.value}`;
+        const url = `{{ url_for('web.web_runway_prediction') }}`;
 
-        $formButton.href = `${url}?origin_icao=${$originAirportIcao.value}&timestamp=${$timestamp.value}`;
+        $formButton.href = `${url}?destination_icao=${$destinationIcao.value}&origin_icao=${$originIcao.value}&timestamp=${$timestamp.value}`;
       }
 
       function resetForm() {
-        $originAirportIcao.value = '';
+        $originIcaoListItem.value = '';
+        $destinationIcao.value = ' ';
         $timestamp.value = '';
         $dateTimeRange.value = 0;
       }
 
-      function onSelectingDestinationAirport(airport) {
-          updateFormTitle(airport);
-          updateDestinationAirport(airport);
-          updateTimestamps(airport);
-      }
-
-      function updateFormTitle(airport) {
-          $predictionForm.innerHTML = `New Runway Prediction | Arriving in ${airport}`;
-      }
-
-      function updateDestinationAirport(airport) {
-        $destination.value = airport;
+      function destinationAirportSelected() {
+          if ($destinationIcao.value !== " ") {
+            updateTimestamps($destinationIcao.value);
+            updateFormButtonHref();
+          }
       }
 
       function updateOriginAirports() {
           $originAirportOptions.innerHTML = "";
-          const search_value = $originAirportIcao.value;
+          const search_value = $originIcaoListItem.value;
 
           if (search_value.length < 2) {
               return;
@@ -175,7 +184,7 @@
               res.forEach((r) => {
                   const option = window.document.createElement('option');
                   option.label = r.label;
-                  option.value = r.icao;
+                  option.value = r.label;
                   $originAirportOptions.appendChild(option);
               });
           }});

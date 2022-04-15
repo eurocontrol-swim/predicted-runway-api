@@ -26,35 +26,31 @@ def index():
                            destination_airports_data=get_destination_airports_data())
 
 
-@web_blueprint.route("/runway-prediction/arrivals/<string:destination_icao>", methods=['GET'])
-def web_runway_prediction(destination_icao: str):
+@web_blueprint.route("/runway-prediction/arrivals", methods=['GET'])
+def web_runway_prediction():
 
-    request_args = dict(request.args)
-    request_args.update({'destination_icao': destination_icao})
     try:
-        prediction_input = PredictionInputSchema().load(**request_args)
+        prediction_input = PredictionInputSchema().load(**request.args)
     except ValidationError as e:
         logger.exception(e)
-        return _load_prediction_template_with_warning(message=str(e),
-                                                      destination_icao=destination_icao)
+        return _load_prediction_template_with_warning(message=str(e))
 
     try:
-        prediction_result = predict_runway(prediction_input=prediction_input)
+        prediction_result = predict_runway(prediction_input)
     except METException as e:
         logger.exception(e)
         return _load_prediction_template_with_warning(
-            f"There is no meteorological information available for {prediction_input.date_time_str}. "
-            f"Please try another arrival time and/or departure airport.",
-            destination_icao=destination_icao)
+            f"There is no meteorological information available for arrivals from "
+            f"{prediction_input.origin_icao} to {prediction_input.destination_icao} on "
+            f"{prediction_input.date_time_str}. "
+            f"Please try another arrival time and/or origin airport.")
     except Exception as e:
         logger.exception(e)
         return abort(500)
 
-    prediction_output = get_web_prediction_output(prediction_input=prediction_input,
-                                                  prediction_result=prediction_result)
+    prediction_output = get_web_prediction_output(prediction_input, prediction_result)
 
-    return _load_prediction_template(destination_icao=destination_icao,
-                                     prediction_output=prediction_output)
+    return _load_prediction_template(prediction_output=prediction_output)
 
 
 @web_blueprint.route("/airports-data/<string:search_value>", methods=['GET'])
@@ -80,17 +76,16 @@ def get_forecast_timestamp_range(destination_icao: str):
     }, 200
 
 
-def _load_prediction_template(destination_icao: str, prediction_output: Optional[dict] = None):
+def _load_prediction_template(prediction_output: Optional[dict] = None):
     destination_airports_data = get_destination_airports_data()
 
     return render_template('runwayPrediction.html',
-                           destination_icao=destination_icao,
                            prediction_output=prediction_output,
                            destination_airports_data=destination_airports_data)
 
 
-def _load_prediction_template_with_warning(message: str, destination_icao: str):
+def _load_prediction_template_with_warning(message: str):
     flash(message, category="warning")
-    return _load_prediction_template(destination_icao)
+    return _load_prediction_template()
 
 

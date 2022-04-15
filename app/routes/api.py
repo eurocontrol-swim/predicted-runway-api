@@ -16,32 +16,31 @@ logger = logging.getLogger(__name__)
 api_blueprint = Blueprint('api', __name__)
 
 
-@api_blueprint.route("/api/0.1/runway-prediction/arrivals/<string:destination_icao>", methods=['GET'])
-def api_runway_prediction(destination_icao: str):
+@api_blueprint.route("/api/0.1/runway-prediction/arrivals", methods=['GET'])
+def api_runway_prediction():
 
-    request_args = dict(request.args)
-    request_args.update({'destination_icao': destination_icao})
     try:
-        prediction_input = PredictionInputSchema().load(**request_args)
+        prediction_input = PredictionInputSchema().load(**request.args)
     except ValidationError as e:
         logger.exception(e)
         return jsonify({"error": str(e)}), 400
 
     try:
-        prediction_result = predict_runway(prediction_input=prediction_input)
+        prediction_result = predict_runway(prediction_input)
     except METException as e:
         logger.exception(e)
-        message = f"There is no meteorological information available for "\
-                  f"{prediction_input.date_time_str}. "\
-                  f"Please try another arrival time and/or departure airport."
+        message = \
+            f"There is no meteorological information available for arrivals from " \
+            f"{prediction_input.origin_icao} to {prediction_input.destination_icao} on " \
+            f"{prediction_input.date_time_str}. " \
+            f"Please try another arrival time and/or origin airport."
         return jsonify({"error": message}), 400
 
     except Exception as e:
         logger.exception(e)
         return jsonify({"error": "Server error"}), 500
 
-    prediction_output = get_api_prediction_output(prediction_input=prediction_input,
-                                                  prediction_result=prediction_result)
+    prediction_output = get_api_prediction_output(prediction_input, prediction_result)
 
     return jsonify(prediction_output), 200
 
