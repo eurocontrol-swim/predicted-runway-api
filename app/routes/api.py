@@ -26,9 +26,6 @@ def api_runway_prediction(destination_icao: str):
     except ValidationError as e:
         logger.exception(e)
         return jsonify({"error": str(e)}), 400
-    except Exception as e:
-        logger.exception(e)
-        return jsonify({"error": "Invalid input"}), 400
 
     try:
         prediction_result = predict_runway(prediction_input=prediction_input)
@@ -41,7 +38,7 @@ def api_runway_prediction(destination_icao: str):
 
     except Exception as e:
         logger.exception(e)
-        return jsonify({"error": "Internal error"}), 500
+        return jsonify({"error": "Server error"}), 500
 
     prediction_output = get_api_prediction_output(prediction_input=prediction_input,
                                                   prediction_result=prediction_result)

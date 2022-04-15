@@ -35,10 +35,7 @@ def web_runway_prediction(destination_icao: str):
         prediction_input = PredictionInputSchema().load(**request_args)
     except ValidationError as e:
         logger.exception(e)
-        return _load_prediction_template_with_warning(message=str(e), destination_icao=destination_icao)
-    except Exception as e:
-        logger.exception(e)
-        return _load_prediction_template_with_warning(message="Invalid input.",
+        return _load_prediction_template_with_warning(message=str(e),
                                                       destination_icao=destination_icao)
 
     try:

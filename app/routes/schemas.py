@@ -51,7 +51,12 @@ class ValidationError(Exception):
 
 class PredictionInputSchema:
     def load(self, **kwargs):
-        return PredictionInput(**self._validate(**kwargs))
+        try:
+            validated_kwargs = self._validate(**kwargs)
+        except TypeError:
+            raise ValidationError('Invalid input.')
+
+        return PredictionInput(**validated_kwargs)
 
     def _validate(self,
                   origin_icao: str,
