@@ -252,12 +252,9 @@
                           </tr>
                           {% for runway in prediction_output['runways'] %}
                             <tr>
-                              {% if runway['probability'] > 0.5 %}
-                                <td class="table-success">{{ runway['name'] }}</td>
-                                <td class="table-success">{{ "{:.0%}".format(runway['probability']) }}</td>
-                              {% else %}
-                                <td class="table-danger">{{ runway['name'] }}</td>
-                                <td class="table-danger">{{ "{:.0%}".format(runway['probability']) }}</td>
+                              {% if runway['probability'] > 0 %}
+                                <td class="table-primary">{{ runway['name'] }}</td>
+                                <td class="table-primary">{{ "{:.0%}".format(runway['probability']) }}</td>
                               {% endif %}
                             </tr>
                           {% endfor %}
@@ -279,17 +276,20 @@
     <script>
         let map = null;
 
-        function addRunwayPolyline(map, runway) {
-            const color = runway.probability > 0.5 ? '#93cab1' : '#dda0a4';
+        function makeRunwayPolyline(runway) {
             const popupContent = `Runway: <strong>${runway.name}</strong> | Probability: <strong>${runway.probability * 100}%</strong>`;
 
-            const polyline = L.polyline(runway.coordinates_geojson, {color})
-                              .bindPopup(popupContent)
-                              .addTo(map);
+            const polyline = L.polyline(runway.coordinates_geojson, {
+                color: '#0c63e4',
+                weight: 12,
+                opacity: runway.probability > 0.2 ? runway.probability : 0.2,
+            }).bindPopup(popupContent);
 
             polyline.on('mouseover', () => {
                 polyline.openPopup();
             })
+
+            return polyline;
         }
         function initMap() {
           const map = L.map('map');
@@ -307,45 +307,27 @@
             attribution: cartodbAttribution,
           }).addTo(map);
 
-          const grayscale = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png', {
-            attribution: cartodbAttribution,
-            pane: 'labels',
-          }).addTo(map);
-
-          const googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-            maxZoom: 20,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-          });
-
-          const googleTerrain = L.tileLayer('http://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
-            maxZoom: 20,
-            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-          });
-
-          const baseMaps = {
-            Grayscale: grayscale,
-            Satelite: googleSat,
-            Terrain: googleTerrain,
-          };
-
-          L.control.layers(baseMaps).addTo(map);
-
           return map;
         }
 
+        function runwaysDataFromPredictionOutput(predictionOutput) {
+          return predictionOutput.runways.filter((r) => r.probability > 0)
+                                         .sort((a, b) => {
+                                            return a.probability - b.probability;
+                                          });
+        }
         $( document ).ready(function() {
           map = initMap();
 
-          const prediction_output = JSON.parse('{{ prediction_output|tojson }}');
-          const reverseSortedRunways = prediction_output.runways.sort((a, b) => {
-            return a.probability - b.probability;
+          const predictionOutput = JSON.parse('{{ prediction_output|tojson }}');
+          const runwaysData = runwaysDataFromPredictionOutput(predictionOutput);
+
+          runwaysData.forEach((runway) => {
+            const runwayPolyline = makeRunwayPolyline(runway);
+            runwayPolyline.addTo(map);
           });
 
-          reverseSortedRunways.forEach((runway) => {
-            addRunwayPolyline(map, runway);
-          });
-
-          const mapCenter = prediction_output.airport_coordinates;
+          const mapCenter = predictionOutput.airport_coordinates;
           const mapZoom = 12;
           map.setView(mapCenter, mapZoom);
 
