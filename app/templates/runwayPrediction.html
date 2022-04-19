@@ -23,6 +23,10 @@
                         <caption>General</caption>
                         <tbody>
                           <tr>
+                            <td><strong>Algorithm</strong></td>
+                            <td>Random Forest Classifier</td>
+                          </tr>
+                          <tr>
                             <td><strong>Estimators</strong></td>
                             <td>{{ prediction_output['metrics']['number_estimators'] }}</td>
                           </tr>
@@ -66,9 +70,8 @@
                         <thead class="table-light">
                           <tr>
                               <th>Name</th>
-                              <th>Mean</th>
+                              <th>Cross-Validation with METAR</th>
                               <th>Test with TAF</th>
-                              <th>Raw results</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -76,91 +79,76 @@
                             <td><strong>f1_weighted</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['mean_f1_weighted'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['f1_weighted'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_f1_weighted'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>balanced_accuracy</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['mean_balanced_accuracy'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['balanced_accuracy'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_balanced_accuracy'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>balanced_accuracy_over_random</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['mean_balanced_accuracy_over_random'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['balanced_accuracy_over_rand'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_balanced_accuracy_over_random'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>accuracy</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['mean_accuracy'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['accuracy'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_accuracy'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>recall_weighted</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['mean_recall_weighted'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['recall_weighted'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_recall_weighted'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>precision_weighted</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['mean_precision_weighted'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['precision_weighted'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_precision_weighted'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>top_2</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['mean_top_2'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['top_2'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_top_2'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>roc_auc</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['mean_roc_auc'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['roc_auc'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_roc_auc'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>log_loss_r_used</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['log_loss_r_used'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['log_loss_r_used'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_log_loss_r_used'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_f1_weighted</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['parallel_f1_weighted'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['parallel_f1_weighted'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_f1_weighted'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_balanced_accuracy</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['parallel_balanced_accuracy'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['parallel_balanced_accuracy'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_bal_acc_sc'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_balanced_accuracy_over_random</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['parallel_balanced_accuracy_over_random'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['parallel_balanced_accuracy_over_random'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_bal_acc_sc_over_random'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_accuracy</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['parallel_accuracy'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['parallel_accuracy'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_acc_sc'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_recall_weighted</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['parallel_recall_weighted'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['parallel_recall_weighted'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_recall_score_weighted'] }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_precision_weighted</strong></td>
                             <td>{{ prediction_output['metrics']['mean_results']['parallel_precision_weighted'] }}</td>
                             <td>{{ prediction_output['metrics']['test_with_taf']['parallel_precision_weighted'] }}</td>
-                            <td>{{ prediction_output['metrics']['raw_results']['test_parallel_precision_score_weighted'] }}</td>
                           </tr>
                         </tbody>
                       </table>
