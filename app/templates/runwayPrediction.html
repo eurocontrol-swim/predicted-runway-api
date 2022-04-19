@@ -218,37 +218,81 @@
                           aria-controls="collapseOne"
                   >
                       <span>
-                          <strong>{{ prediction_output['origin_icao'] }}</strong> <i class="bi-arrow-right"></i> <strong>{{ prediction_output['destination_icao'] }}</strong> | {{ prediction_output['date_time'] }}
+                          <strong>{{ prediction_output['prediction_input']['origin_icao'] }}</strong>
+                          <i class="bi-arrow-right"></i>
+                          <strong>{{ prediction_output['prediction_input']['destination_icao'] }}</strong>
+                          | {{ prediction_output['prediction_input']['date_time'] }}
                       </span>
                   </button>
                 </h2>
                 <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
                   <div class="accordion-body">
-                      <div class="table-responsive">
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="predictionInput-tab" data-bs-toggle="tab" data-bs-target="#predictionInput" type="button" role="tab" aria-controls="predictionInput" aria-selected="true">Prediction input</button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="predictionOutput-tab" data-bs-toggle="tab" data-bs-target="#predictionOutput" type="button" role="tab" aria-controls="predictionOutput" aria-selected="false">Prediction output</button>
+                      </li>
+                    </ul>
+                    <div class="tab-content" id="myTabContent">
+                      <div class="tab-pane fade" id="predictionInput" role="tabpanel" aria-labelledby="predictionInput-tab">
+                          <div class="table-responsive">
 
-                        <table class="table table-sm">
-                        <thead>
-                          <tr>
-                            <th scope="col">Runway</th>
-                            <th scope="col">Probability</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <td></td>
-                            <td></td>
-                          </tr>
-                          {% for runway in prediction_output['runways'] %}
-                            <tr>
-                              {% if runway['probability'] > 0 %}
-                                <td class="table-primary">{{ runway['name'] }}</td>
-                                <td class="table-primary">{{ "{:.0%}".format(runway['probability']) }}</td>
-                              {% endif %}
-                            </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                  </div>
+                            <table class="table table-sm">
+                                <tbody>
+                                  <tr>
+                                    <td><strong>Origin airport ICAO</strong></td>
+                                    <td>{{ prediction_output['prediction_input']['origin_icao'] }}</td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Destination airport ICAO</strong></td>
+                                    <td>{{ prediction_output['prediction_input']['destination_icao'] }}</td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Date time</strong></td>
+                                    <td>{{ prediction_output['prediction_input']['date_time'] }}</td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Wind direction</strong></td>
+                                    <td>{{ prediction_output['prediction_input']['wind_direction'] }}&#176;</td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Wind speed</strong></td>
+                                    <td>{{ prediction_output['prediction_input']['wind_speed'] }}kt</td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                          </div>
+
+                      </div>
+                      <div class="tab-pane fade show active" id="predictionOutput" role="tabpanel" aria-labelledby="predictionOutput-tab">
+                          <div class="table-responsive">
+
+                            <table class="table table-sm">
+                                <thead>
+                                  <tr>
+                                    <th scope="col">Runway</th>
+                                    <th scope="col">Probability</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {% for runway in prediction_output['runways'] %}
+                                    <tr>
+                                      {% if runway['probability'] > 0 %}
+                                        <td class="table-primary">{{ runway['name'] }}</td>
+                                        <td class="table-primary">{{ "{:.0%}".format(runway['probability']) }}</td>
+                                      {% endif %}
+                                    </tr>
+                                  {% endfor %}
+                                </tbody>
+                              </table>
+                          </div>
+
+                      </div>
+                    </div>
+
+
                 </div>
               </div>
 
@@ -304,10 +348,9 @@
                                             return a.probability - b.probability;
                                           });
         }
-        $( document ).ready(function() {
-          map = initMap();
 
-          const predictionOutput = JSON.parse('{{ prediction_output|tojson }}');
+        function drawMapFromPredictionOutput(predictionOutput) {
+          map = initMap();
           const runwaysData = runwaysDataFromPredictionOutput(predictionOutput);
 
           runwaysData.forEach((runway) => {
@@ -318,7 +361,12 @@
           const mapCenter = predictionOutput.airport_coordinates;
           const mapZoom = 12;
           map.setView(mapCenter, mapZoom);
+        }
 
+        $( document ).ready(function() {
+          const predictionOutput = JSON.parse('{{ prediction_output|tojson }}');
+
+          drawMapFromPredictionOutput(predictionOutput);
         });
     </script>
 {% endblock %}

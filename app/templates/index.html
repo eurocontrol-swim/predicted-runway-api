@@ -181,8 +181,8 @@
               const startDatetime = new Date();
               startDatetime.setMinutes(0);
               startDatetime.setSeconds(0);
-              const startDateTimeTimestamp = Math.round(startDatetime.getTime() / 1000);
-              const dateTimeRangeMax = Math.round(((res.end_timestamp - startDateTimeTimestamp) / 3600));
+              const startDateTimeTimestamp = Math.floor(startDatetime.getTime() / 1000);
+              const dateTimeRangeMax = Math.floor(((res.end_timestamp - startDateTimeTimestamp) / 3600));
 
               $timestamp.value = startDateTimeTimestamp;
               $dateTimeRange.setAttribute('max', dateTimeRangeMax);

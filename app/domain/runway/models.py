@@ -64,3 +64,12 @@ class PredictionInput:
     @property
     def date_time_hour(self):
         return self.date_time.hour
+
+    def to_dict(self):
+        return {
+            "origin_icao": self.origin_icao,
+            "destination_icao": self.destination_icao,
+            "date_time": self.date_time_str,
+            "wind_direction": self.wind_direction,
+            "wind_speed": self.wind_speed,
+        }

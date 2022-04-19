@@ -144,13 +144,10 @@ class PredictionOutputContext:
         self.prediction_output = {}
 
 
-class BasicPredictionOutputBuilder:
+class RunwaysProbabilitiesBuilder:
     @classmethod
     def build(cls, context: PredictionOutputContext):
         context.prediction_output = {
-            "origin_icao": context.prediction_input.origin_icao,
-            "destination_icao": context.prediction_input.destination_icao,
-            "date_time": context.prediction_input.date_time_str,
             "runways": [
                {"name": runway, "probability": probability} for runway, probability in
                context.prediction_result.sort_values(ascending=False).items()
@@ -158,7 +155,13 @@ class BasicPredictionOutputBuilder:
         }
 
 
-class GeodataPredictionOutputBuilder:
+class PredictionInputBuilder:
+    @classmethod
+    def build(cls, context: PredictionOutputContext):
+        context.prediction_output["prediction_input"] = context.prediction_input.to_dict()
+
+
+class GeodataBuilder:
     @classmethod
     def build(cls, context: PredictionOutputContext):
         airport_data = get_destination_airports_data()[context.prediction_input.destination_icao]
@@ -170,7 +173,7 @@ class GeodataPredictionOutputBuilder:
                 airport_data['runways_geojson'][runway['name']]
 
 
-class MetricsPredictionOutputBuilder:
+class MetricsBuilder:
     @classmethod
     def build(cls, context: PredictionOutputContext):
         context.prediction_output['metrics'] = get_destination_airport_metrics(
@@ -184,9 +187,10 @@ def get_web_prediction_output(prediction_input: PredictionInput,
     context = PredictionOutputContext(prediction_input,
                                       prediction_result)
 
-    for builder in [BasicPredictionOutputBuilder,
-                    GeodataPredictionOutputBuilder,
-                    MetricsPredictionOutputBuilder]:
+    for builder in [RunwaysProbabilitiesBuilder,
+                    PredictionInputBuilder,
+                    GeodataBuilder,
+                    MetricsBuilder]:
         builder.build(context)
 
     return context.prediction_output
@@ -198,7 +202,7 @@ def get_api_prediction_output(prediction_input: PredictionInput,
     context = PredictionOutputContext(prediction_input,
                                       prediction_result)
 
-    for builder in [BasicPredictionOutputBuilder]:
+    for builder in [RunwaysProbabilitiesBuilder]:
         builder.build(context)
 
     return context.prediction_output
