@@ -5,10 +5,11 @@ from flask import (render_template,
                    abort,
                    request,
                    flash,
-                   Blueprint, jsonify)
+                   Blueprint, jsonify, redirect, url_for)
 
+from app.config.file_dir import meteo_dir
 from app.met_api import METException
-from app.met_api.query import get_taf_datetime_range
+from app.met_api.query import get_taf_datetime_range, get_last_wind_dir, get_last_wind_speed
 from app.domain.runway.predictor import predict_runway
 from app.domain.airports import get_destination_airports_data, search_airport_data
 from app.routes.schemas import PredictionInputSchema, get_web_prediction_output, ValidationError
@@ -26,8 +27,41 @@ def index():
                            destination_airports_data=get_destination_airports_data())
 
 
-@web_blueprint.route("/runway-prediction/arrivals", methods=['GET'])
+@web_blueprint.route("/runway-prediction/arrivals", methods=['GET', 'POST'])
 def web_runway_prediction():
+    if request.method == 'GET':
+        return _get_web_runway_prediction()
+
+    if request.method == 'POST':
+        return _post_web_runway_prediction()
+
+
+def _post_web_runway_prediction():
+    input_data = dict(request.form)
+
+    try:
+        PredictionInputSchema().load(**input_data)
+    except ValidationError as e:
+        logger.exception(e)
+        return _load_prediction_template_with_warning(message=str(e))
+
+    if not input_data['wind_direction']:
+        input_data['wind_direction'] = get_last_wind_dir(
+            met_path=meteo_dir,
+            airport=input_data['destination_icao'],
+            before=int(input_data['timestamp'])
+        )
+    if not input_data['wind_speed']:
+        input_data['wind_speed'] = get_last_wind_speed(
+            met_path=meteo_dir,
+            airport=input_data['destination_icao'],
+            before=int(input_data['timestamp'])
+        )
+
+    return redirect(url_for('web.web_runway_prediction', **input_data))
+
+
+def _get_web_runway_prediction():
 
     try:
         prediction_input = PredictionInputSchema().load(**request.args)
@@ -66,8 +100,6 @@ def airports_data(search_value: str):
 @web_blueprint.route("/forecast-timestamp-range/<string:destination_icao>", methods=['GET'])
 def get_forecast_timestamp_range(destination_icao: str):
     start_time_datetime, end_time_datetime = get_taf_datetime_range(destination_icao)
-
-    # delta_in_hours = int((end_time_datetime - start_time_datetime).total_seconds() / 3600)
 
     return {
         'start_timestamp': int(start_time_datetime.timestamp()),

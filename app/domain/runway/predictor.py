@@ -41,10 +41,9 @@ import pandas as pd
 from joblib import load
 from sklearn.ensemble import RandomForestClassifier
 
-from app.config.file_dir import runway_models_dir, meteo_dir
+from app.config.file_dir import runway_models_dir
 from app.domain.airports import get_airport_data
 from app.domain.runway.models import PredictionInput
-from app.met_api.query import get_last_wind_speed, get_last_wind_dir
 
 
 class RunwayPredictor:
@@ -111,25 +110,7 @@ class RunwayPredictor:
         return bearing
 
 
-def _update_prediction_input_with_wind(prediction_input: PredictionInput) -> PredictionInput:
-    prediction_input.wind_speed = get_last_wind_speed(
-        met_path=meteo_dir,
-        airport=prediction_input.destination_icao,
-        before=prediction_input.timestamp
-    )
-    prediction_input.wind_direction = get_last_wind_dir(
-        met_path=meteo_dir,
-        airport=prediction_input.destination_icao,
-        before=prediction_input.timestamp
-    )
-
-    return prediction_input
-
-
 def predict_runway(prediction_input: PredictionInput) -> pd.Series:
-    if prediction_input.wind_direction is None and prediction_input.wind_speed is None:
-        prediction_input = _update_prediction_input_with_wind(prediction_input)
-
     predictor = RunwayPredictor.from_destination_icao(prediction_input.destination_icao)
 
     return predictor.predict(prediction_input)

@@ -59,7 +59,7 @@
           <h5 class="modal-title" id="predictionForm">New Runway Prediction</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-
+        <form method="POST" action="{{ url_for('web.web_runway_prediction') }}">
           <div class="modal-body">
             <div class="form-group">
             <div class="mb-3">
@@ -69,18 +69,19 @@
                      class="form-control"
                      list="originAirportOptions"
                      id="originIcaoListItem"
-                     name="originIcaoListItem"
                      placeholder="Type to search"
                      onkeyup="updateOriginAirports()"
-                     onchange="originAirportSelected()">
+                     onchange="originAirportSelected()"
+                     required
+              >
               <datalist id="originAirportOptions">
               </datalist>
-              <input id="originIcao" type="text" hidden>
+              <input id="originIcao" name="origin_icao" type="text" hidden required>
             </div>
             <div class="mb-3">
             <label for="destinationIcao" class="form-label">Arriving to</label>
-                <select id="destinationIcao" class="form-control" onchange="destinationAirportSelected()">
-                    <option value=" " label=""></option>
+                <select id="destinationIcao" name="destination_icao" class="form-control" required onchange="destinationAirportSelected()">
+                    <option value="" label=""></option>
                   {% for icao, airport_data in destination_airports_data.items() %}
                     <option value="{{ airport_data['icao'] }}" label="{{ airport_data['label'] }}"></option>
                   {% endfor %}
@@ -89,17 +90,29 @@
             <div class="mb-3">
               <label for="dateTimeRange" class="form-label">Arriving at</label>
               <input type="range" class="form-range" min="0" max="0" id="dateTimeRange" value="0" onchange="sliderMoved()">
-              <input type="text" id="timestamp" name="timestamp" hidden>
+              <input type="text" id="timestamp" name="timestamp" hidden required>
               <span id="dateTimeText"></span>
             </div>
 
+            <div class="mb-3">
+              <label for="windDirection" class="form-label">Wind direction (optional) *</label>
+              <input class="form-control" type="number" min="0" id="windDirection" name="wind_direction" placeholder="Value in degrees">
             </div>
+
+            <div class="mb-3">
+              <label for="windSpeed" class="form-label">Wind speed (optional) *</label>
+              <input class="form-control" type="number" min="0" id="windSpeed" name="wind_speed" placeholder="Value in knots">
+            </div>
+
+            </div>
+           <span style="font-size: 0.8em">* If not provided their values will be extracted from the latest available METAR or TAF data.</span>
           </div>
         <div class="modal-footer">
           <div class="mb-3">
-              <a class="btn btn-primary" id="formButton" role="button" href="" onclick="resetForm()">Predict</a>
+              <button class="btn btn-primary" id="formButton" type="submit">Predict</button>
           </div>
       </div>
+        </form>
     </div>
   </div>
   </div>
@@ -113,7 +126,6 @@
       const $destinationIcao = window.document.getElementById('destinationIcao');
       const $predictionForm = window.document.getElementById('predictionForm');
       const $originAirportOptions = window.document.getElementById('originAirportOptions');
-      const $formButton = window.document.getElementById('formButton');
 
       function getCurrentTimestamp() {
         return Math.ceil(new Date().getTime() / 1000);
@@ -121,12 +133,10 @@
 
       function originAirportSelected() {
         updateOriginIcao();
-        updateFormButtonHref();
       }
 
       function sliderMoved() {
         updateCurrentTimestamp();
-        updateFormButtonHref();
       }
 
       function updateOriginIcao() {
@@ -136,12 +146,6 @@
         const startTimestamp = $dateTimeRange.getAttribute('data-start-timestamp');
         $timestamp.value = Number(startTimestamp) + (3600 * $dateTimeRange.value);
         $dateTimeText.innerHTML = `<strong>${moment(new Date($timestamp.value * 1000)).format('LLLL')}</strong>`;
-      }
-
-      function updateFormButtonHref() {
-        const url = `{{ url_for('web.web_runway_prediction') }}`;
-
-        $formButton.href = `${url}?destination_icao=${$destinationIcao.value}&origin_icao=${$originIcao.value}&timestamp=${$timestamp.value}`;
       }
 
       function resetForm() {
@@ -154,7 +158,6 @@
       function destinationAirportSelected() {
           if ($destinationIcao.value !== " ") {
             updateTimestamps($destinationIcao.value);
-            updateFormButtonHref();
           }
       }
 
