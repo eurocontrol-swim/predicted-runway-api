@@ -67,12 +67,11 @@ def airports_data(search_value: str):
 def get_forecast_timestamp_range(destination_icao: str):
     start_time_datetime, end_time_datetime = get_taf_datetime_range(destination_icao)
 
-    delta_in_hours = int((end_time_datetime - start_time_datetime).total_seconds() / 3600)
+    # delta_in_hours = int((end_time_datetime - start_time_datetime).total_seconds() / 3600)
 
     return {
         'start_timestamp': int(start_time_datetime.timestamp()),
         'end_timestamp': int(end_time_datetime.timestamp()),
-        'delta_in_hours': delta_in_hours
     }, 200
 
 
