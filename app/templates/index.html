@@ -89,7 +89,7 @@
             </div>
             <div class="mb-3">
               <label for="dateTimeRange" class="form-label">Arriving at</label>
-              <input type="range" class="form-range" min="0" max="0" id="dateTimeRange" value="0" onchange="sliderMoved()">
+              <input type="range" class="form-range" min="0" max="0" id="dateTimeRange" value="0" onchange="sliderMoved()" oninput="sliderMoved()">
               <input type="text" id="timestamp" name="timestamp" hidden required>
               <span id="dateTimeText"></span>
             </div>
