@@ -58,7 +58,7 @@
                           {% for feature in prediction_output['metrics']['features_importance'] %}
                           <tr>
                             <td><strong>{{ feature[0] }}</strong></td>
-                            <td>{{ feature[1] }}</td>
+                            <td>{{ "{:.2f}%".format(feature[1] * 100) }}</td>
                           </tr>
                           {% endfor %}
                         </tbody>
@@ -77,78 +77,78 @@
                         <tbody>
                           <tr>
                             <td><strong>f1_weighted</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['mean_f1_weighted'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['f1_weighted'] }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['mean_results']['mean_f1_weighted'] * 100) }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['test_with_taf']['f1_weighted'] * 100) }}</td>
                           </tr>
                           <tr>
                             <td><strong>balanced_accuracy</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['mean_balanced_accuracy'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['balanced_accuracy'] }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['mean_results']['mean_balanced_accuracy'] * 100) }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['test_with_taf']['balanced_accuracy'] * 100) }}</td>
                           </tr>
                           <tr>
                             <td><strong>balanced_accuracy_over_random</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['mean_balanced_accuracy_over_random'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['balanced_accuracy_over_rand'] }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['mean_results']['mean_balanced_accuracy_over_random'] * 100) }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['test_with_taf']['balanced_accuracy_over_rand'] * 100) }}</td>
                           </tr>
                           <tr>
                             <td><strong>accuracy</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['mean_accuracy'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['accuracy'] }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['mean_results']['mean_accuracy'] * 100) }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['test_with_taf']['accuracy'] * 100) }}</td>
                           </tr>
                           <tr>
                             <td><strong>recall_weighted</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['mean_recall_weighted'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['recall_weighted'] }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['mean_results']['mean_recall_weighted'] * 100) }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['test_with_taf']['recall_weighted'] * 100) }}</td>
                           </tr>
                           <tr>
                             <td><strong>precision_weighted</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['mean_precision_weighted'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['precision_weighted'] }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['mean_results']['mean_precision_weighted'] * 100) }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['test_with_taf']['precision_weighted'] * 100) }}</td>
                           </tr>
                           <tr>
                             <td><strong>top_2</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['mean_top_2'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['top_2'] }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['mean_results']['mean_top_2'] * 100) }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['test_with_taf']['top_2'] * 100) }}</td>
                           </tr>
                           <tr>
                             <td><strong>roc_auc</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['mean_roc_auc'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['roc_auc'] }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['mean_results']['mean_roc_auc'] * 100) }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['test_with_taf']['roc_auc'] * 100) }}</td>
                           </tr>
                           <tr>
                             <td><strong>log_loss_r_used</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['log_loss_r_used'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['log_loss_r_used'] }}</td>
+                            <td>{{ "{:.2f}".format(prediction_output['metrics']['mean_results']['log_loss_r_used']) }}</td>
+                            <td>{{ "{:.2f}".format(prediction_output['metrics']['test_with_taf']['log_loss_r_used']) }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_f1_weighted</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['parallel_f1_weighted'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_f1_weighted'] }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['mean_results']['parallel_f1_weighted'] * 100) }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['test_with_taf']['parallel_f1_weighted'] * 100) }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_balanced_accuracy</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['parallel_balanced_accuracy'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_balanced_accuracy'] }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['mean_results']['parallel_balanced_accuracy'] * 100) }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['test_with_taf']['parallel_balanced_accuracy'] * 100) }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_balanced_accuracy_over_random</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['parallel_balanced_accuracy_over_random'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_balanced_accuracy_over_random'] }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['mean_results']['parallel_balanced_accuracy_over_random'] * 100) }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['test_with_taf']['parallel_balanced_accuracy_over_random'] * 100) }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_accuracy</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['parallel_accuracy'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_accuracy'] }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['mean_results']['parallel_accuracy'] * 100) }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['test_with_taf']['parallel_accuracy'] * 100) }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_recall_weighted</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['parallel_recall_weighted'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_recall_weighted'] }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['mean_results']['parallel_recall_weighted'] * 100) }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['test_with_taf']['parallel_recall_weighted'] * 100) }}</td>
                           </tr>
                           <tr>
                             <td><strong>parallel_precision_weighted</strong></td>
-                            <td>{{ prediction_output['metrics']['mean_results']['parallel_precision_weighted'] }}</td>
-                            <td>{{ prediction_output['metrics']['test_with_taf']['parallel_precision_weighted'] }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['mean_results']['parallel_precision_weighted'] * 100) }}</td>
+                            <td>{{ "{:.2f}%".format(prediction_output['metrics']['test_with_taf']['parallel_precision_weighted'] * 100) }}</td>
                           </tr>
                         </tbody>
                       </table>
