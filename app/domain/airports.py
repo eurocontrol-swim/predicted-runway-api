@@ -61,8 +61,11 @@ def extract_airport_data(data: dict, with_geodata: bool = False) -> dict:
     if with_geodata:
         extracted["lat"] = data["lat"]
         extracted["lon"] = data["lon"]
-        extracted["runways_geojson"] = {
-            runway: _reverse_coordinates_geojson(data["coordinates_geojson"])
+        extracted["runways_geodata"] = {
+            runway: {
+                'geojson': _reverse_coordinates_geojson(data["coordinates_geojson"]),
+                'true_bearing': data['true_bearing']
+            }
             for runway, data in data.get("runways", {}).items()
         }
 

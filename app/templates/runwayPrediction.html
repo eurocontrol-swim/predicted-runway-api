@@ -311,7 +311,7 @@
         function makeRunwayPolyline(runway) {
             const popupContent = `Runway: <strong>${runway.name}</strong> | Probability: <strong>${runway.probability * 100}%</strong>`;
 
-            const polyline = L.polyline(runway.coordinates_geojson, {
+            const polyline = new L.polyline(runway.coordinates_geojson, {
                 color: '#0c63e4',
                 weight: 12,
                 opacity: runway.probability > 0.2 ? runway.probability : 0.2,
@@ -323,7 +323,21 @@
 
             return polyline;
         }
-        function initMap() {
+
+        function makeRunwayMarker(runway) {
+            const iconClassName = 'marker-icon-' + runway.name;
+            const markerIcon =  new L.icon({
+                iconUrl: '{{ url_for("static", filename="icons/airplane.png") }}',
+                iconSize: [40, 40],
+                className: iconClassName,
+            });
+
+            const marker = new L.Marker(runway.coordinates_geojson[0], {icon: markerIcon});
+
+            return marker;
+        }
+
+        function initMap(center) {
           const map = L.map('map');
           map.createPane('labels');
 
@@ -339,6 +353,10 @@
             attribution: cartodbAttribution,
           }).addTo(map);
 
+          const mapCenter = center;
+          const mapZoom = 12;
+          map.setView(mapCenter, mapZoom);
+
           return map;
         }
 
@@ -349,24 +367,30 @@
                                           });
         }
 
-        function drawMapFromPredictionOutput(predictionOutput) {
-          map = initMap();
-          const runwaysData = runwaysDataFromPredictionOutput(predictionOutput);
-
-          runwaysData.forEach((runway) => {
-            const runwayPolyline = makeRunwayPolyline(runway);
-            runwayPolyline.addTo(map);
+        function drawRunways(runways) {
+          runways.forEach((runway) => {
+            makeRunwayPolyline(runway).addTo(map);
+            makeRunwayMarker(runway).addTo(map);
           });
+        }
 
-          const mapCenter = predictionOutput.airport_coordinates;
-          const mapZoom = 12;
-          map.setView(mapCenter, mapZoom);
+        function rotateRunwayMarkerIcons(runways) {
+          runways.forEach((runway) => {
+            const iconClassName = 'marker-icon-' + runway.name;
+            const [iconElement] = window.document.getElementsByClassName(iconClassName);
+            iconElement.style.setProperty('transform-origin', 'center');
+            iconElement.style.transform += ` rotate(${runway.true_bearing}deg)`;
+          });
         }
 
         $( document ).ready(function() {
           const predictionOutput = JSON.parse('{{ prediction_output|tojson }}');
+          const runways = runwaysDataFromPredictionOutput(predictionOutput);
 
-          drawMapFromPredictionOutput(predictionOutput);
+          map = initMap(predictionOutput.airport_coordinates);
+
+          drawRunways(runways);
+          rotateRunwayMarkerIcons(runways);
         });
     </script>
 {% endblock %}

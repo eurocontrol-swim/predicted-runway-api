@@ -170,7 +170,9 @@ class GeodataBuilder:
 
         for i, runway in enumerate(context.prediction_output['runways']):
             context.prediction_output['runways'][i]['coordinates_geojson'] = \
-                airport_data['runways_geojson'][runway['name']]
+                airport_data['runways_geodata'][runway['name']]['geojson']
+            context.prediction_output['runways'][i]['true_bearing'] = \
+                airport_data['runways_geodata'][runway['name']]['true_bearing']
 
 
 class MetricsBuilder:
