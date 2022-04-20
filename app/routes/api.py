@@ -1,12 +1,8 @@
-from flask import (abort,
-                   request,
-                   jsonify,
-                   Blueprint)
+from flask import request, jsonify, Blueprint
 from app.domain.runway.predictor import predict_runway
-from datetime import datetime
 import logging
 
-from app.met_api import METException
+from app.met import METException
 from app.routes.schemas import PredictionInputSchema, ValidationError, get_api_prediction_output
 
 logging.basicConfig(format='[%(asctime)s] - %(levelname)s - %(module)s - %(message)s')
@@ -24,18 +20,14 @@ def api_runway_prediction():
     except ValidationError as e:
         logger.exception(e)
         return jsonify({"error": str(e)}), 400
+    except METException as e:
+        logger.exception(e)
+        message = f"There is no meteorological information available for provided timestamp. " \
+                  f"Please try again with different value."
+        return jsonify({"error": message}), 400
 
     try:
         prediction_result = predict_runway(prediction_input)
-    except METException as e:
-        logger.exception(e)
-        message = \
-            f"There is no meteorological information available for arrivals from " \
-            f"{prediction_input.origin_icao} to {prediction_input.destination_icao} on " \
-            f"{prediction_input.date_time_str}. " \
-            f"Please try another arrival time and/or origin airport."
-        return jsonify({"error": message}), 400
-
     except Exception as e:
         logger.exception(e)
         return jsonify({"error": "Server error"}), 500

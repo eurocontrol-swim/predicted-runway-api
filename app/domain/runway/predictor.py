@@ -41,7 +41,7 @@ import pandas as pd
 from joblib import load
 from sklearn.ensemble import RandomForestClassifier
 
-from app.config.file_dir import runway_models_dir
+from app.config.file_dir import RUNWAY_MODELS_DIR
 from app.domain.airports import get_airport_data
 from app.domain.runway.models import PredictionInput
 
@@ -53,7 +53,7 @@ class RunwayPredictor:
 
     @classmethod
     def from_destination_icao(cls, destination_icao: str):
-        _trained_model_path = runway_models_dir.joinpath(f'{destination_icao}.pkl').absolute()
+        _trained_model_path = RUNWAY_MODELS_DIR.joinpath(f'{destination_icao}.pkl').absolute()
 
         trained_model: RandomForestClassifier = load(_trained_model_path)
 

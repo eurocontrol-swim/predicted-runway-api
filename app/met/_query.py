@@ -8,8 +8,7 @@ from pandas import Timestamp
 from json import load
 from typing import Dict
 
-from app.config.file_dir import taf_dir
-from app.met_api import ExpiredMETAR, METARNotAvailable, TAFNotAvailable
+from app.met import ExpiredMETAR, METARNotAvailable, TAFNotAvailable
 
 
 def _query_last_taf(taf_path: Path, before: int = None) -> Dict:
@@ -114,20 +113,3 @@ def get_last_wind_dir(met_path: Path, airport: str, before: int) -> float:
                 except:
                     pass
         raise TAFNotAvailable()
-
-
-def get_taf_datetime_range(destination_icao) -> tuple[datetime, datetime]:
-    path = taf_dir.joinpath(destination_icao)
-
-    first_file, *_, last_file = sorted(os.listdir(path))
-
-    with open(path.joinpath(first_file), 'r') as f:
-        first_file_data = json.load(f)
-
-    with open(path.joinpath(last_file), 'r') as f:
-        last_file_data = json.load(f)
-
-    start_time, end_time = first_file_data['start_time']['dt'], last_file_data['end_time']['dt']
-
-    return datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%S%z"), \
-        datetime.strptime(end_time, "%Y-%m-%dT%H:%M:%S%z")

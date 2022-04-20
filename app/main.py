@@ -1,5 +1,5 @@
 from flask import Flask
-from app.config.file_dir import templates_dir
+from app.config.file_dir import TEMPLATES_DIR
 from app.routes.web import web_blueprint
 from app.routes.api import api_blueprint
 
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_app():
-    app = Flask(__name__, template_folder=templates_dir)
+    app = Flask(__name__, template_folder=TEMPLATES_DIR)
     app.logger = logger
     app.secret_key = getenv('SECRET_KEY')
 
