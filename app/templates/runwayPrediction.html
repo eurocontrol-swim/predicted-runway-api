@@ -356,7 +356,6 @@
           const mapCenter = center;
           const mapZoom = 12;
           map.setView(mapCenter, mapZoom);
-
           return map;
         }
 
@@ -388,6 +387,10 @@
           const runways = runwaysDataFromPredictionOutput(predictionOutput);
 
           map = initMap(predictionOutput.airport_coordinates);
+
+          map.on('zoomend', () => {
+            rotateRunwayMarkerIcons(runways);
+          });
 
           drawRunways(runways);
           rotateRunwayMarkerIcons(runways);
