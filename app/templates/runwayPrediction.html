@@ -309,16 +309,10 @@
         let map = null;
 
         function makeRunwayPolyline(runway) {
-            const popupContent = `Runway: <strong>${runway.name}</strong> | Probability: <strong>${runway.probability * 100}%</strong>`;
-
             const polyline = new L.polyline(runway.coordinates_geojson, {
                 color: '#0c63e4',
                 weight: 12,
                 opacity: runway.probability > 0.2 ? runway.probability : 0.2,
-            }).bindPopup(popupContent);
-
-            polyline.on('mouseover', () => {
-                polyline.openPopup();
             })
 
             return polyline;
@@ -332,7 +326,12 @@
                 className: iconClassName,
             });
 
-            const marker = new L.Marker(runway.coordinates_geojson[0], {icon: markerIcon});
+            const popupContent = `Runway: <strong>${runway.name}</strong> | Probability: <strong>${runway.probability * 100}%</strong>`;
+            const marker = new L.Marker(runway.coordinates_geojson[0], {icon: markerIcon}).bindPopup(popupContent);
+
+            marker.on('mouseover', () => {
+                marker.openPopup();
+            })
 
             return marker;
         }
