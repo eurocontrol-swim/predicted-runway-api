@@ -38,13 +38,13 @@ __author__ = "EUROCONTROL (SWIM)"
 import json
 from functools import lru_cache
 
-from app.config.file_dir import icao_airports_catalog_path, runway_model_metrics_dir
-from app.domain import DESTINATION_ICAOS
+from app.config.file_dir import ICAO_AIRPORTS_CATALOG_PATH, RUNWAY_MODEL_METRICS_DIR
+from app.config import DESTINATION_ICAOS
 
 
 @lru_cache
 def get_airport_data():
-    with open(icao_airports_catalog_path, 'r') as f:
+    with open(ICAO_AIRPORTS_CATALOG_PATH, 'r') as f:
         return json.load(f)
 
 
@@ -81,7 +81,7 @@ def get_destination_airports_data():
 
 
 def get_destination_airport_metrics(airport: str):
-    path = runway_model_metrics_dir.joinpath(f"CV-Test_results_{airport}_100.json")
+    path = RUNWAY_MODEL_METRICS_DIR.joinpath(f"CV-Test_results_{airport}_100.json")
 
     with open(path, 'r') as f:
         return json.load(f)

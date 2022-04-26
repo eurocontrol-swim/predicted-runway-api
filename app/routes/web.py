@@ -7,9 +7,7 @@ from flask import (render_template,
                    flash,
                    Blueprint, jsonify, redirect, url_for)
 
-from app.config.file_dir import meteo_dir
-from app.met_api import METException
-from app.met_api.query import get_taf_datetime_range, get_last_wind_dir, get_last_wind_speed
+from app.met.api import get_taf_datetime_range, METNotAvailable
 from app.domain.runway.predictor import predict_runway
 from app.domain.airports import get_destination_airports_data, search_airport_data
 from app.routes.schemas import PredictionInputSchema, get_web_prediction_output, ValidationError
@@ -40,25 +38,16 @@ def _post_web_runway_prediction():
     input_data = dict(request.form)
 
     try:
-        PredictionInputSchema().load(**input_data)
+        prediction_input = PredictionInputSchema().load(**input_data)
     except ValidationError as e:
-        logger.exception(e)
         return _load_prediction_template_with_warning(message=str(e))
+    except METNotAvailable as e:
+        logger.exception(e)
+        return _load_prediction_template_with_warning(
+            f"There is no meteorological information available for provided timestamp. "
+            f"Please try again with different value.")
 
-    if not input_data['wind_direction']:
-        input_data['wind_direction'] = get_last_wind_dir(
-            met_path=meteo_dir,
-            airport=input_data['destination_icao'],
-            before=int(input_data['timestamp'])
-        )
-    if not input_data['wind_speed']:
-        input_data['wind_speed'] = get_last_wind_speed(
-            met_path=meteo_dir,
-            airport=input_data['destination_icao'],
-            before=int(input_data['timestamp'])
-        )
-
-    return redirect(url_for('web.web_runway_prediction', **input_data))
+    return redirect(url_for('web.web_runway_prediction', **prediction_input.to_query_string_dict()))
 
 
 def _get_web_runway_prediction():
@@ -68,16 +57,14 @@ def _get_web_runway_prediction():
     except ValidationError as e:
         logger.exception(e)
         return _load_prediction_template_with_warning(message=str(e))
+    except METNotAvailable as e:
+        logger.exception(e)
+        return _load_prediction_template_with_warning(
+            f"There is no meteorological information available for the wind input. "
+            f"Please try again with different source or custom values.")
 
     try:
         prediction_result = predict_runway(prediction_input)
-    except METException as e:
-        logger.exception(e)
-        return _load_prediction_template_with_warning(
-            f"There is no meteorological information available for arrivals from "
-            f"{prediction_input.origin_icao} to {prediction_input.destination_icao} on "
-            f"{prediction_input.date_time_str}. "
-            f"Please try another arrival time and/or origin airport.")
     except Exception as e:
         logger.exception(e)
         return abort(500)

@@ -40,9 +40,10 @@ from typing import Optional, Any
 
 import pandas as pd
 
+from app.config import DESTINATION_ICAOS
 from app.domain.airports import get_destination_airports_data, get_destination_airport_metrics
-from app.domain import DESTINATION_ICAOS
-from app.domain.runway.models import PredictionInput
+from app.domain.runway.factory import PredictionInputFactory
+from app.domain.runway.models import PredictionInput, WindInputSource
 
 
 class ValidationError(Exception):
@@ -51,12 +52,15 @@ class ValidationError(Exception):
 
 class PredictionInputSchema:
     def load(self, **kwargs):
+        validated_kwargs = self._load_validated(**kwargs)
+
+        return PredictionInputFactory.create_prediction_input(**validated_kwargs)
+
+    def _load_validated(self, **kwargs):
         try:
-            validated_kwargs = self._validate(**kwargs)
+            return self._validate(**kwargs)
         except TypeError:
             raise ValidationError('Invalid input.')
-
-        return PredictionInput(**validated_kwargs)
 
     def _validate(self,
                   origin_icao: str,
@@ -64,14 +68,25 @@ class PredictionInputSchema:
                   timestamp: int,
                   wind_direction: Optional[float] = None,
                   wind_speed: Optional[float] = None,
+                  wind_input_source: Optional[str] = None,
                   ) -> dict:
-        return {
+        validated_data = {
             "origin_icao": self._validate_origin_icao(origin_icao),
             "destination_icao": self._validate_destination_icao(destination_icao),
             "date_time": self._validate_timestamp(timestamp),
-            "wind_direction": self._validate_wind_direction(wind_direction) if wind_direction else None,
-            "wind_speed": self._validate_wind_speed(wind_speed) if wind_speed else None
         }
+
+        if wind_direction and wind_speed:
+            validated_data["wind_direction"] = self._validate_wind_direction(wind_direction)
+            validated_data["wind_speed"] = self._validate_wind_speed(wind_speed)
+
+        if wind_input_source:
+            try:
+                validated_data["wind_input_source"] = WindInputSource(wind_input_source)
+            except ValueError:
+                validated_data["wind_input_source"] = None
+
+        return validated_data
 
     @staticmethod
     def _is_valid_icao(icao: str):
@@ -153,6 +168,7 @@ class RunwaysProbabilitiesBuilder:
                context.prediction_result.sort_values(ascending=False).items()
            ]
         }
+
 
 
 class PredictionInputBuilder:

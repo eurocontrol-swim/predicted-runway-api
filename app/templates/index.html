@@ -93,19 +93,7 @@
               <input type="text" id="timestamp" name="timestamp" hidden required>
               <span id="dateTimeText"></span>
             </div>
-
-            <div class="mb-3">
-              <label for="windDirection" class="form-label">Wind direction (optional) *</label>
-              <input class="form-control" type="number" min="0" id="windDirection" name="wind_direction" placeholder="Value in degrees">
             </div>
-
-            <div class="mb-3">
-              <label for="windSpeed" class="form-label">Wind speed (optional) *</label>
-              <input class="form-control" type="number" min="0" id="windSpeed" name="wind_speed" placeholder="Value in knots">
-            </div>
-
-            </div>
-           <span style="font-size: 0.8em">* If not provided their values will be extracted from the latest available METAR or TAF data.</span>
           </div>
         <div class="modal-footer">
           <div class="mb-3">
@@ -188,15 +176,15 @@
               const dateTimeRangeMax = Math.floor(((res.end_timestamp - startDateTimeTimestamp) / 3600));
 
               $timestamp.value = startDateTimeTimestamp;
-              $dateTimeRange.setAttribute('max', dateTimeRangeMax);
-              $dateTimeRange.setAttribute('data-start-timestamp', startDateTimeTimestamp);
+              $dateTimeRange.setAttribute('max', dateTimeRangeMax.toString());
+              $dateTimeRange.setAttribute('data-start-timestamp', startDateTimeTimestamp.toString());
               updateCurrentTimestamp();
           }});
       }
 
-    $( document ).ready(function() {
-
-    });
+      $(document).ready( function() {
+        resetForm();
+      })
     </script>
   {% block content %}
   {% endblock %}

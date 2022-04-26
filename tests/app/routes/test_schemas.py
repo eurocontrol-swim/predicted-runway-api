@@ -39,7 +39,7 @@ import datetime
 
 import pytest as pytest
 
-from app.domain import DESTINATION_ICAOS
+from app.config import DESTINATION_ICAOS
 from app.routes.schemas import ValidationError, PredictionInputSchema
 
 

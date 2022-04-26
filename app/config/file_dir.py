@@ -2,20 +2,26 @@ import os
 from pathlib import Path
 
 
-current_path = Path(__file__)
-current_dir = current_path.parent
-base_dir = current_dir.parent
+CURRENT_PATH = Path(__file__)
+CURRENT_DIR = CURRENT_PATH.parent
+BASE_DIR = CURRENT_DIR.parent
 
-meteo_dir = Path(os.getenv("MET_UPDATE_DIR", "/data/met"))
-metar_dir = meteo_dir.joinpath('metar')
-taf_dir = meteo_dir.joinpath('taf')
+METEO_DIR = Path(os.getenv("MET_UPDATE_DIR", "/data/met"))
+METAR_DIR = METEO_DIR.joinpath('metar')
+TAF_DIR = METEO_DIR.joinpath('taf')
 
-runway_models_path = Path("/data/models")
-runway_models_dir = Path(runway_models_path)
+RUNWAY_MODELS_DIR = Path("/data/models")
 
-runway_model_metrics_path = Path("/data/metrics")
-runway_model_metrics_dir = Path(runway_model_metrics_path)
+RUNWAY_MODEL_METRICS_DIR = Path("/data/metrics")
 
-icao_airports_catalog_path = base_dir.joinpath('static').joinpath('icao_airports_catalog.json')
+ICAO_AIRPORTS_CATALOG_PATH = BASE_DIR.joinpath('static').joinpath('icao_airports_catalog.json')
 
-templates_dir = base_dir.joinpath('templates')
+TEMPLATES_DIR = BASE_DIR.joinpath('templates')
+
+
+def get_taf_dir_for_airport_icao(airport_icao: str) -> Path:
+    return TAF_DIR.joinpath(airport_icao)
+
+
+def get_metar_dir_for_airport_icao(airport_icao: str) -> Path:
+    return METAR_DIR.joinpath(airport_icao)

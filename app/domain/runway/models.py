@@ -36,7 +36,16 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 __author__ = "EUROCONTROL (SWIM)"
 
 from datetime import datetime
-from typing import Optional
+from enum import Enum
+
+
+class WindInputSource(Enum):
+    FROM_METAR = 'FROM_METAR'
+    FROM_TAF = 'FROM_TAF'
+
+    @classmethod
+    def choices(cls):
+        return [v.value for v in cls.__members__.values()]
 
 
 class PredictionInput:
@@ -44,12 +53,14 @@ class PredictionInput:
                  origin_icao: str,
                  destination_icao: str,
                  date_time: datetime,
-                 wind_direction: Optional[float] = None,
-                 wind_speed: Optional[float] = None,
+                 wind_input_source: WindInputSource,
+                 wind_direction: float,
+                 wind_speed: float,
                  ) -> None:
         self.origin_icao = origin_icao
         self.destination_icao = destination_icao
         self.date_time = date_time
+        self.wind_input_source = wind_input_source
         self.wind_direction = wind_direction
         self.wind_speed = wind_speed
 
@@ -66,10 +77,26 @@ class PredictionInput:
         return self.date_time.hour
 
     def to_dict(self):
+        wind_input_source_mapper = {
+            WindInputSource.FROM_METAR: 'from METAR',
+            WindInputSource.FROM_TAF: 'from TAF'
+        }
+
         return {
             "origin_icao": self.origin_icao,
             "destination_icao": self.destination_icao,
             "date_time": self.date_time_str,
+            "wind_input_source": wind_input_source_mapper.get(self.wind_input_source, ''),
             "wind_direction": self.wind_direction,
             "wind_speed": self.wind_speed,
+        }
+
+    def to_query_string_dict(self):
+        return {
+            "origin_icao": self.origin_icao,
+            "destination_icao": self.destination_icao,
+            "timestamp": self.timestamp,
+            "wind_input_source": self.wind_input_source.value or '',
+            "wind_direction": self.wind_direction,
+            "wind_speed": self.wind_speed
         }
