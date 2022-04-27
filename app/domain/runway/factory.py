@@ -35,7 +35,7 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from app.domain.runway.models import WindInputSource, PredictionInput
@@ -47,7 +47,7 @@ class PredictionInputFactory:
     @staticmethod
     def create_prediction_input(origin_icao: str,
                                 destination_icao: str,
-                                date_time: datetime,
+                                timestamp: int,
                                 wind_direction: Optional[float] = None,
                                 wind_speed: Optional[float] = None,
                                 wind_input_source: Optional[WindInputSource] = None
@@ -56,13 +56,13 @@ class PredictionInputFactory:
         if wind_direction is None and wind_speed is None:
             wind_direction, wind_speed, wind_input_source = get_wind_input(
                 airport_icao=destination_icao,
-                before_timestamp=int(date_time.timestamp())
+                before_timestamp=timestamp
             )
 
         return PredictionInput(
             origin_icao=origin_icao,
             destination_icao=destination_icao,
-            date_time=date_time,
+            date_time=datetime.fromtimestamp(timestamp).astimezone(timezone.utc),
             wind_input_source=wind_input_source,
             wind_direction=wind_direction,
             wind_speed=wind_speed

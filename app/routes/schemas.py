@@ -73,7 +73,7 @@ class PredictionInputSchema:
         validated_data = {
             "origin_icao": self._validate_origin_icao(origin_icao),
             "destination_icao": self._validate_destination_icao(destination_icao),
-            "date_time": self._validate_timestamp(timestamp),
+            "timestamp": self._validate_timestamp(timestamp),
         }
 
         if wind_direction and wind_speed:
@@ -110,7 +110,7 @@ class PredictionInputSchema:
         return value.upper()
 
     @staticmethod
-    def _validate_timestamp(value: Any) -> datetime:
+    def _validate_timestamp(value: Any) -> int:
         if not (isinstance(value, int)):
             try:
                 value = int(value)
@@ -118,9 +118,11 @@ class PredictionInputSchema:
                 raise ValidationError("timestamp should be an integer.")
 
         try:
-            return datetime.fromtimestamp(value)
+            datetime.fromtimestamp(value)
         except (TypeError, ValueError, OSError, OverflowError):
             raise ValidationError("Invalid timestamp.")
+
+        return value
 
     @staticmethod
     def _validate_wind_direction(value: Any) -> float:

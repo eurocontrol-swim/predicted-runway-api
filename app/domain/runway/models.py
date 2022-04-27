@@ -35,7 +35,7 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 
@@ -66,7 +66,7 @@ class PredictionInput:
 
     @property
     def date_time_str(self):
-        return self.date_time.strftime('%a, %d %b %Y - %H:%M:%S')
+        return self.date_time.strftime('%a, %d %b %Y %H:%M:%S %Z')
 
     @property
     def timestamp(self):

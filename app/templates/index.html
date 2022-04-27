@@ -130,10 +130,15 @@
       function updateOriginIcao() {
           $originIcao.value = $originIcaoListItem.value.slice(0, 4);
       }
+
+      function formatDate(d) {
+        return d.toUTCString().replace('GMT', 'UTC');
+      }
+
       function updateCurrentTimestamp() {
         const startTimestamp = $dateTimeRange.getAttribute('data-start-timestamp');
         $timestamp.value = Number(startTimestamp) + (3600 * $dateTimeRange.value);
-        $dateTimeText.innerHTML = `<strong>${moment(new Date($timestamp.value * 1000)).format('LLLL')}</strong>`;
+        $dateTimeText.innerHTML = `<strong>${formatDate(new Date($timestamp.value * 1000))}</strong>`;
       }
 
       function resetForm() {
@@ -169,10 +174,10 @@
 
       function updateTimestamps(airport) {
           $.ajax({url: `/forecast-timestamp-range/${airport}`, success: function(res){
-              const startDatetime = new Date();
-              startDatetime.setMinutes(0);
-              startDatetime.setSeconds(0);
-              const startDateTimeTimestamp = Math.floor(startDatetime.getTime() / 1000);
+              const startDatetime = moment().utc();
+              startDatetime.set('minutes', 0);
+              startDatetime.set('seconds', 0);
+              const startDateTimeTimestamp = startDatetime.unix();
               const dateTimeRangeMax = Math.floor(((res.end_timestamp - startDateTimeTimestamp) / 3600));
 
               $timestamp.value = startDateTimeTimestamp;

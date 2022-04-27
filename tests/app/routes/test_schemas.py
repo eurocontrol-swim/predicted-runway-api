@@ -101,7 +101,7 @@ def test_prediction_input_schema__timestamp_not_convertable_to_datetime(invalid_
 
 @pytest.mark.parametrize('timestamp', [1650024497, 1650030959])
 def test_prediction_input_schema__timestamp_is_converted_to_datetime(timestamp):
-    assert PredictionInputSchema()._validate_timestamp(timestamp).timestamp() == timestamp
+    assert PredictionInputSchema()._validate_timestamp(timestamp) == timestamp
 
 
 @pytest.mark.parametrize('invalid_wind_direction', ['str', [], {}, (), None])
