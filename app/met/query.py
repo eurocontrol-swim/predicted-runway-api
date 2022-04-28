@@ -110,20 +110,32 @@ class TAFAirportFilesQuery(AirportFilesQuery):
 
         return taf_start_time_timestamp <= timestamp <= taf_end_time_timestamp
 
+    @staticmethod
+    def _get_forecast_value(forecast: dict, value_key: str) -> Optional[float]:
+        try:
+            result = float(forecast[value_key]['value'])
+        except (KeyError, TypeError, ValueError):
+            result = None
+
+        return result
+
     def _get_wind_value_from_file(self, file: Path, before_timestamp: int, value_key: str) \
             -> Optional[float]:
 
         content = self._read_file(file=file)
 
+        temp = None
         for forecast in content['forecast']:
             start_time_timestamp = pd.Timestamp(forecast['start_time']['dt']).timestamp()
             end_time_timestamp = pd.Timestamp(forecast['end_time']['dt']).timestamp()
 
-            if start_time_timestamp <= before_timestamp <= end_time_timestamp:
-                try:
-                    return float(forecast[value_key]['value'])
-                except (KeyError, TypeError, ValueError):
-                    pass
+            if start_time_timestamp <= before_timestamp:
+                temp = self._get_forecast_value(forecast=forecast, value_key=value_key)
+
+                if temp is not None and before_timestamp <= end_time_timestamp:
+                    return temp
+
+        return temp
 
     def get_wind_speed(self, before_timestamp: Optional[int] = None) -> Optional[int]:
         file = self.get_file(before_timestamp=before_timestamp)
