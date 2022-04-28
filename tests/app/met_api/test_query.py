@@ -41,7 +41,7 @@ import datetime
 import pytest
 from pandas import Timestamp
 
-from app.met.query import TAFAirportFilesQuery, METARAirportFilesQuery
+from app.adapters.met import TAFAirportFilesQuery, METARAirportFilesQuery
 
 
 @pytest.mark.parametrize('before_timestamp, actual_timestamp', [

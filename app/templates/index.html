@@ -39,65 +39,69 @@
       <div class="collapse navbar-collapse" id="navbarNavDropdown">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item dropdown">
-              <a class="btn btn-primary" href="#newPredictionForm" role="button" data-bs-toggle="modal" aria-expanded="false">
+              <a class="nav-link dropdown-toggle" href="#" id="newPredictionMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 New prediction
               </a>
+              <ul class="dropdown-menu" aria-labelledby="newPredictionMenu">
+                <li><a class="dropdown-item" data-bs-toggle="modal" href="#rpForm">Runway</a></li>
+                <li><a class="dropdown-item" data-bs-toggle="modal" href="#rcpForm">Runway configuration</a></li>
+              </ul>
             </li>
           </ul>
         <div class="d-flex">
-            {% block modelInfo %}
+            {% block modelStats %}
             {% endblock %}
         </div>
       </div>
     </div>
   </nav>
 
-  <div class="modal fade" id="newPredictionForm" aria-hidden="true" aria-labelledby="predictionForm" tabindex="-1">
+  <div class="modal fade" id="rpForm" aria-hidden="true" aria-labelledby="rpForm" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="predictionForm">New Runway Prediction</h5>
+          <h5 class="modal-title" id="rpForm">New Runway Prediction</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form method="POST" action="{{ url_for('web.web_runway_prediction') }}">
+        <form method="POST" action="{{ url_for('web.runway_prediction') }}">
           <div class="modal-body">
             <div class="form-group">
             <div class="mb-3">
 
-              <label for="originAirports" class="form-label">Departing from</label>
+              <label for="rpOriginAirports" class="form-label">Departing from</label>
               <input autoComplete="off"
                      class="form-control"
-                     list="originAirportOptions"
-                     id="originIcaoListItem"
+                     list="rpOriginAirportOptions"
+                     id="rpOriginIcaoListItem"
                      placeholder="Type to search"
-                     onkeyup="updateOriginAirports()"
-                     onchange="originAirportSelected()"
+                     onkeyup="updateRpOriginAirports()"
+                     onchange="rpOriginAirportSelected()"
                      required
               >
-              <datalist id="originAirportOptions">
+              <datalist id="rpOriginAirportOptions">
               </datalist>
-              <input id="originIcao" name="origin_icao" type="text" hidden required>
+              <input id="rpOriginIcao" name="origin_icao" type="text" hidden required>
             </div>
             <div class="mb-3">
-            <label for="destinationIcao" class="form-label">Arriving to</label>
-                <select id="destinationIcao" name="destination_icao" class="form-control" required onchange="destinationAirportSelected()">
+            <label for="rpDestinationIcao" class="form-label">Arriving to</label>
+                <select id="rpDestinationIcao" name="destination_icao" class="form-control" required onchange="rpDestinationAirportSelected()">
                     <option value="" label=""></option>
-                  {% for icao, airport_data in destination_airports_data.items() %}
-                    <option value="{{ airport_data['icao'] }}" label="{{ airport_data['label'] }}"></option>
+                  {% for airport in destination_airports %}
+                    <option value="{{ airport.icao }}" label="{{ airport.title }}"></option>
                   {% endfor %}
                 </select>
             </div>
             <div class="mb-3">
-              <label for="dateTimeRange" class="form-label">Arriving at</label>
-              <input type="range" class="form-range" min="0" max="0" id="dateTimeRange" value="0" onchange="sliderMoved()" oninput="sliderMoved()">
-              <input type="text" id="timestamp" name="timestamp" hidden required>
-              <span id="dateTimeText"></span>
+              <label for="rpDateTimeRange" class="form-label">Arriving at</label>
+              <input type="range" class="form-range" min="0" max="0" id="rpDateTimeRange" value="0" onchange="rpSliderMoved()" oninput="rpSliderMoved()">
+              <input type="text" id="rpTimestamp" name="timestamp" hidden required>
+              <span id="rpDateTimeText"></span>
             </div>
             </div>
           </div>
         <div class="modal-footer">
           <div class="mb-3">
-              <button class="btn btn-primary" id="formButton" type="submit">Predict</button>
+              <button class="btn btn-primary" id="rpFormButton" type="submit">Predict</button>
           </div>
       </div>
         </form>
@@ -105,58 +109,123 @@
   </div>
   </div>
 
+  <div class="modal fade" id="rcpForm" aria-hidden="true" aria-labelledby="rcpForm" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="rcpForm">New Runway Configuration Prediction</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="POST" action="{{ url_for('web.runway_config_prediction') }}">
+          <div class="modal-body">
+            <div class="form-group">
+            <div class="mb-3">
+            <label for="rcpDestinationIcao" class="form-label">Arriving to</label>
+                <select id="rcpDestinationIcao" name="destination_icao" class="form-control" required onchange="rcpDestinationAirportSelected()">
+                    <option value="" label=""></option>
+                  {% for airport in destination_airports %}
+                    <option value="{{ airport.icao }}" label="{{ airport.title }}"></option>
+                  {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+              <label for="rcpDateTimeRange" class="form-label">Arriving at</label>
+              <input type="range" class="form-range" min="0" max="0" id="rcpDateTimeRange" value="0" onchange="rcpSliderMoved()" oninput="rcpSliderMoved()">
+              <input type="text" id="rcpTimestamp" name="timestamp" hidden required>
+              <span id="rcpDateTimeText"></span>
+            </div>
+            </div>
+          </div>
+        <div class="modal-footer">
+          <div class="mb-3">
+              <button class="btn btn-primary" id="rcpFormButton" type="submit">Predict</button>
+          </div>
+      </div>
+        </form>
+    </div>
+  </div>
+  </div>
+
+
     <script>
-      const $dateTimeRange = window.document.getElementById('dateTimeRange');
-      const $timestamp = window.document.getElementById('timestamp');
-      const $dateTimeText = window.document.getElementById('dateTimeText');
-      const $originIcaoListItem = window.document.getElementById('originIcaoListItem');
-      const $originIcao = window.document.getElementById('originIcao');
-      const $destinationIcao = window.document.getElementById('destinationIcao');
-      const $predictionForm = window.document.getElementById('predictionForm');
-      const $originAirportOptions = window.document.getElementById('originAirportOptions');
+      const $rpDateTimeRange = window.document.getElementById('rpDateTimeRange');
+      const $rpTimestamp = window.document.getElementById('rpTimestamp');
+      const $rpDateTimeText = window.document.getElementById('rpDateTimeText');
+      const $rpOriginIcaoListItem = window.document.getElementById('rpOriginIcaoListItem');
+      const $rpOriginIcao = window.document.getElementById('rpOriginIcao');
+      const $rpDestinationIcao = window.document.getElementById('rpDestinationIcao');
+      const $rpForm = window.document.getElementById('rpForm');
+      const $rpOriginAirportOptions = window.document.getElementById('rpOriginAirportOptions');
+
+      const $rcpDateTimeRange = window.document.getElementById('rcpDateTimeRange');
+      const $rcpTimestamp = window.document.getElementById('rcpTimestamp');
+      const $rcpDateTimeText = window.document.getElementById('rcpDateTimeText');
+      const $rcpOriginIcaoListItem = window.document.getElementById('rcpOriginIcaoListItem');
+      const $rcpOriginIcao = window.document.getElementById('rcpOriginIcao');
+      const $rcpDestinationIcao = window.document.getElementById('rcpDestinationIcao');
+      const $rcpForm = window.document.getElementById('rcpForm');
+      const $rcpOriginAirportOptions = window.document.getElementById('rcpOriginAirportOptions');
 
       function getCurrentTimestamp() {
         return Math.ceil(new Date().getTime() / 1000);
       }
 
-      function originAirportSelected() {
-        updateOriginIcao();
+      function rpOriginAirportSelected() {
+        $rpOriginIcao.value = $rpOriginIcaoListItem.value.slice(0, 4);
       }
 
-      function sliderMoved() {
-        updateCurrentTimestamp();
+      function rpSliderMoved() {
+        updateRpCurrentTimestamp();
       }
 
-      function updateOriginIcao() {
-          $originIcao.value = $originIcaoListItem.value.slice(0, 4);
+      function rcpSliderMoved() {
+        updateRcpCurrentTimestamp();
       }
 
       function formatDate(d) {
         return d.toUTCString().replace('GMT', 'UTC');
       }
 
-      function updateCurrentTimestamp() {
-        const startTimestamp = $dateTimeRange.getAttribute('data-start-timestamp');
-        $timestamp.value = Number(startTimestamp) + (3600 * $dateTimeRange.value);
-        $dateTimeText.innerHTML = `<strong>${formatDate(new Date($timestamp.value * 1000))}</strong>`;
+      function updateRpCurrentTimestamp() {
+        const startTimestamp = $rpDateTimeRange.getAttribute('data-start-timestamp');
+        $rpTimestamp.value = Number(startTimestamp) + (3600 * $rpDateTimeRange.value);
+        $rpDateTimeText.innerHTML = `<strong>${formatDate(new Date($rpTimestamp.value * 1000))}</strong>`;
       }
 
-      function resetForm() {
-        $originIcaoListItem.value = '';
-        $destinationIcao.value = ' ';
-        $timestamp.value = '';
-        $dateTimeRange.value = 0;
+      function updateRcpCurrentTimestamp() {
+        const startTimestamp = $rcpDateTimeRange.getAttribute('data-start-timestamp');
+        $rcpTimestamp.value = Number(startTimestamp) + (3600 * $rcpDateTimeRange.value);
+        $rcpDateTimeText.innerHTML = `<strong>${formatDate(new Date($rcpTimestamp.value * 1000))}</strong>`;
       }
 
-      function destinationAirportSelected() {
-          if ($destinationIcao.value !== " ") {
-            updateTimestamps($destinationIcao.value);
+      function resetRpForm() {
+        $rpOriginIcaoListItem.value = '';
+        $rpDestinationIcao.value = ' ';
+        $rpTimestamp.value = '';
+        $rpDateTimeRange.value = 0;
+      }
+
+      function resetRcpForm() {
+        $rcpDestinationIcao.value = ' ';
+        $rcpTimestamp.value = '';
+        $rcpDateTimeRange.value = 0;
+      }
+
+      function rpDestinationAirportSelected() {
+          if ($rpDestinationIcao.value !== " ") {
+            updateRpTimestamps($rpDestinationIcao.value);
           }
       }
 
-      function updateOriginAirports() {
-          $originAirportOptions.innerHTML = "";
-          const search_value = $originIcaoListItem.value;
+      function rcpDestinationAirportSelected() {
+          if ($rcpDestinationIcao.value !== " ") {
+            updateRcpTimestamps($rcpDestinationIcao.value);
+          }
+      }
+
+      function updateRpOriginAirports() {
+          $rpOriginAirportOptions.innerHTML = "";
+          const search_value = $rpOriginIcaoListItem.value;
 
           if (search_value.length < 2) {
               return;
@@ -165,30 +234,46 @@
           $.ajax({url: `/airports-data/${search_value}`, success: function(res){
               res.forEach((r) => {
                   const option = window.document.createElement('option');
-                  option.label = r.label;
-                  option.value = r.label;
-                  $originAirportOptions.appendChild(option);
+                  option.label = r.title;
+                  option.value = r.title;
+                  $rpOriginAirportOptions.appendChild(option);
               });
           }});
       }
 
-      function updateTimestamps(airport) {
+      function updateRpTimestamps(airport) {
           $.ajax({url: `/forecast-timestamp-range/${airport}`, success: function(res){
               const startDatetime = moment().utc();
               startDatetime.set('minutes', 0);
               startDatetime.set('seconds', 0);
               const startDateTimeTimestamp = startDatetime.unix();
-              const dateTimeRangeMax = Math.floor(((res.end_timestamp - startDateTimeTimestamp) / 3600));
+              const rpDateTimeRangeMax = Math.floor(((res.end_timestamp - startDateTimeTimestamp) / 3600));
 
-              $timestamp.value = startDateTimeTimestamp;
-              $dateTimeRange.setAttribute('max', dateTimeRangeMax.toString());
-              $dateTimeRange.setAttribute('data-start-timestamp', startDateTimeTimestamp.toString());
-              updateCurrentTimestamp();
+              $rpTimestamp.value = startDateTimeTimestamp;
+              $rpDateTimeRange.setAttribute('max', rpDateTimeRangeMax.toString());
+              $rpDateTimeRange.setAttribute('data-start-timestamp', startDateTimeTimestamp.toString());
+              updateRpCurrentTimestamp();
+          }});
+      }
+
+      function updateRcpTimestamps(airport) {
+          $.ajax({url: `/forecast-timestamp-range/${airport}`, success: function(res){
+              const startDatetime = moment().utc();
+              startDatetime.set('minutes', 0);
+              startDatetime.set('seconds', 0);
+              const startDateTimeTimestamp = startDatetime.unix();
+              const rcpDateTimeRangeMax = Math.floor(((res.end_timestamp - startDateTimeTimestamp) / 3600));
+
+              $rcpTimestamp.value = startDateTimeTimestamp;
+              $rcpDateTimeRange.setAttribute('max', rcpDateTimeRangeMax.toString());
+              $rcpDateTimeRange.setAttribute('data-start-timestamp', startDateTimeTimestamp.toString());
+              updateRcpCurrentTimestamp();
           }});
       }
 
       $(document).ready( function() {
-        resetForm();
+        resetRpForm();
+        resetRcpForm();
       })
     </script>
   {% block content %}

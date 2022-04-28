@@ -1,5 +1,5 @@
 from flask import Flask
-from app.config.file_dir import TEMPLATES_DIR
+from app.config import TEMPLATES_DIR
 from app.routes.web import web_blueprint
 from app.routes.api import api_blueprint
 

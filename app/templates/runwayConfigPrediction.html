@@ -1,0 +1,259 @@
+{% extends 'index.html' %}
+<!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
+
+
+{% block modelStats %}
+
+    {% if result %}
+        {% include 'runwayConfigStats.html' %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="d-grid gap-3">
+      <div class="p-2">
+        {% include 'warnings.html' %}
+      </div>
+
+    {% if result %}
+      <div class="p-2">
+        <div class="accordion" id="accordionExample">
+
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                  <button class="accordion-button"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#collapseOne"
+                          aria-expanded="false"
+                          aria-controls="collapseOne"
+                  >
+                      <span>
+                          <strong>Runway Configuration Prediction</strong> |
+                          {{ result['prediction_input']['destination_icao'] }}
+                          | {{ result['prediction_input']['date_time'] }}
+                      </span>
+                  </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                  <div class="accordion-body">
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="predictionInput-tab" data-bs-toggle="tab" data-bs-target="#predictionInput" type="button" role="tab" aria-controls="predictionInput" aria-selected="true">Prediction input</button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="predictionOutput-tab" data-bs-toggle="tab" data-bs-target="#predictionOutput" type="button" role="tab" aria-controls="predictionOutput" aria-selected="false">Prediction output</button>
+                      </li>
+                    </ul>
+                    <div class="tab-content" id="myTabContent">
+                      <div class="tab-pane fade" id="predictionInput" role="tabpanel" aria-labelledby="predictionInput-tab">
+                          <div class="table-responsive">
+
+                            <table class="table table-sm">
+                                <tbody>
+                                  <tr>
+                                    <td><strong>Destination airport ICAO</strong></td>
+                                    <td>{{ result['prediction_input']['destination_icao'] }}</td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Date time</strong></td>
+                                    <td>{{ result['prediction_input']['date_time'] }}</td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Wind direction</strong></td>
+                                      {% if result['prediction_input']['wind_input_source'] %}
+                                        <td>{{ result['prediction_input']['wind_direction'] }}&#176; ({{ result['prediction_input']['wind_input_source'] }})</td>
+                                      {% else %}
+                                        <td>{{ result['prediction_input']['wind_direction'] }}&#176;</td>
+                                      {% endif %}
+                                  </tr>
+                                  <tr>
+                                    <td><strong>Wind speed</strong></td>
+                                      {% if result['prediction_input']['wind_input_source'] %}
+                                        <td>{{ result['prediction_input']['wind_speed'] }}&#176; ({{ result['prediction_input']['wind_input_source'] }})</td>
+                                      {% else %}
+                                        <td>{{ result['prediction_input']['wind_speed'] }}&#176;</td>
+                                      {% endif %}
+                                  </tr>
+                                </tbody>
+                              </table>
+                          </div>
+
+                      </div>
+                      <div class="tab-pane fade show active" id="predictionOutput" role="tabpanel" aria-labelledby="predictionOutput-tab">
+                          <div class="table-responsive">
+
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                  <tr>
+                                    <th scope="col">Runway Configuration</th>
+                                    <th scope="col">Probability</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {% for feature in result['prediction_output']['features'] %}
+                                    <tr onclick="onRunwayConfigClick({{ loop.index0 }})" id="runway-config-row-{{ loop.index0 }}">
+                                        <td>{{ ", ".join(feature['properties']['runway_config']) }}</td>
+                                        <td>{{ "{:.0%}".format(feature['properties']['probability']) }}</td>
+                                    </tr>
+                                  {% endfor %}
+                                </tbody>
+                              </table>
+                          </div>
+
+                      </div>
+                    </div>
+
+
+                </div>
+              </div>
+
+            </div>
+        </div>
+      </div>
+      <div class="p-2">
+        <div id="map" style="height: 700px"></div>
+      </div>
+    {% endif %}
+    </div>
+  </div>
+    <script>
+        let result = null;
+        let map = null;
+        let geo = null;
+        let airplaneMarkers = [];
+        let currentIndex;
+
+        function reverseCoordinates(coordinates) {
+            return [coordinates[1], coordinates[0]]
+        }
+
+        function initMap(center_coordinates) {
+          const map = L.map('map');
+          map.createPane('labels');
+
+          // This pane is above markers but below popups
+          map.getPane('labels').style.zIndex = 650;
+
+          // Layers in this pane are non-interactive and do not obscure mouse/touch events
+          map.getPane('labels').style.pointerEvents = 'none';
+
+          const cartodbAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>';
+
+          L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+            attribution: cartodbAttribution,
+          }).addTo(map);
+
+          const mapCenter = reverseCoordinates(center_coordinates);
+          const mapZoom = 12;
+          map.setView(mapCenter, mapZoom);
+          return map;
+        }
+
+        function getRunwayConfigElements(index) {
+            return [
+                geo.getLayers()[index],
+                airplaneMarkers[index],
+                window.document.getElementById(`runway-config-row-${index}`)
+            ];
+        }
+
+        function showRunwayConfig(index) {
+            const [layer, markers, row] = getRunwayConfigElements(index);
+            layer.addTo(map);
+            row.style.setProperty('background-color', '#e7f1ff');
+            markers.forEach((m) => m.addTo(map));
+            rotateRunwayMarkerIcons(index, result.prediction_output.features[index].properties.true_bearing_per_runway);
+        }
+
+        function hideRunwayConfig(index) {
+            const [layer, markers, row] = getRunwayConfigElements(index);
+            layer.remove();
+            markers.forEach((m) => m.remove());
+            row.style.setProperty('background-color', '#ffffff');
+        }
+
+        function onRunwayConfigClick(index) {
+            currentIndex = index;
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            for (let i = 0; i < geo.getLayers().length; i++) {
+                const configMethod = i === currentIndex ? showRunwayConfig : hideRunwayConfig;
+                configMethod(i);
+            }
+        }
+
+        function addAirplaceMarkers(index, feature) {
+
+            const markers = [];
+            for (i = 0; i < feature.properties.runway_config.length; i++) {
+                const iconClassName = `marker-icon-${index}-${feature.properties.runway_config[i]}`;
+                const markerIcon =  new L.icon({
+                    className: iconClassName,
+                    iconUrl: '{{ url_for("static", filename="icons/airplane.png") }}',
+                    iconSize: [40, 40],
+                });
+
+                const config = feature.properties.runway_config;
+                const coordinates = reverseCoordinates(feature.geometry.coordinates[i][0]);
+                const popupContent = `Runway: <strong>${config[i]}</strong> | Probability: <strong>${Math.round(feature.properties.probability * 100)}%</strong>`;
+
+                const marker = new L.Marker(coordinates, {icon: markerIcon}).bindPopup(popupContent).addTo(map);
+                marker.on('mouseover', () => {
+                    marker.openPopup();
+                })
+                markers.push(marker);
+            }
+
+            return markers;
+        }
+
+        function rotateRunwayMarkerIcons(index, trueBearingPerRunway) {
+            Object.keys(trueBearingPerRunway).forEach((runwayName) => {
+                const iconClassName = `marker-icon-${index}-${runwayName}`;
+                const [iconElement] = window.document.getElementsByClassName(iconClassName);
+                iconElement.style.setProperty('transform-origin', 'center');
+                iconElement.style.transform += ` rotate(${trueBearingPerRunway[runwayName]}deg)`;
+
+            })
+        }
+
+        $( document ).ready(function() {
+          currentIndex = 0;
+          result = JSON.parse('{{ result|tojson }}');
+
+          map = initMap(result.airport_coordinates);
+
+          map.on('zoomend', () => {
+            updateDisplay();
+          });
+
+          geo = L.geoJSON(
+              result.prediction_output, {
+                style: (feature) => {
+                    return {
+                        color: '#f05a23',
+                        weight: 12,
+                        opacity: feature.properties.probability > 0.2 ? feature.properties.probability : 0.2,
+                    }
+                },
+              }
+          ).addTo(map);
+
+          for (let i = 0; i < result.prediction_output.features.length; i++) {
+            airplaneMarkers.push(addAirplaceMarkers(i, result.prediction_output.features[i]));
+          }
+
+          updateDisplay();
+        });
+    </script>
+    <style>
+    .table-hover tbody tr:hover td {
+      background-color: #e7f1ff;
+      cursor: pointer;
+    }
+    </style>
+{% endblock %}

@@ -35,12 +35,11 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
-import datetime
 
 import pytest as pytest
 
 from app.config import DESTINATION_ICAOS
-from app.routes.schemas import ValidationError, PredictionInputSchema
+from app.routes import schemas
 
 
 @pytest.fixture
@@ -55,104 +54,104 @@ def prediction_input_data():
 
 
 @pytest.mark.parametrize('invalid_origin_icao', ['ICAO1', 1, 1.0, {}, [], (), False, None])
-def test_prediction_input_schema__invalid_origin_icao(invalid_origin_icao):
-    with pytest.raises(ValidationError) as e:
-        PredictionInputSchema()._validate_origin_icao(invalid_origin_icao)
+def test__invalid_origin_icao(invalid_origin_icao):
+    with pytest.raises(ValueError) as e:
+        schemas._validate_origin_icao(invalid_origin_icao)
     assert str(e.value) == 'origin_icao should be a string of 4 characters.'
 
 
 @pytest.mark.parametrize('origin_icao', ['ICAO', '11CA'])
-def test_prediction_input_schema__origin_icao_is_valid(origin_icao):
-    assert PredictionInputSchema()._validate_origin_icao(origin_icao) == origin_icao.upper()
+def test__origin_icao_is_valid(origin_icao):
+    assert schemas._validate_origin_icao(origin_icao) == origin_icao.upper()
 
 
 @pytest.mark.parametrize('invalid_destination_icao', ['ICAO1', 1, 1.0, {}, [], (), False, None])
-def test_prediction_input_schema__invalid_destination_icao(invalid_destination_icao):
-    with pytest.raises(ValidationError) as e:
-        PredictionInputSchema()._validate_destination_icao(invalid_destination_icao)
+def test__invalid_destination_icao(invalid_destination_icao):
+    with pytest.raises(ValueError) as e:
+        schemas._validate_destination_icao(invalid_destination_icao)
     assert str(e.value) == 'destination_icao should be a string of 4 characters.'
 
 
-@pytest.mark.parametrize('invalid_destination_icao', ['LEMD', 'EBBR', 'LGAV'])
-def test_prediction_input_schema__destination_icao_is_not_supported(invalid_destination_icao):
-    with pytest.raises(ValidationError) as e:
-        PredictionInputSchema()._validate_destination_icao(invalid_destination_icao)
+@pytest.mark.parametrize('invalid_destination_icao', ['LFBO', 'EBBR', 'LGAV'])
+def test__destination_icao_is_not_supported(invalid_destination_icao):
+    with pytest.raises(ValueError) as e:
+        schemas._validate_destination_icao(invalid_destination_icao)
     assert str(e.value) == f"destination_icao should be one of {', '.join(DESTINATION_ICAOS)}."
 
 
 @pytest.mark.parametrize('destination_icao', DESTINATION_ICAOS)
-def test_prediction_input_schema__destination_icao_is_valid_and_supported(destination_icao):
-    assert PredictionInputSchema()._validate_destination_icao(destination_icao) == destination_icao
+def test__destination_icao_is_valid_and_supported(destination_icao):
+    assert schemas._validate_destination_icao(destination_icao) == destination_icao
 
 
 @pytest.mark.parametrize('invalid_timestamp', ['str', [], {}, (), None])
-def test_prediction_input_schema__timestamp_is_not_integer(invalid_timestamp):
-    with pytest.raises(ValidationError) as e:
-        PredictionInputSchema()._validate_timestamp(invalid_timestamp)
+def test__timestamp_is_not_integer(invalid_timestamp):
+    with pytest.raises(ValueError) as e:
+        schemas._validate_timestamp(invalid_timestamp)
     assert str(e.value) == f"timestamp should be an integer."
 
 
 @pytest.mark.parametrize('invalid_timestamp', [1111111111111111111111111])
-def test_prediction_input_schema__timestamp_not_convertable_to_datetime(invalid_timestamp):
-    with pytest.raises(ValidationError) as e:
-        PredictionInputSchema()._validate_timestamp(invalid_timestamp)
+def test__timestamp_not_convertable_to_datetime(invalid_timestamp):
+    with pytest.raises(ValueError) as e:
+        schemas._validate_timestamp(invalid_timestamp)
     assert str(e.value) == f"Invalid timestamp."
 
 
 @pytest.mark.parametrize('timestamp', [1650024497, 1650030959])
-def test_prediction_input_schema__timestamp_is_converted_to_datetime(timestamp):
-    assert PredictionInputSchema()._validate_timestamp(timestamp) == timestamp
+def test__timestamp_is_converted_to_datetime(timestamp):
+    assert schemas._validate_timestamp(timestamp) == timestamp
 
 
 @pytest.mark.parametrize('invalid_wind_direction', ['str', [], {}, (), None])
-def test_prediction_input_schema__wind_direction_is_not_float(invalid_wind_direction):
-    with pytest.raises(ValidationError) as e:
-        PredictionInputSchema()._validate_wind_direction(invalid_wind_direction)
+def test__wind_direction_is_not_float(invalid_wind_direction):
+    with pytest.raises(ValueError) as e:
+        schemas._validate_wind_direction(invalid_wind_direction)
     assert str(e.value) == f"wind_direction should be a float."
 
 
 @pytest.mark.parametrize('invalid_wind_direction', [-1, 361])
-def test_prediction_input_schema__wind_direction_is_not_between_0_and_360(invalid_wind_direction):
-    with pytest.raises(ValidationError) as e:
-        PredictionInputSchema()._validate_wind_direction(invalid_wind_direction)
+def test__wind_direction_is_not_between_0_and_360(invalid_wind_direction):
+    with pytest.raises(ValueError) as e:
+        schemas._validate_wind_direction(invalid_wind_direction)
     assert str(e.value) == f"wind_direction should be between 0 and 360."
 
 
 @pytest.mark.parametrize('wind_direction', [0, 1, 100, 360])
-def test_prediction_input_schema__wind_direction_is_valid(wind_direction):
-    assert PredictionInputSchema()._validate_wind_direction(wind_direction) == wind_direction
+def test__wind_direction_is_valid(wind_direction):
+    assert schemas._validate_wind_direction(wind_direction) == wind_direction
 
 
 @pytest.mark.parametrize('invalid_wind_speed', ['str', [], {}, (), None])
-def test_prediction_input_schema__wind_speed_is_not_float(invalid_wind_speed):
-    with pytest.raises(ValidationError) as e:
-        PredictionInputSchema()._validate_wind_speed(invalid_wind_speed)
+def test__wind_speed_is_not_float(invalid_wind_speed):
+    with pytest.raises(ValueError) as e:
+        schemas._validate_wind_speed(invalid_wind_speed)
     assert str(e.value) == f"wind_speed should be a float."
 
 
 @pytest.mark.parametrize('invalid_wind_speed', [-1, -1000])
-def test_prediction_input_schema__wind_speed_is_not_between_positive(invalid_wind_speed):
-    with pytest.raises(ValidationError) as e:
-        PredictionInputSchema()._validate_wind_speed(invalid_wind_speed)
+def test__wind_speed_is_not_between_positive(invalid_wind_speed):
+    with pytest.raises(ValueError) as e:
+        schemas._validate_wind_speed(invalid_wind_speed)
     assert str(e.value) == f"wind_speed should be positive."
 
 
 @pytest.mark.parametrize('wind_speed', [0, 1, 100, 360])
-def test_prediction_input_schema__wind_speed_is_valid(wind_speed):
-    assert PredictionInputSchema()._validate_wind_speed(wind_speed) == wind_speed
+def test__wind_speed_is_valid(wind_speed):
+    assert schemas._validate_wind_speed(wind_speed) == wind_speed
 
 
 def test_prediction_input_schema__invalid_prediction_input_data(prediction_input_data):
     del prediction_input_data['origin_icao']
-    with pytest.raises(ValidationError) as e:
-        PredictionInputSchema().load(**prediction_input_data)
+    with pytest.raises(schemas.ValidationError) as e:
+        schemas.RunwayPredictionInputSchema().load(**prediction_input_data)
     assert str(e.value) == f"Invalid input."
 
 
 def test_prediction_input_schema__valid_prediction_input_data__returns_prediction_input(
     prediction_input_data
 ):
-    prediction_input = PredictionInputSchema().load(**prediction_input_data)
+    prediction_input = schemas.RunwayPredictionInputSchema().load(**prediction_input_data)
     assert prediction_input.origin_icao == prediction_input_data['origin_icao'].upper()
     assert prediction_input.destination_icao == prediction_input_data['destination_icao'].upper()
     assert prediction_input.date_time.timestamp() == prediction_input_data['timestamp']
