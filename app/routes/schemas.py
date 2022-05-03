@@ -35,194 +35,197 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, Any
 
-import pandas as pd
-
 from app.config import DESTINATION_ICAOS
-from app.domain.airports import get_destination_airports_data, get_destination_airport_metrics
-from app.domain.runway.factory import PredictionInputFactory
-from app.domain.runway.models import PredictionInput, WindInputSource
+from app.adapters.stats import get_runway_airport_stats, get_runway_config_airport_stats
+from app.domain.models import RunwayPredictionInput, WindInputSource, RunwayConfigPredictionInput, \
+    RunwayPredictionOutput, RunwayConfigPredictionOutput
 
 
 class ValidationError(Exception):
     ...
 
 
-class PredictionInputSchema:
-    def load(self, **kwargs):
-        validated_kwargs = self._load_validated(**kwargs)
+def _is_valid_icao(icao: str):
+    return isinstance(icao, str) and len(icao) == 4
 
-        return PredictionInputFactory.create_prediction_input(**validated_kwargs)
 
-    def _load_validated(self, **kwargs):
+def _validate_origin_icao(value: Any) -> str:
+    if not _is_valid_icao(value):
+        raise ValueError("origin_icao should be a string of 4 characters.")
+
+    return value
+
+
+def _validate_destination_icao(value: Any) -> str:
+    if not _is_valid_icao(value):
+        raise ValueError("destination_icao should be a string of 4 characters.")
+
+    if value not in DESTINATION_ICAOS:
+        raise ValueError(f"destination_icao should be one of {', '.join(DESTINATION_ICAOS)}.")
+
+    return value
+
+
+def _validate_timestamp(value: Any) -> int:
+    if not (isinstance(value, int)):
+        try:
+            value = int(value)
+        except (ValueError, TypeError):
+            raise ValueError("timestamp should be an integer.")
+
+    try:
+        datetime.fromtimestamp(value)
+    except (TypeError, ValueError, OSError, OverflowError):
+        raise ValueError("Invalid timestamp.")
+
+    return value
+
+
+def _validate_wind_direction(value: Any) -> float:
+    if not isinstance(value, int):
+        try:
+            value = float(value)
+        except (ValueError, TypeError):
+            raise ValueError("wind_direction should be a float.")
+
+    if not 0 <= value <= 360:
+        raise ValueError('wind_direction should be between 0 and 360.')
+
+    return value
+
+
+def _validate_wind_speed(value: any) -> float:
+    if not isinstance(value, int):
+        try:
+            value = float(value)
+        except (ValueError, TypeError):
+            raise ValueError("wind_speed should be a float.")
+
+    if value < 0:
+        raise ValueError('wind_speed should be positive.')
+
+    return value
+
+
+class PredictionInputSchema(ABC):
+
+    def validate(self, **kwargs) -> dict:
         try:
             return self._validate(**kwargs)
         except TypeError:
             raise ValidationError('Invalid input.')
+        except ValueError as e:
+            raise ValidationError(str(e))
 
-    def _validate(self,
-                  origin_icao: str,
-                  destination_icao: str,
-                  timestamp: int,
-                  wind_direction: Optional[float] = None,
-                  wind_speed: Optional[float] = None,
-                  wind_input_source: Optional[str] = None,
-                  ) -> dict:
+    @abstractmethod
+    def _validate(self, **kwargs) -> dict:
+        ...
+
+
+class RunwayPredictionInputSchema(PredictionInputSchema):
+
+    def _validate(
+        self,
+        origin_icao: str,
+        destination_icao: str,
+        timestamp: int,
+        wind_direction: Optional[float] = None,
+        wind_speed: Optional[float] = None,
+        wind_input_source: Optional[str] = None,
+    ) -> dict:
+
         validated_data = {
-            "origin_icao": self._validate_origin_icao(origin_icao),
-            "destination_icao": self._validate_destination_icao(destination_icao),
-            "timestamp": self._validate_timestamp(timestamp),
+            "origin_icao": _validate_origin_icao(origin_icao),
+            "destination_icao": _validate_destination_icao(destination_icao),
+            "timestamp": _validate_timestamp(timestamp),
         }
 
-        if wind_direction and wind_speed:
-            validated_data["wind_direction"] = self._validate_wind_direction(wind_direction)
-            validated_data["wind_speed"] = self._validate_wind_speed(wind_speed)
+        if wind_direction is not None:
+            validated_data["wind_direction"] = _validate_wind_direction(wind_direction)
 
-        if wind_input_source:
-            try:
-                validated_data["wind_input_source"] = WindInputSource(wind_input_source)
-            except ValueError:
-                validated_data["wind_input_source"] = None
+        if wind_speed is not None:
+            validated_data["wind_speed"] = _validate_wind_speed(wind_speed)
+
+        try:
+            validated_data["wind_input_source"] = WindInputSource(wind_input_source)
+        except ValueError:
+            pass
 
         return validated_data
 
-    @staticmethod
-    def _is_valid_icao(icao: str):
-        return isinstance(icao, str) and len(icao) == 4
 
-    @staticmethod
-    def _validate_origin_icao(value: Any) -> str:
-        if not PredictionInputSchema._is_valid_icao(value):
-            raise ValidationError("origin_icao should be a string of 4 characters.")
+class RunwayConfigPredictionInputSchema(PredictionInputSchema):
 
-        return value.upper()
+    def _validate(
+        self,
+        destination_icao: str,
+        timestamp: int,
+        wind_direction: Optional[float] = None,
+        wind_speed: Optional[float] = None,
+        wind_input_source: Optional[str] = None,
+    ) -> dict:
 
-    @staticmethod
-    def _validate_destination_icao(value: Any) -> str:
-        if not PredictionInputSchema._is_valid_icao(value):
-            raise ValidationError("destination_icao should be a string of 4 characters.")
+        validated_data = {
+            "destination_icao": _validate_destination_icao(destination_icao),
+            "timestamp": _validate_timestamp(timestamp),
+        }
 
-        if value not in DESTINATION_ICAOS:
-            raise ValidationError(f"destination_icao should be one of {', '.join(DESTINATION_ICAOS)}.")
+        if wind_direction is not None:
+            validated_data["wind_direction"] = _validate_wind_direction(wind_direction)
 
-        return value.upper()
-
-    @staticmethod
-    def _validate_timestamp(value: Any) -> int:
-        if not (isinstance(value, int)):
-            try:
-                value = int(value)
-            except (ValueError, TypeError):
-                raise ValidationError("timestamp should be an integer.")
+        if wind_speed is not None:
+            validated_data["wind_speed"] = _validate_wind_speed(wind_speed)
 
         try:
-            datetime.fromtimestamp(value)
-        except (TypeError, ValueError, OSError, OverflowError):
-            raise ValidationError("Invalid timestamp.")
+            validated_data["wind_input_source"] = WindInputSource(wind_input_source)
+        except ValueError:
+            pass
 
-        return value
-
-    @staticmethod
-    def _validate_wind_direction(value: Any) -> float:
-        if not isinstance(value, int):
-            try:
-                value = float(value)
-            except (ValueError, TypeError):
-                raise ValidationError("wind_direction should be a float.")
-
-        if not 0 <= value <= 360:
-            raise ValidationError('wind_direction should be between 0 and 360.')
-
-        return value
-
-    @staticmethod
-    def _validate_wind_speed(value: any) -> float:
-        if not isinstance(value, int):
-            try:
-                value = float(value)
-            except (ValueError, TypeError):
-                raise ValidationError("wind_speed should be a float.")
-
-        if value < 0:
-            raise ValidationError('wind_speed should be positive.')
-
-        return value
+        return validated_data
 
 
-class PredictionOutputContext:
-    def __init__(self,
-                 prediction_input: PredictionInput,
-                 prediction_result: pd.Series,
-                 ):
-        self.prediction_input = prediction_input
-        self.prediction_result = prediction_result
-        self.prediction_output = {}
+@dataclass
+class RunwayPredictionOutputSchema:
+    prediction_input: RunwayPredictionInput
+    prediction_output: RunwayPredictionOutput
 
+    def to_api(self) -> dict:
+        return {
+            "prediction_input": self.prediction_input.to_dict(),
+            "prediction_output": self.prediction_output.to_geojson(),
+        }
 
-class RunwaysProbabilitiesBuilder:
-    @classmethod
-    def build(cls, context: PredictionOutputContext):
-        context.prediction_output = {
-            "runways": [
-               {"name": runway, "probability": probability} for runway, probability in
-               context.prediction_result.sort_values(ascending=False).items()
-           ]
+    def to_web(self) -> dict:
+        return {
+            "prediction_input": self.prediction_input.to_display_dict(),
+            "prediction_output": self.prediction_output.to_geojson(exclude_zero_probas=True),
+            "airport_coordinates": [self.prediction_input.destination.lon,
+                                    self.prediction_input.destination.lat],
+            "stats": get_runway_airport_stats(self.prediction_input.destination.icao)
         }
 
 
+@dataclass
+class RunwayConfigPredictionOutputSchema:
+    prediction_input: RunwayConfigPredictionInput
+    prediction_output: RunwayConfigPredictionOutput
 
-class PredictionInputBuilder:
-    @classmethod
-    def build(cls, context: PredictionOutputContext):
-        context.prediction_output["prediction_input"] = context.prediction_input.to_dict()
+    def to_api(self) -> dict:
+        return {
+            "prediction_input": self.prediction_input.to_dict(),
+            "prediction_output": self.prediction_output.to_geojson(),
+        }
 
-
-class GeodataBuilder:
-    @classmethod
-    def build(cls, context: PredictionOutputContext):
-        airport_data = get_destination_airports_data()[context.prediction_input.destination_icao]
-
-        context.prediction_output['airport_coordinates'] = [airport_data['lat'], airport_data['lon']]
-
-        for i, runway in enumerate(context.prediction_output['runways']):
-            context.prediction_output['runways'][i]['coordinates_geojson'] = \
-                airport_data['runways_geodata'][runway['name']]['geojson']
-            context.prediction_output['runways'][i]['true_bearing'] = \
-                airport_data['runways_geodata'][runway['name']]['true_bearing']
-
-
-class MetricsBuilder:
-    @classmethod
-    def build(cls, context: PredictionOutputContext):
-        context.prediction_output['metrics'] = get_destination_airport_metrics(
-            context.prediction_input.destination_icao
-        )
-
-
-def get_web_prediction_output(prediction_input: PredictionInput,
-                              prediction_result: pd.Series):
-
-    context = PredictionOutputContext(prediction_input,
-                                      prediction_result)
-
-    for builder in [RunwaysProbabilitiesBuilder,
-                    PredictionInputBuilder,
-                    GeodataBuilder,
-                    MetricsBuilder]:
-        builder.build(context)
-
-    return context.prediction_output
-
-
-def get_api_prediction_output(prediction_input: PredictionInput,
-                              prediction_result: pd.Series):
-
-    context = PredictionOutputContext(prediction_input,
-                                      prediction_result)
-
-    for builder in [RunwaysProbabilitiesBuilder]:
-        builder.build(context)
-
-    return context.prediction_output
+    def to_web(self) -> dict:
+        return {
+            "prediction_input": self.prediction_input.to_display_dict(),
+            "prediction_output": self.prediction_output.to_geojson(exclude_zero_probas=True),
+            "airport_coordinates": [self.prediction_input.destination.lon,
+                                    self.prediction_input.destination.lat],
+            "stats": get_runway_config_airport_stats(self.prediction_input.destination.icao)
+        }

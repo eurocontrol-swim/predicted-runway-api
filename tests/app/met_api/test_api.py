@@ -40,10 +40,10 @@ from unittest import mock
 
 import pytest
 
-from app.domain.runway.models import WindInputSource
-from app.met.api import get_wind_input_from_metar, get_wind_input_from_taf, get_wind_input, \
+from app.domain.models import WindInputSource
+from app.adapters.met.api import get_wind_input_from_metar, get_wind_input_from_taf, get_wind_input, \
     METNotAvailable
-from app.met.query import METARAirportFilesQuery, TAFAirportFilesQuery
+from app.adapters.met.query import METARAirportFilesQuery, TAFAirportFilesQuery
 
 
 @pytest.fixture
@@ -92,7 +92,7 @@ def test_get_wind_from_taf__wind_speed_not_found__returns_none(
                                    before_timestamp=before_timestamp) is None
 
 
-@mock.patch('app.met.api.get_wind_input_from_metar')
+@mock.patch('app.adapters.met.api.get_wind_input_from_metar')
 def test_get_wind_input__found_in_metar__returns_values_and_source(
     mock_get_wind_input_from_metar, airport_icao, before_timestamp
 ):
@@ -101,8 +101,8 @@ def test_get_wind_input__found_in_metar__returns_values_and_source(
            == (10, 10, WindInputSource.FROM_METAR)
 
 
-@mock.patch('app.met.api.get_wind_input_from_taf')
-@mock.patch('app.met.api.get_wind_input_from_metar')
+@mock.patch('app.adapters.met.api.get_wind_input_from_taf')
+@mock.patch('app.adapters.met.api.get_wind_input_from_metar')
 def test_get_wind_input__not_found_in_metar__returns_taf_values_and_source(
     mock_get_wind_input_from_metar, mock_get_wind_input_from_taf, airport_icao, before_timestamp
 ):
@@ -112,8 +112,8 @@ def test_get_wind_input__not_found_in_metar__returns_taf_values_and_source(
            == (10, 10, WindInputSource.FROM_TAF)
 
 
-@mock.patch('app.met.api.get_wind_input_from_taf')
-@mock.patch('app.met.api.get_wind_input_from_metar')
+@mock.patch('app.adapters.met.api.get_wind_input_from_taf')
+@mock.patch('app.adapters.met.api.get_wind_input_from_metar')
 def test_get_wind_input__not_found_in_neither_source__raises_metnotavailable(
     mock_get_wind_input_from_metar, mock_get_wind_input_from_taf, airport_icao, before_timestamp
 ):

@@ -1,0 +1,195 @@
+
+<button class="btn btn-outline-info"
+        type="button"
+        data-bs-toggle="modal"
+        data-bs-target="#modelStatsModal"
+>
+    <i class="bi bi-info-circle"></i> Model statistics
+</button>
+<div class="modal fade" id="modelStatsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modelStatsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modelStatsModalLabel">Model statistics | {{ result['stats']['airport'] }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+          <div class="table-responsive">
+            <table class="table table-sm caption-top metrics-table">
+                <caption>General</caption>
+                <tbody>
+                  <tr>
+                    <td><strong>Algorithm</strong></td>
+                    <td>Random Forest Classifier</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Estimators</strong></td>
+                    <td>{{ result['stats']['number_estimators'] }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Criterion</strong></td>
+                    <td>{{ result['stats']['criterion'] }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>From date</strong></td>
+                    <td>{{ result['stats']['date_from'] }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>To date</strong></td>
+                    <td>{{ result['stats']['date_to'] }}</td>
+                  </tr>
+                </tbody>
+              </table>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm caption-top metrics-table">
+                <caption>Features</caption>
+                <thead class="table-light">
+                  <tr>
+                      <th>Name</th>
+                      <th>Importance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for feature in result['stats']['features_importance'] %}
+                  <tr>
+                    {% if feature[0] == "wind_dir" %}
+                        <td><strong>Wind direction</strong></td>
+                    {% elif feature[0] == "15min_day_interval" %}
+                        <td><strong>Quarter of day</strong></td>
+                    {% elif feature[0] == "wind_speed" %}
+                        <td><strong>Wind speed</strong></td>
+                    {% elif feature[0] == "is_summer_season" %}
+                        <td><strong>Is summer season</strong></td>
+                    {% elif feature[0] == "is_workday" %}
+                        <td><strong>Is workday</strong></td>
+                    {% endif  %}
+                    <td>{{ "{:.2f}%".format(feature[1] * 100) }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm caption-top metrics-table">
+                <caption>Metrics</caption>
+                <thead class="table-light">
+                  <tr>
+                      <th>Name</th>
+                      <th>Test with METAR</th>
+                      <th>Test with TAF</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>F1 weighted</strong></td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['f1_weighted'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['f1_weighted'] * 100) }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Balanced accuracy</strong></td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['balanced_accuracy'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['balanced_accuracy'] * 100) }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Balanced accuracy over random</strong></td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['balanced_accuracy_over_rand'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['balanced_accuracy_over_rand'] * 100) }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Accuracy</strong></td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['accuracy'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['accuracy'] * 100) }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Recall weighted</strong></td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['recall_weighted'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['recall_weighted'] * 100) }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Precision weighted</strong></td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['precision_weighted'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['precision_weighted'] * 100) }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Top 2</strong></td>
+                      {% if result['stats']['test_with_metar']['top_2'] %}
+                        <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['top_2'] * 100) }}</td>
+                      {% else %}
+                        <td>NA</td>
+                      {% endif %}
+                      {% if result['stats']['test_with_taf']['top_2'] %}
+                        <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['top_2'] * 100) }}</td>
+                      {% else %}
+                        <td>NA</td>
+                      {% endif %}
+                  </tr>
+                  <tr>
+                    <td><strong>ROC AUC</strong></td>
+                      {% if result['stats']['test_with_metar']['roc_auc'] %}
+                        <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['roc_auc'] * 100) }}</td>
+                      {% else %}
+                        <td>NA</td>
+                      {% endif %}
+                      {% if result['stats']['test_with_taf']['roc_auc'] %}
+                        <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['roc_auc'] * 100) }}</td>
+                      {% else %}
+                        <td>NA</td>
+                      {% endif %}
+                  </tr>
+                  <tr>
+                    <td><strong>Jaccard score</strong></td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['jaccard_score']) }}</td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['jaccard_score']) }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Hamming loss</strong></td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['hamming_loss']) }}</td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['hamming_loss']) }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Parallel F1 weighted</strong></td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['parallel_f1_weighted'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['parallel_f1_weighted'] * 100) }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Parallel balanced accuracy</strong></td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['parallel_balanced_accuracy'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['parallel_balanced_accuracy'] * 100) }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Parallel balanced accuracy over random</strong></td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['parallel_balanced_accuracy_over_random'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['parallel_balanced_accuracy_over_random'] * 100) }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Parallel accuracy</strong></td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['parallel_accuracy'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['parallel_accuracy'] * 100) }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Parallel recall weighted</strong></td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['parallel_recall_weighted'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['parallel_recall_weighted'] * 100) }}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Parallel precision weighted</strong></td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['parallel_precision_weighted'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['parallel_precision_weighted'] * 100) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+.modal-backdrop {
+    {# fixing modal misbehaviour #}
+    width: 0;
+}
+.metrics-table {
+    font-size: 0.9rem;
+}
+</style>
