@@ -77,9 +77,9 @@
                                   <tr>
                                     <td><strong>Wind speed</strong></td>
                                       {% if result['prediction_input']['wind_input_source'] %}
-                                        <td>{{ result['prediction_input']['wind_speed'] }}&#176; ({{ result['prediction_input']['wind_input_source'] }})</td>
+                                        <td>{{ result['prediction_input']['wind_speed'] }}kts ({{ result['prediction_input']['wind_input_source'] }})</td>
                                       {% else %}
-                                        <td>{{ result['prediction_input']['wind_speed'] }}&#176;</td>
+                                        <td>{{ result['prediction_input']['wind_speed'] }}kts</td>
                                       {% endif %}
                                   </tr>
                                 </tbody>
