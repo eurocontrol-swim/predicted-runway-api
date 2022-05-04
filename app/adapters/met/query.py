@@ -74,12 +74,9 @@ class AirportFilesQuery(abc.ABC):
                 return file
 
     def list_files(self, reverse_order: bool = False) -> list[Path]:
-        result = [f for f in self.files_dir.glob('*.json')]
+        files = [f for f in self.files_dir.glob('*.json')]
 
-        if reverse_order:
-            result = sorted(result, reverse=True)
-
-        return result
+        return sorted(files, reverse=reverse_order)
 
     def file_has_timestamp(self, file: Path, timestamp: int) -> bool:
         return self.file_is_before_timestamp(file, timestamp=timestamp) \
@@ -156,7 +153,7 @@ class TAFAirportFilesQuery(AirportFilesQuery):
                                                   value_key='wind_direction')
 
     def get_datetime_range(self) -> Optional[tuple[datetime, datetime]]:
-        files = sorted(self.list_files())
+        files = self.list_files()
 
         if not files:
             return
@@ -164,7 +161,7 @@ class TAFAirportFilesQuery(AirportFilesQuery):
         if len(files) == 1:
             first_file, last_file = files[0], files[0]
         else:
-            first_file, *_, last_file = sorted(self.list_files())
+            first_file, *_, last_file = files
 
         first_file_content = self._read_file(first_file)
         last_file_content = self._read_file(last_file)

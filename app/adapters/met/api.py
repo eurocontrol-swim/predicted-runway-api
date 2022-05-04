@@ -98,4 +98,4 @@ def get_taf_datetime_range(destination_icao) -> tuple[datetime, datetime]:
     if datetime_range is None:
         raise METNotAvailable()
 
-    return fq.get_datetime_range()
+    return datetime_range
