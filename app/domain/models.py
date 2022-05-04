@@ -36,13 +36,12 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 __author__ = "EUROCONTROL (SWIM)"
 
 import math
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Protocol, Optional
+from typing import Protocol, Optional, Any
 
 import holidays
-import pandas as pd
 
 
 class WindInputSource(Enum):
@@ -123,37 +122,15 @@ class Airport:
                 return runway
 
 
-@dataclass
-class Arrival:
-    origin: Airport
-    destination: Airport
-
-    def get_angle(self) -> float:
-        origin_lat = math.radians(self.origin.lat)
-        origin_lon = math.radians(self.origin.lon)
-        destination_lat = math.radians(self.destination.lat)
-        destination_lon = math.radians(self.destination.lon)
-
-        diff_lon = destination_lon - origin_lon
-
-        y = math.sin(diff_lon) * math.cos(destination_lat)
-        x = math.cos(origin_lat) * math.sin(destination_lat) \
-            - math.sin(origin_lat) * math.cos(destination_lat) * math.cos(diff_lon)
-
-        bearing = math.atan2(y, x)
-
-        bearing = math.degrees(bearing)
-        bearing = (bearing + 360) % 360
-
-        return bearing
-
-
 class PredictionInput(Protocol):
 
     def to_dict(self) -> dict:
         ...
 
     def to_display_dict(self) -> dict:
+        ...
+
+    def get_model_input_values(self, features: list[str]) -> list[Any]:
         ...
 
 
@@ -186,6 +163,18 @@ class RunwayPredictionInput:
             "wind_speed": self.wind_speed,
         }
 
+    def get_model_input_values(self, features: list[str]) -> list[Any]:
+        _model_input_mapper = {
+            "hour": self.timestamp.hour_of_day,
+            "is_workday": self.timestamp.is_workday(self.destination.country),
+            "is_summer_season": self.timestamp.is_summer_season(),
+            "wind_speed": self.wind_speed,
+            "wind_dir": self.wind_direction,
+            "origin_angle": get_airports_angle(origin=self.origin, destination=self.destination)
+        }
+
+        return [_model_input_mapper[feature] for feature in features]
+
 
 @dataclass
 class RunwayConfigPredictionInput:
@@ -213,85 +202,16 @@ class RunwayConfigPredictionInput:
             "wind_speed": self.wind_speed,
         }
 
-
-class PredictionModelInput(Protocol):
-
-    @classmethod
-    def from_runway_prediction_input(cls, prediction_input: PredictionInput):
-        ...
-
-    def to_dataframe(self) -> pd.DataFrame:
-        ...
-
-
-@dataclass
-class RunwayPredictionModelInput:
-    hour_of_day: int
-    is_workday: bool
-    is_summer_season: bool
-    wind_speed: float
-    wind_direction: float
-    origin_angle: float
-
-    def __post_init__(self):
-        self._input_mapper = {
-            "hour": self.hour_of_day,
+    def get_model_input_values(self, features: list[str]) -> list[Any]:
+        _model_input_mapper = {
+            "15min_day_interval": self.timestamp.quarter_of_day,
+            "is_workday": self.timestamp.is_workday(country=self.destination.country),
+            "is_summer_season": self.timestamp.is_summer_season(),
             "wind_speed": self.wind_speed,
-            "wind_dir": self.wind_direction,
-            "origin_angle": self.origin_angle,
-            "is_workday": self.is_workday,
-            "is_summer_season": self.is_summer_season,
+            "wind_dir": self.wind_direction
         }
 
-    @classmethod
-    def from_runway_prediction_input(cls, prediction_input: RunwayPredictionInput):
-        arrival = Arrival(origin=prediction_input.origin, destination=prediction_input.destination)
-
-        return cls(
-            hour_of_day=prediction_input.timestamp.hour_of_day,
-            is_workday=prediction_input.timestamp.is_workday(country=arrival.destination.country),
-            is_summer_season=prediction_input.timestamp.is_summer_season(),
-            wind_speed=prediction_input.wind_speed,
-            wind_direction=prediction_input.wind_direction,
-            origin_angle=arrival.get_angle()
-        )
-
-    def to_dataframe(self) -> pd.DataFrame:
-        return pd.DataFrame([list(self._input_mapper.values())],
-                            columns=list(self._input_mapper.keys()))
-
-
-@dataclass
-class RunwayConfigPredictionModelInput:
-    is_workday: bool
-    is_summer_season: bool
-    quarter_of_day: int
-    wind_speed: float
-    wind_direction: float
-
-    def __post_init__(self):
-        self._input_mapper = {
-            "is_workday": self.is_workday,
-            "is_summer_season": self.is_summer_season,
-            "15min_day_interval": self.quarter_of_day,
-            "wind_speed": self.wind_speed,
-            "wind_dir": self.wind_direction,
-        }
-
-    @classmethod
-    def from_runway_prediction_input(cls, prediction_input: RunwayConfigPredictionInput):
-        return cls(
-            quarter_of_day=prediction_input.timestamp.quarter_of_day,
-            wind_speed=prediction_input.wind_speed,
-            wind_direction=prediction_input.wind_direction,
-            is_workday=prediction_input.timestamp.is_workday(
-                country=prediction_input.destination.country),
-            is_summer_season=prediction_input.timestamp.is_summer_season()
-        )
-
-    def to_dataframe(self) -> pd.DataFrame:
-        return pd.DataFrame([list(self._input_mapper.values())],
-                            columns=list(self._input_mapper.keys()))
+        return [_model_input_mapper[feature] for feature in features]
 
 
 class PredictionModelOutput(dict):
@@ -407,3 +327,23 @@ class RunwayConfigPredictionOutput:
                 self._get_runway_config_geojson(proba)for proba in probas
             ]
         }
+
+
+def get_airports_angle(origin: Airport, destination: Airport) -> float:
+    origin_lat = math.radians(origin.lat)
+    origin_lon = math.radians(origin.lon)
+    destination_lat = math.radians(destination.lat)
+    destination_lon = math.radians(destination.lon)
+
+    diff_lon = destination_lon - origin_lon
+
+    y = math.sin(diff_lon) * math.cos(destination_lat)
+    x = math.cos(origin_lat) * math.sin(destination_lat) \
+        - math.sin(origin_lat) * math.cos(destination_lat) * math.cos(diff_lon)
+
+    bearing = math.atan2(y, x)
+
+    bearing = math.degrees(bearing)
+    bearing = (bearing + 360) % 360
+
+    return bearing

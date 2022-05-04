@@ -37,14 +37,14 @@ __author__ = "EUROCONTROL (SWIM)"
 
 from pathlib import Path
 
+import pandas as pd
 from joblib import load
 from sklearn.ensemble import RandomForestClassifier
 
 from app.config import get_runway_model_path, get_runway_config_model_path
 from app.domain.models import RunwayPredictionInput, RunwayConfigPredictionInput, \
-    RunwayPredictionOutput, RunwayConfigPredictionOutput, RunwayConfigPredictionModelInput, \
-    PredictionModelInput, RunwayPredictionModelInput, PredictionModelOutput, RunwayProbability, \
-    RunwayConfigProbability
+    RunwayPredictionOutput, RunwayConfigPredictionOutput, PredictionModelOutput, RunwayProbability, \
+    RunwayConfigProbability, PredictionInput
 
 
 class Predictor:
@@ -56,8 +56,13 @@ class Predictor:
     def from_path(cls, path: Path):
         return cls(trained_model=load(path))
 
-    def predict(self, model_input: PredictionModelInput) -> PredictionModelOutput:
-        prediction_result = self.trained_model.predict_proba(model_input.to_dataframe())
+    def predict(self, prediction_input: PredictionInput) -> PredictionModelOutput:
+        features = list(self.trained_model.feature_names_in_)
+        values = prediction_input.get_model_input_values(features=features)
+
+        model_input = pd.DataFrame([values], columns=features)
+
+        prediction_result = self.trained_model.predict_proba(model_input)
 
         return PredictionModelOutput(zip(self.trained_model.classes_, prediction_result[0]))
 
@@ -67,8 +72,7 @@ def predict_runway(prediction_input: RunwayPredictionInput) -> list[RunwayProbab
 
     predictor = Predictor.from_path(model_path)
 
-    model_output = predictor.predict(
-        model_input=RunwayPredictionModelInput.from_runway_prediction_input(prediction_input))
+    model_output = predictor.predict(prediction_input=prediction_input)
 
     return [
         RunwayProbability(runway_name=runway_name, value=proba)
@@ -89,8 +93,7 @@ def predict_runway_config(prediction_input: RunwayConfigPredictionInput) \
 
     predictor = Predictor.from_path(model_path)
 
-    model_output = predictor.predict(
-        model_input=RunwayConfigPredictionModelInput.from_runway_prediction_input(prediction_input))
+    model_output = predictor.predict(prediction_input=prediction_input)
 
     return [
         RunwayConfigProbability(runway_config=runway_config, value=proba)
