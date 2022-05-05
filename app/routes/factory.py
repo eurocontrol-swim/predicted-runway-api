@@ -64,7 +64,7 @@ class RunwayPredictionInputFactory:
             origin=get_airport_by_icao(origin_icao),
             destination=get_airport_by_icao(destination_icao),
             timestamp=Timestamp(timestamp),
-            wind_input_source=WindInputSource(wind_input_source),
+            wind_input_source=WindInputSource(wind_input_source) if wind_input_source else None,
             wind_direction=wind_direction,
             wind_speed=wind_speed
         )
@@ -89,7 +89,7 @@ class RunwayConfigPredictionInputFactory:
         return RunwayConfigPredictionInput(
             destination=get_airport_by_icao(destination_icao),
             timestamp=Timestamp(timestamp),
-            wind_input_source=WindInputSource(wind_input_source),
+            wind_input_source=WindInputSource(wind_input_source) if wind_input_source else None,
             wind_direction=wind_direction,
             wind_speed=wind_speed
         )

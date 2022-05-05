@@ -2,13 +2,14 @@ import logging
 from typing import Optional
 
 from flask import render_template, request, flash, Blueprint, jsonify, redirect, url_for
+from marshmallow import ValidationError
 
 from app.adapters.airports import get_destination_airports, get_airports
 from app.adapters.met.api import get_taf_datetime_range, METNotAvailable
 from app.domain.predictor import get_runway_prediction_output, \
     get_runway_config_prediction_output
 from app.routes.factory import RunwayPredictionInputFactory, RunwayConfigPredictionInputFactory
-from app.routes.schemas import ValidationError, RunwayPredictionInputSchema, \
+from app.routes.schemas import RunwayPredictionInputSchema, \
     RunwayConfigPredictionInputSchema, RunwayPredictionOutputSchema, \
     RunwayConfigPredictionOutputSchema
 
