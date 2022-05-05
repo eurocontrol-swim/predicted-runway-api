@@ -94,7 +94,7 @@
                                 <tbody>
                                   {% for feature in result['prediction_output']['features'] %}
                                     <tr onclick="onRunwayConfigClick({{ loop.index0 }})" id="runway-config-row-{{ loop.index0 }}">
-                                        <td>{{ ", ".join(feature['properties']['runway_config']) }}</td>
+                                        <td>{{ feature['properties']['runways'] | map(attribute='name') | list | join(", ")}}</td>
                                         <td>{{ "{:.0%}".format(feature['properties']['probability']) }}</td>
                                     </tr>
                                   {% endfor %}
@@ -164,7 +164,7 @@
             layer.addTo(map);
             row.style.setProperty('background-color', '#e7f1ff');
             markers.forEach((m) => m.addTo(map));
-            rotateRunwayMarkerIcons(index, result.prediction_output.features[index].properties.true_bearing_per_runway);
+            rotateRunwayMarkerIcons(index, result.prediction_output.features[index].properties.runways);
         }
 
         function hideRunwayConfig(index) {
@@ -189,17 +189,17 @@
         function addAirplaceMarkers(index, feature) {
 
             const markers = [];
-            for (i = 0; i < feature.properties.runway_config.length; i++) {
-                const iconClassName = `marker-icon-${index}-${feature.properties.runway_config[i]}`;
+            for (i = 0; i < feature.properties.runways.length; i++) {
+                const iconClassName = `marker-icon-${index}-${feature.properties.runways[i].name}`;
                 const markerIcon =  new L.icon({
                     className: iconClassName,
                     iconUrl: '{{ url_for("static", filename="icons/airplane.png") }}',
                     iconSize: [40, 40],
                 });
 
-                const config = feature.properties.runway_config;
+                const runways = feature.properties.runways;
                 const coordinates = reverseCoordinates(feature.geometry.coordinates[i][0]);
-                const popupContent = `Runway: <strong>${config[i]}</strong> | Probability: <strong>${Math.round(feature.properties.probability * 100)}%</strong>`;
+                const popupContent = `Runway: <strong>${runways[i].name}</strong> | Probability: <strong>${Math.round(feature.properties.probability * 100)}%</strong>`;
 
                 const marker = new L.Marker(coordinates, {icon: markerIcon}).bindPopup(popupContent).addTo(map);
                 marker.on('mouseover', () => {
@@ -211,12 +211,12 @@
             return markers;
         }
 
-        function rotateRunwayMarkerIcons(index, trueBearingPerRunway) {
-            Object.keys(trueBearingPerRunway).forEach((runwayName) => {
-                const iconClassName = `marker-icon-${index}-${runwayName}`;
+        function rotateRunwayMarkerIcons(index, runways) {
+            runways.forEach((runway) => {
+                const iconClassName = `marker-icon-${index}-${runway.name}`;
                 const [iconElement] = window.document.getElementsByClassName(iconClassName);
                 iconElement.style.setProperty('transform-origin', 'center');
-                iconElement.style.transform += ` rotate(${trueBearingPerRunway[runwayName]}deg)`;
+                iconElement.style.transform += ` rotate(${runway.true_bearing}deg)`;
 
             })
         }

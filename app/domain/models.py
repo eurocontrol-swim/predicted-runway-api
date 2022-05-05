@@ -301,11 +301,14 @@ class RunwayConfigPredictionOutput:
         return {
             "type": "Feature",
             "properties": {
-                "runway_config": proba.runway_names,
                 "probability": proba.value,
-                "true_bearing_per_runway": {
-                    runway.name: runway.true_bearing for runway in runways
-                }
+                "runways": [
+                    {
+                        "name": runway.name,
+                        "true_bearing": runway.true_bearing
+                    }
+                    for runway in runways
+                ],
             },
             "geometry": {
                 "type": "MultiLineString",
