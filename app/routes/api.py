@@ -50,7 +50,7 @@ def runway_prediction():
 def runway_config_prediction():
 
     try:
-        validated_input = RunwayConfigPredictionInputSchema().load(**request.args)
+        validated_input = RunwayConfigPredictionInputSchema().validate(**request.args)
     except ValidationError as e:
         logger.exception(e)
         return jsonify({"error": str(e)}), 400

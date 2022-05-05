@@ -87,13 +87,11 @@ class AirportFilesQuery(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def get_wind_speed(self, before_timestamp: Optional[int] = None) \
-            -> Optional[float]:
+    def get_wind_speed(self, before_timestamp: Optional[int] = None) -> Optional[float]:
         ...
 
     @abc.abstractmethod
-    def get_wind_direction(self, before_timestamp: Optional[int] = None) \
-            -> Optional[float]:
+    def get_wind_direction(self, before_timestamp: Optional[int] = None) -> Optional[float]:
         ...
 
 
