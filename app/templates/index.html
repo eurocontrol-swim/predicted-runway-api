@@ -29,7 +29,7 @@
             crossorigin="">
     </script>
 </head>
-<body>
+<body class="d-flex flex-column h-100">
   <nav class="navbar navbar-expand-lg sticky-top navbar-dark bg-dark" style="width: 100%">
     <div class="container">
       <a class="navbar-brand"  href="{{ url_for('web.index') }}">Predicted Runway</a>
@@ -276,7 +276,25 @@
         resetRcpForm();
       })
     </script>
+  <main class="flex-shrink-0">
+
+  <div class="container">
   {% block content %}
   {% endblock %}
+      <div>
+        <a class="openapi-link"
+            href="/api/0.1/ui"
+        >Predicted Runway API specifications</a>
+      </div>
+  </div>
+  </main>
 </body>
+  <style>
+      a.openapi-link {
+          text-decoration: none;
+          color: #0c63e4;
+          margin-left: 20px;
+          font-size: .8em;
+      }
+  </style>
 </html>
