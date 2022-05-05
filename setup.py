@@ -29,6 +29,8 @@ setuptools.setup(
         'tzlocal==4.1',
         'scikit-learn==1.0.2',
         'scipy==1.8.0',
-        'holidays==0.13'
+        'holidays==0.13',
+        'connexion[swagger-ui]',
+        'marshmallow'
     ]
 )
