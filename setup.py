@@ -28,6 +28,7 @@ setuptools.setup(
         'tzdata==2021.5',
         'tzlocal==4.1',
         'scikit-learn==1.0.2',
-        'scipy==1.8.0'
+        'scipy==1.8.0',
+        'holidays==0.13'
     ]
 )
