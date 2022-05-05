@@ -45,7 +45,7 @@ def _message_invalid_request_exception(exc: Exception) -> str:
 
 
 def _runway_prediction_input_from_input_data(input_data):
-    validated_input = RunwayPredictionInputSchema().validate(**input_data)
+    validated_input = RunwayPredictionInputSchema().load(input_data)
 
     return RunwayPredictionInputFactory.create(**validated_input)
 
@@ -83,7 +83,7 @@ def _get_runway_prediction():
 
 
 def _runway_config_prediction_input_from_input_data(input_data):
-    validated_input = RunwayConfigPredictionInputSchema().validate(**input_data)
+    validated_input = RunwayConfigPredictionInputSchema().load(input_data)
 
     return RunwayConfigPredictionInputFactory.create(**validated_input)
 

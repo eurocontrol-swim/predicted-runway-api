@@ -1,0 +1,119 @@
+# Copyright 2022 EUROCONTROL
+# ==========================================
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+# following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+#    disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+#    disclaimer in the documentation and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products
+#    derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# ==========================================
+#
+# Editorial note: this license is an instance of the BSD license template as provided by the Open Source Initiative:
+# http://opensource.org/licenses/BSD-3-Clause
+#
+# Details on EUROCONTROL: http://www.eurocontrol.int
+
+openapi: 3.0.2
+
+servers:
+  - description: Predicted Runway
+    url: /api/0.1
+info:
+  description: Predicted Runway
+  version: "0.1"
+  title: Predicted Runway API
+#  contact:
+#    email: you@your-company.com
+#  license:
+#    name: Apache 2.0
+#    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+
+
+
+tags:
+  - name: Runway Prediction
+    description: Runway prediction
+  - name: Runway Configuration Prediction
+    description: Runway configuration
+
+paths:
+
+  /runway-prediction/arrivals/:
+    get:
+      tags:
+        - Runway Prediction
+      summary: predicts the runways in use for specific timestamp and airports
+      operationId: app.routes.api.runway_prediction
+      responses:
+        '200':
+          description: returns the input used during prediction as well as a GeoJSON representation of the predicted runways
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: ''
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /runway-config/prediction/arrivals/:
+    get:
+      tags:
+        - Runway Configuration Prediction
+      summary: predicts the runways' configuration for specific timestamp and destination airport
+      operationId: app.routes.api.runway_config_prediction
+      responses:
+        '200':
+          description: returns the input used during prediction as well as a GeoJSON representation of the predicted runway configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: ''
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Error:
+      description: Error structure (RFC 7807 compliant - https://tools.ietf.org/html/rfc7807)
+      type: object
+      required:
+        - title
+        - detail
+        - status
+      properties:
+        title:
+          type: string
+          description: A short, human-readable summary of the problem
+          example: Internal Server Error
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem
+          example: The server has encountered an error during the request
+        status:
+          type: integer
+          description: The HTTP response code
+          example: 500

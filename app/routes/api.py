@@ -13,14 +13,11 @@ logging.basicConfig(format='[%(asctime)s] - %(levelname)s - %(module)s - %(messa
 logger = logging.getLogger(__name__)
 
 
-api_blueprint = Blueprint('api', __name__)
 
-
-@api_blueprint.route("/api/0.1/runway-prediction/arrivals", methods=['GET'])
 def runway_prediction():
 
     try:
-        validated_input = RunwayPredictionInputSchema().validate(**request.args)
+        validated_input = RunwayPredictionInputSchema().load(request.args)
     except ValidationError as e:
         logger.exception(e)
         return jsonify({"error": str(e)}), 400
@@ -46,11 +43,10 @@ def runway_prediction():
     return jsonify(result), 200
 
 
-@api_blueprint.route("/api/0.1/runway-config-prediction/arrivals")
 def runway_config_prediction():
 
     try:
-        validated_input = RunwayConfigPredictionInputSchema().validate(**request.args)
+        validated_input = RunwayConfigPredictionInputSchema().load(request.args)
     except ValidationError as e:
         logger.exception(e)
         return jsonify({"error": str(e)}), 400

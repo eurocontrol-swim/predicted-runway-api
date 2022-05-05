@@ -40,6 +40,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional, Any
 
+import marshmallow as ma
+
 from app.config import DESTINATION_ICAOS
 from app.adapters.stats import get_runway_airport_stats, get_runway_config_airport_stats
 from app.domain.models import RunwayPredictionInput, WindInputSource, RunwayConfigPredictionInput, \
@@ -56,17 +58,17 @@ def _is_valid_icao(icao: str):
 
 def _validate_origin_icao(value: Any) -> str:
     if not _is_valid_icao(value):
-        raise ValueError("origin_icao should be a string of 4 characters.")
+        raise ma.ValidationError("origin_icao should be a string of 4 characters.")
 
     return value
 
 
 def _validate_destination_icao(value: Any) -> str:
     if not _is_valid_icao(value):
-        raise ValueError("destination_icao should be a string of 4 characters.")
+        raise ma.ValidationError("destination_icao should be a string of 4 characters.")
 
     if value not in DESTINATION_ICAOS:
-        raise ValueError(f"destination_icao should be one of {', '.join(DESTINATION_ICAOS)}.")
+        raise ma.ValidationError(f"destination_icao should be one of {', '.join(DESTINATION_ICAOS)}.")
 
     return value
 
@@ -76,12 +78,12 @@ def _validate_timestamp(value: Any) -> int:
         try:
             value = int(value)
         except (ValueError, TypeError):
-            raise ValueError("timestamp should be an integer.")
+            raise ma.ValidationError("timestamp should be an integer.")
 
     try:
         datetime.fromtimestamp(value)
     except (TypeError, ValueError, OSError, OverflowError):
-        raise ValueError("Invalid timestamp.")
+        raise ma.ValidationError("Invalid timestamp.")
 
     return value
 
@@ -91,102 +93,127 @@ def _validate_wind_direction(value: Any) -> float:
         try:
             value = float(value)
         except (ValueError, TypeError):
-            raise ValueError("wind_direction should be a float.")
+            raise ma.ValidationError("wind_direction should be a float.")
 
     if not 0 <= value <= 360:
-        raise ValueError('wind_direction should be between 0 and 360.')
+        raise ma.ValidationError('wind_direction should be between 0 and 360.')
 
     return value
 
 
-def _validate_wind_speed(value: any) -> float:
+def _validate_wind_speed(value: Any) -> float:
     if not isinstance(value, int):
         try:
             value = float(value)
         except (ValueError, TypeError):
-            raise ValueError("wind_speed should be a float.")
+            raise ma.ValidationError("wind_speed should be a float.")
 
     if value < 0:
-        raise ValueError('wind_speed should be positive.')
+        raise ma.ValidationError('wind_speed should be positive.')
 
     return value
 
 
-class PredictionInputSchema(ABC):
+def _validate_wind_input_source(value: Any) -> str:
+    try:
+        WindInputSource(value)
+    except ValueError:
+        raise ma.ValidationError('Invalid wind_input_source')
 
-    def validate(self, **kwargs) -> dict:
-        try:
-            return self._validate(**kwargs)
-        except TypeError:
-            raise ValidationError('Invalid input.')
-        except ValueError as e:
-            raise ValidationError(str(e))
+    return value
 
-    @abstractmethod
-    def _validate(self, **kwargs) -> dict:
-        ...
+
+class PredictionInputSchema(ma.Schema):
+    destination_icao = ma.fields.Str(required=True, validate=_validate_destination_icao)
+    timestamp = ma.fields.Int(required=True, validate=_validate_timestamp)
+    wind_speed = ma.fields.Float(validate=_validate_wind_speed)
+    wind_direction = ma.fields.Float(validate=_validate_wind_direction)
+    wind_input_source = ma.fields.Str(validate=_validate_wind_input_source)
 
 
 class RunwayPredictionInputSchema(PredictionInputSchema):
-
-    def _validate(
-        self,
-        origin_icao: str,
-        destination_icao: str,
-        timestamp: int,
-        wind_direction: Optional[float] = None,
-        wind_speed: Optional[float] = None,
-        wind_input_source: Optional[str] = None,
-    ) -> dict:
-
-        validated_data = {
-            "origin_icao": _validate_origin_icao(origin_icao),
-            "destination_icao": _validate_destination_icao(destination_icao),
-            "timestamp": _validate_timestamp(timestamp),
-        }
-
-        if wind_direction is not None:
-            validated_data["wind_direction"] = _validate_wind_direction(wind_direction)
-
-        if wind_speed is not None:
-            validated_data["wind_speed"] = _validate_wind_speed(wind_speed)
-
-        try:
-            validated_data["wind_input_source"] = WindInputSource(wind_input_source)
-        except ValueError:
-            pass
-
-        return validated_data
+    origin_icao = ma.fields.Str(required=True, validate=_validate_origin_icao)
 
 
 class RunwayConfigPredictionInputSchema(PredictionInputSchema):
+    ...
 
-    def _validate(
-        self,
-        destination_icao: str,
-        timestamp: int,
-        wind_direction: Optional[float] = None,
-        wind_speed: Optional[float] = None,
-        wind_input_source: Optional[str] = None,
-    ) -> dict:
-
-        validated_data = {
-            "destination_icao": _validate_destination_icao(destination_icao),
-            "timestamp": _validate_timestamp(timestamp),
-        }
-
-        if wind_direction is not None:
-            validated_data["wind_direction"] = _validate_wind_direction(wind_direction)
-
-        if wind_speed is not None:
-            validated_data["wind_speed"] = _validate_wind_speed(wind_speed)
-
-        try:
-            validated_data["wind_input_source"] = WindInputSource(wind_input_source)
-        except ValueError:
-            pass
-
-        return validated_data
+#
+# class PredictionInputSchema(ABC):
+#
+#     def validate(self, **kwargs) -> dict:
+#         try:
+#             return self._validate(**kwargs)
+#         except TypeError:
+#             raise ValidationError('Invalid input.')
+#         except ValueError as e:
+#             raise ValidationError(str(e))
+#
+#     @abstractmethod
+#     def _validate(self, **kwargs) -> dict:
+#         ...
+#
+#
+# class RunwayPredictionInputSchema(PredictionInputSchema):
+#
+#     def _validate(
+#         self,
+#         origin_icao: str,
+#         destination_icao: str,
+#         timestamp: int,
+#         wind_direction: Optional[float] = None,
+#         wind_speed: Optional[float] = None,
+#         wind_input_source: Optional[str] = None,
+#     ) -> dict:
+#
+#         validated_data = {
+#             "origin_icao": _validate_origin_icao(origin_icao),
+#             "destination_icao": _validate_destination_icao(destination_icao),
+#             "timestamp": _validate_timestamp(timestamp),
+#         }
+#
+#         if wind_direction is not None:
+#             validated_data["wind_direction"] = _validate_wind_direction(wind_direction)
+#
+#         if wind_speed is not None:
+#             validated_data["wind_speed"] = _validate_wind_speed(wind_speed)
+#
+#         try:
+#             validated_data["wind_input_source"] = WindInputSource(wind_input_source)
+#         except ValueError:
+#             pass
+#
+#         return validated_data
+#
+#
+# class RunwayConfigPredictionInputSchema(PredictionInputSchema):
+#
+#     def _validate(
+#         self,
+#         destination_icao: str,
+#         timestamp: int,
+#         wind_direction: Optional[float] = None,
+#         wind_speed: Optional[float] = None,
+#         wind_input_source: Optional[str] = None,
+#     ) -> dict:
+#
+#         validated_data = {
+#             "destination_icao": _validate_destination_icao(destination_icao),
+#             "timestamp": _validate_timestamp(timestamp),
+#         }
+#
+#         if wind_direction is not None:
+#             validated_data["wind_direction"] = _validate_wind_direction(wind_direction)
+#
+#         if wind_speed is not None:
+#             validated_data["wind_speed"] = _validate_wind_speed(wind_speed)
+#
+#         try:
+#             validated_data["wind_input_source"] = WindInputSource(wind_input_source)
+#         except ValueError:
+#             pass
+#
+#         return validated_data
 
 
 @dataclass
