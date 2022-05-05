@@ -112,11 +112,9 @@
         </div>
       </div>
       <div class="p-2">
-        <div id="map" style="max-height: 1000px"></div>
+        <div id="map" style="height: 700px"></div>
       </div>
     {% endif %}
-    </div>
-{#  </div>#}
     <script>
         let result = null;
         let map = null;
@@ -215,7 +213,9 @@
                 const iconClassName = `marker-icon-${index}-${runway.name}`;
                 const [iconElement] = window.document.getElementsByClassName(iconClassName);
                 iconElement.style.setProperty('transform-origin', 'center');
-                iconElement.style.transform += ` rotate(${runway.true_bearing}deg)`;
+                if (iconElement.style.transform.indexOf('rotate') === -1) {
+                    iconElement.style.transform += ` rotate(${runway.true_bearing}deg)`;
+                }
 
             })
         }
