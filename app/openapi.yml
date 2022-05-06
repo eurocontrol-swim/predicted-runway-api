@@ -201,10 +201,11 @@ components:
             wind_input_source:
               type: string
               enum:
-                  - FROM_TAF
-                  - FROM_METAR
+                  - TAF
+                  - METAR
+                  - USER
               description: where the wind input (speed, direction) was taken from in case of their absence upon request
-              example: FROM_TAF
+              example: TAF
         prediction_output:
           type: object
           properties:
@@ -243,10 +244,11 @@ components:
             wind_input_source:
               type: string
               enum:
-                  - FROM_TAF
-                  - FROM_METAR
+                  - TAF
+                  - METAR
+                  - USER
               description: where the wind input (speed, direction) was taken from in case of their absence upon request
-              example: FROM_TAF
+              example: TAF
         prediction_output:
           type: object
           properties:

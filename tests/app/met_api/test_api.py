@@ -98,7 +98,7 @@ def test_get_wind_input__found_in_metar__returns_values_and_source(
 ):
     mock_get_wind_input_from_metar.return_value = 10, 10
     assert get_wind_input(airport_icao=airport_icao, before_timestamp=before_timestamp) \
-           == (10, 10, WindInputSource.FROM_METAR)
+           == (10, 10, WindInputSource.METAR)
 
 
 @mock.patch('app.adapters.met.api.get_wind_input_from_taf')
@@ -109,7 +109,7 @@ def test_get_wind_input__not_found_in_metar__returns_taf_values_and_source(
     mock_get_wind_input_from_metar.return_value = None
     mock_get_wind_input_from_taf.return_value = 10, 10
     assert get_wind_input(airport_icao=airport_icao, before_timestamp=before_timestamp) \
-           == (10, 10, WindInputSource.FROM_TAF)
+           == (10, 10, WindInputSource.TAF)
 
 
 @mock.patch('app.adapters.met.api.get_wind_input_from_taf')

@@ -43,6 +43,25 @@ from app.domain.models import WindInputSource, RunwayPredictionInput, RunwayConf
     Timestamp
 
 
+def _hand_wind_input(
+    destination_icao: str,
+    timestamp: int,
+    wind_direction: Optional[float] = None,
+    wind_speed: Optional[float] = None,
+    wind_input_source: Optional[str] = None,
+) -> tuple[float, float, WindInputSource]:
+
+    if wind_direction is None and wind_speed is None:
+        wind_direction, wind_speed, wind_input_source = get_wind_input(
+            airport_icao=destination_icao,
+            before_timestamp=timestamp
+        )
+    elif wind_input_source is None:
+        wind_input_source = WindInputSource.USER
+
+    return wind_direction, wind_speed, wind_input_source
+
+
 class RunwayPredictionInputFactory:
 
     @staticmethod
@@ -54,11 +73,9 @@ class RunwayPredictionInputFactory:
                wind_input_source: Optional[str] = None
                ):
 
-        if wind_direction is None and wind_speed is None:
-            wind_direction, wind_speed, wind_input_source = get_wind_input(
-                airport_icao=destination_icao,
-                before_timestamp=timestamp
-            )
+        wind_direction, wind_speed, wind_input_source = _hand_wind_input(
+            destination_icao, timestamp, wind_direction, wind_speed, wind_input_source
+        )
 
         return RunwayPredictionInput(
             origin=get_airport_by_icao(origin_icao),
@@ -80,11 +97,9 @@ class RunwayConfigPredictionInputFactory:
                wind_input_source: Optional[str] = None
                ):
 
-        if wind_direction is None and wind_speed is None:
-            wind_direction, wind_speed, wind_input_source = get_wind_input(
-                airport_icao=destination_icao,
-                before_timestamp=timestamp
-            )
+        wind_direction, wind_speed, wind_input_source = _hand_wind_input(
+            destination_icao, timestamp, wind_direction, wind_speed, wind_input_source
+        )
 
         return RunwayConfigPredictionInput(
             destination=get_airport_by_icao(destination_icao),

@@ -74,12 +74,12 @@ def get_wind_input_from_taf(airport_icao: str, before_timestamp: int) -> Optiona
 
 
 def get_wind_input(airport_icao: str, before_timestamp: int) -> tuple[float, float, WindInputSource]:
-    source = WindInputSource.FROM_METAR
+    source = WindInputSource.METAR
     wind_input = get_wind_input_from_metar(airport_icao=airport_icao,
                                            before_timestamp=before_timestamp)
 
     if not wind_input:
-        source = WindInputSource.FROM_TAF
+        source = WindInputSource.TAF
         wind_input = get_wind_input_from_taf(airport_icao=airport_icao,
                                              before_timestamp=before_timestamp)
 

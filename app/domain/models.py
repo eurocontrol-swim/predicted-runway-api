@@ -45,19 +45,16 @@ import holidays
 
 
 class WindInputSource(Enum):
-    FROM_METAR = 'FROM_METAR'
-    FROM_TAF = 'FROM_TAF'
+    METAR = 'METAR'
+    TAF = 'TAF'
+    USER = 'USER'
 
     @classmethod
     def choices(cls):
         return [v.value for v in cls.__members__.values()]
 
     def __str__(self):
-        if self.value == self.FROM_METAR.value:
-            return 'from METAR'
-
-        if self.value == self.FROM_TAF.value:
-            return 'from TAF'
+        return f"from {self.value}"
 
 
 @dataclass
