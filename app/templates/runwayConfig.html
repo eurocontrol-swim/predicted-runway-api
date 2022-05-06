@@ -5,7 +5,7 @@
 {% block modelStats %}
 
     {% if result %}
-        {% include 'runwayStats.html' %}
+        {% include 'runwayConfigStats.html' %}
     {% endif %}
 {% endblock %}
 
@@ -29,9 +29,7 @@
                           aria-controls="collapseOne"
                   >
                       <span>
-                          <strong>Runway Prediction</strong> |
-                          {{ result['prediction_input']['origin_icao'] }}
-                          <i class="bi-arrow-right"></i>
+                          <strong>Runway Configuration Prediction</strong> |
                           {{ result['prediction_input']['destination_icao'] }}
                           | {{ result['prediction_input']['date_time'] }}
                       </span>
@@ -53,10 +51,6 @@
 
                             <table class="table table-sm">
                                 <tbody>
-                                  <tr>
-                                    <td><strong>Origin airport ICAO</strong></td>
-                                    <td>{{ result['prediction_input']['origin_icao'] }}</td>
-                                  </tr>
                                   <tr>
                                     <td><strong>Destination airport ICAO</strong></td>
                                     <td>{{ result['prediction_input']['destination_icao'] }}</td>
@@ -89,17 +83,17 @@
                       <div class="tab-pane fade show active" id="predictionOutput" role="tabpanel" aria-labelledby="predictionOutput-tab">
                           <div class="table-responsive">
 
-                            <table class="table table-sm">
+                            <table class="table table-sm table-hover">
                                 <thead>
                                   <tr>
-                                    <th scope="col">Runway</th>
+                                    <th scope="col">Runway Configuration</th>
                                     <th scope="col">Probability</th>
                                   </tr>
                                 </thead>
                                 <tbody>
                                   {% for feature in result['prediction_output']['features'] %}
-                                    <tr>
-                                        <td>{{ feature['properties']['runway_name'] }}</td>
+                                    <tr onclick="onRunwayConfigClick({{ loop.index0 }})" id="runway-config-row-{{ loop.index0 }}">
+                                        <td>{{ feature['properties']['runways'] | map(attribute='name') | list | join(", ")}}</td>
                                         <td>{{ "{:.0%}".format(feature['properties']['probability']) }}</td>
                                     </tr>
                                   {% endfor %}
@@ -126,80 +120,9 @@
         >Predicted Runway API specifications</a>
       </div>
     {% endif %}
+</div>
     <script>
-        let map = null;
-
-        function reverseCoordinates(coordinates) {
-            return [coordinates[1], coordinates[0]]
-        }
-
-        function initMap(center_coordinates) {
-          const map = L.map('map');
-          map.createPane('labels');
-
-          // This pane is above markers but below popups
-          map.getPane('labels').style.zIndex = 650;
-
-          // Layers in this pane are non-interactive and do not obscure mouse/touch events
-          map.getPane('labels').style.pointerEvents = 'none';
-
-          const cartodbAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>';
-
-          L.tileLayer('http://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
-            attribution: cartodbAttribution,
-          }).addTo(map);
-
-          const mapCenter = reverseCoordinates(center_coordinates);
-          const mapZoom = 12;
-          map.setView(mapCenter, mapZoom);
-          return map;
-        }
-
-        function rotateRunwayMarkerIcons(features) {
-          features.forEach((feature) => {
-            const iconClassName = 'marker-icon-' + feature.properties.runway_name;
-            const [iconElement] = window.document.getElementsByClassName(iconClassName);
-            iconElement.style.setProperty('transform-origin', 'center');
-            iconElement.style.transform += ` rotate(${feature.properties.true_bearing}deg)`;
-          });
-        }
-
-        $( document ).ready(function() {
-          const result = JSON.parse('{{ result|tojson }}');
-
-          map = initMap(result.airport_coordinates);
-          L.geoJSON(
-              result.prediction_output, {
-                style: (feature) => {
-                    return {
-                        color: '#f05a23',
-                        weight: 12,
-                        opacity: feature.properties.probability > 0.2 ? feature.properties.probability : 0.2,
-                    }
-                },
-                onEachFeature: (feature, layer) => {
-                    const iconClassName = 'marker-icon-' + feature.properties.runway_name;
-                    const markerIcon =  new L.icon({
-                        iconUrl: '{{ url_for("static", filename="icons/airplane.png") }}',
-                        iconSize: [40, 40],
-                        className: iconClassName,
-                    });
-
-                    const popupContent = `Runway: <strong>${feature.properties.runway_name}</strong> | Probability: <strong>${Math.round(feature.properties.probability * 100)}%</strong>`;
-                    const marker = new L.Marker(reverseCoordinates(feature.geometry.coordinates[0]), {icon: markerIcon}).bindPopup(popupContent).addTo(map);
-
-                    marker.on('mouseover', () => {
-                        marker.openPopup();
-                    })
-                }
-              }
-          ).addTo(map);
-
-          map.on('zoomend', () => {
-            rotateRunwayMarkerIcons(result.prediction_output.features);
-          });
-
-          rotateRunwayMarkerIcons(result.prediction_output.features);
-        });
+        let result = JSON.parse('{{ result|tojson }}');
     </script>
+    <script src="{{ url_for('static', filename = 'js/runwayConfig.js') }}"></script>
 {% endblock %}

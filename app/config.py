@@ -21,7 +21,7 @@ RUNWAY_CONFIG_MODELS_DIR = Path("/data/models/runway_config")
 RUNWAY_MODEL_STATS_DIR = Path("/data/stats/runway")
 RUNWAY_CONFIG_MODEL_STATS_DIR = Path("/data/stats/runway_config")
 
-ICAO_AIRPORTS_CATALOG_PATH = BASE_DIR.joinpath('static').joinpath('icao_airports_catalog.json')
+ICAO_AIRPORTS_CATALOG_PATH = BASE_DIR.joinpath('static/data').joinpath('icao_airports_catalog.json')
 
 TEMPLATES_DIR = BASE_DIR.joinpath('templates')
 

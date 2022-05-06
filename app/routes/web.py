@@ -161,7 +161,7 @@ def get_forecast_timestamp_range(destination_icao: str):
 def _load_runway_prediction_template(result: Optional[dict] = None):
     destination_airports = get_destination_airports()
 
-    return render_template('runwayPrediction.html',
+    return render_template('runway.html',
                            result=result,
                            destination_airports=destination_airports)
 
@@ -174,7 +174,7 @@ def _load_runway_prediction_template_with_warning(message: str):
 def _load_runway_config_prediction_template(result: Optional[dict] = None):
     destination_airports = get_destination_airports()
 
-    return render_template('runwayConfigPrediction.html',
+    return render_template('runwayConfig.html',
                            result=result,
                            destination_airports=destination_airports)
 

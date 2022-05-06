@@ -1,0 +1,12 @@
+
+a.openapi-link {
+  text-decoration: none;
+  color: #0c63e4;
+  margin-left: 10px;
+  font-size: .8em;
+}
+
+.table-hover tbody tr:hover td {
+  background-color: #e7f1ff;
+  cursor: pointer;
+}
