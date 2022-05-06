@@ -109,7 +109,7 @@ paths:
             application/json:
                 example: {'error': 'Something went wrong during the prediction. Please try again later.'}
 
-  /runway-config/prediction/arrivals/:
+  /runway-config-prediction/arrivals/:
     get:
       tags:
         - Runway Configuration Prediction
@@ -221,7 +221,7 @@ components:
       description: Output
       type: object
       properties:
-        prediction_inpu:
+        prediction_input:
           type: object
           properties:
             destination_icao:
