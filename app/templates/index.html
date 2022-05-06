@@ -51,8 +51,16 @@
             </li>
           </ul>
         <div class="d-flex">
-            {% block modelStats %}
-            {% endblock %}
+            {% if result %}
+
+                <button class="btn btn-outline-info btn-sm"
+                        type="button"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modelStatsModal"
+                >
+                    <i class="bi bi-info-circle"></i> Model statistics
+                </button>
+            {% endif %}
         </div>
       </div>
     </div>

@@ -1,12 +1,4 @@
-
-<button class="btn btn-outline-info btn-sm"
-        type="button"
-        data-bs-toggle="modal"
-        data-bs-target="#modelStatsModal"
->
-    <i class="bi bi-info-circle"></i> Model statistics
-</button>
-<div class="modal fade" id="modelStatsModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modelStatsModalLabel" aria-hidden="true">
+<div class="modal fade" id="modelStatsModal" tabindex="-1" aria-labelledby="modelStatsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
@@ -15,7 +7,7 @@
       </div>
       <div class="modal-body">
           <div class="table-responsive">
-            <table class="table table-sm caption-top metrics-table">
+            <table class="table table-sm caption-top stats-table">
                 <caption>General</caption>
                 <tbody>
                   <tr>
@@ -165,12 +157,3 @@
     </div>
   </div>
 </div>
-<style>
-.modal-backdrop {
-    {# fixing modal misbehaviour #}
-    width: 0;
-}
-.metrics-table {
-    font-size: 0.9rem;
-}
-</style>

@@ -10,3 +10,7 @@ a.openapi-link {
   background-color: #e7f1ff;
   cursor: pointer;
 }
+
+.stats-table {
+    font-size: 0.9rem;
+}

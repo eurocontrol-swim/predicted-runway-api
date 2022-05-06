@@ -2,12 +2,9 @@
 <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
 
 
-{% block modelStats %}
-
-    {% if result %}
-        {% include 'runwayStats.html' %}
-    {% endif %}
-{% endblock %}
+{% if result %}
+    {% include 'runwayStats.html' %}
+{% endif %}
 
 {% block content %}
     <div class="d-grid gap-3">
@@ -117,7 +114,7 @@
             </div>
         </div>
       </div>
-      <div class="p-2">
+      <div class="p-2 map-area">
         <div id="map" style="height: 700px"></div>
       </div>
       <div>
