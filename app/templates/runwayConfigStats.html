@@ -146,36 +146,6 @@
                     <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['hamming_loss']) }}</td>
                     <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['hamming_loss']) }}</td>
                   </tr>
-                  <tr>
-                    <td><strong>Parallel F1 weighted</strong></td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['parallel_f1_weighted'] * 100) }}</td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['parallel_f1_weighted'] * 100) }}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Parallel balanced accuracy</strong></td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['parallel_balanced_accuracy'] * 100) }}</td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['parallel_balanced_accuracy'] * 100) }}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Parallel balanced accuracy over random</strong></td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['parallel_balanced_accuracy_over_random'] * 100) }}</td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['parallel_balanced_accuracy_over_random'] * 100) }}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Parallel accuracy</strong></td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['parallel_accuracy'] * 100) }}</td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['parallel_accuracy'] * 100) }}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Parallel recall weighted</strong></td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['parallel_recall_weighted'] * 100) }}</td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['parallel_recall_weighted'] * 100) }}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Parallel precision weighted</strong></td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['parallel_precision_weighted'] * 100) }}</td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['parallel_precision_weighted'] * 100) }}</td>
-                  </tr>
                 </tbody>
               </table>
           </div>
