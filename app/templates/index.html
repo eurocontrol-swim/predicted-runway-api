@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="height: 100%">
 <head>
   <meta charset="UTF-8">
   <title>Predicted Runway</title>
@@ -76,6 +76,17 @@
     </div>
   </main>
 
+  <footer class="footer mt-auto py-3 bg-light">
+      <div class="container">
+        <p class=" text-center">
+            <a class="openapi-link"
+                href="/api/0.1/ui"
+            >
+                Predicted Runway API specifications
+            </a>
+        </p>
+      </div>
+    </footer>
     <script>
         let airplaneIconUrl = '{{ url_for("static", filename="icons/airplane.png") }}';
     </script>
