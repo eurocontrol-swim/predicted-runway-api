@@ -2,10 +2,6 @@
 <!-- Google Analytics: change UA-XXXXX-Y to be your site's ID. -->
 
 
-{% if result %}
-    {% include 'runwayConfigStats.html' %}
-{% endif %}
-
 {% block content %}
     <div class="d-grid gap-3">
       <div class="p-2">
@@ -119,4 +115,9 @@
         let result = JSON.parse('{{ result|tojson }}');
     </script>
     <script src="{{ url_for('static', filename = 'js/runwayConfig.js') }}"></script>
+
+    {% if result %}
+        {% include 'runwayConfigStats.html' %}
+    {% endif %}
+
 {% endblock %}
