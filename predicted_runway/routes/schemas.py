@@ -41,9 +41,9 @@ from datetime import datetime
 
 import marshmallow as ma
 
-from app.config import DESTINATION_ICAOS
-from app.adapters.stats import get_runway_airport_stats, get_runway_config_airport_stats
-from app.domain.models import RunwayPredictionInput, WindInputSource, RunwayConfigPredictionInput, \
+from predicted_runway.config import DESTINATION_ICAOS
+from predicted_runway.adapters.stats import get_runway_airport_stats, get_runway_config_airport_stats
+from predicted_runway.domain.models import RunwayPredictionInput, WindInputSource, RunwayConfigPredictionInput, \
     RunwayPredictionOutput, RunwayConfigPredictionOutput
 
 

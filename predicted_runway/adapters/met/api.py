@@ -38,9 +38,9 @@ __author__ = "EUROCONTROL (SWIM)"
 from datetime import datetime
 from typing import Optional
 
-from app.config import get_metar_dir_for_airport_icao, get_taf_dir_for_airport_icao
-from app.domain.models import WindInputSource
-from app.adapters.met.query import METARAirportFilesQuery, TAFAirportFilesQuery, AirportFilesQuery
+from predicted_runway.config import get_metar_dir_for_airport_icao, get_taf_dir_for_airport_icao
+from predicted_runway.domain.models import WindInputSource
+from predicted_runway.adapters.met.query import METARAirportFilesQuery, TAFAirportFilesQuery, AirportFilesQuery
 
 
 class METNotAvailable(Exception):

@@ -41,8 +41,8 @@ import pandas as pd
 from joblib import load
 from sklearn.ensemble import RandomForestClassifier
 
-from app.config import get_runway_model_path, get_runway_config_model_path
-from app.domain.models import RunwayPredictionInput, RunwayConfigPredictionInput, \
+from predicted_runway.config import get_runway_model_path, get_runway_config_model_path
+from predicted_runway.domain.models import RunwayPredictionInput, RunwayConfigPredictionInput, \
     RunwayPredictionOutput, RunwayConfigPredictionOutput, PredictionModelOutput, RunwayProbability, \
     RunwayConfigProbability, PredictionInput
 

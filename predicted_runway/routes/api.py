@@ -1,13 +1,13 @@
 from flask import request, jsonify, Blueprint
 from marshmallow import ValidationError
 
-from app.domain.predictor import  get_runway_prediction_output, \
+from predicted_runway.domain.predictor import  get_runway_prediction_output, \
     get_runway_config_prediction_output
 import logging
 
-from app.adapters.met.api import METNotAvailable
-from app.routes.factory import RunwayPredictionInputFactory, RunwayConfigPredictionInputFactory
-from app.routes.schemas import RunwayPredictionInputSchema, \
+from predicted_runway.adapters.met.api import METNotAvailable
+from predicted_runway.routes.factory import RunwayPredictionInputFactory, RunwayConfigPredictionInputFactory
+from predicted_runway.routes.schemas import RunwayPredictionInputSchema, \
     RunwayConfigPredictionInputSchema, RunwayConfigPredictionOutputSchema, \
     RunwayPredictionOutputSchema
 

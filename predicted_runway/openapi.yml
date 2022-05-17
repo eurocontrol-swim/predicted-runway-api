@@ -49,7 +49,7 @@ paths:
       tags:
         - Runway Prediction
       summary: predicts the runways in use for specific timestamp and airports
-      operationId: app.routes.api.runway_prediction
+      operationId: predicted_runway.routes.api.runway_prediction
       parameters:
         - in: query
           required: true
@@ -114,7 +114,7 @@ paths:
       tags:
         - Runway Configuration Prediction
       summary: predicts the runways' configuration for specific timestamp and destination airport
-      operationId: app.routes.api.runway_config_prediction
+      operationId: predicted_runway.routes.api.runway_config_prediction
       parameters:
         - in: query
           required: true

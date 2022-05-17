@@ -39,8 +39,8 @@ __author__ = "EUROCONTROL (SWIM)"
 import pytest as pytest
 from marshmallow import ValidationError
 
-from app.config import DESTINATION_ICAOS
-from app.routes import schemas
+from predicted_runway.config import DESTINATION_ICAOS
+from predicted_runway.routes import schemas
 
 
 @pytest.fixture

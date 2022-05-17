@@ -39,9 +39,9 @@ import json
 from functools import lru_cache
 from typing import Optional, Iterable
 
-from app.config import ICAO_AIRPORTS_CATALOG_PATH, DESTINATION_ICAOS
-from app.domain.factory import AirportFactory
-from app.domain.models import Airport
+from predicted_runway.config import ICAO_AIRPORTS_CATALOG_PATH, DESTINATION_ICAOS
+from predicted_runway.domain.factory import AirportFactory
+from predicted_runway.domain.models import Airport
 
 
 @lru_cache

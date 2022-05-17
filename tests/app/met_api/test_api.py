@@ -40,10 +40,10 @@ from unittest import mock
 
 import pytest
 
-from app.domain.models import WindInputSource
-from app.adapters.met.api import get_wind_input_from_metar, get_wind_input_from_taf, get_wind_input, \
+from predicted_runway.domain.models import WindInputSource
+from predicted_runway.adapters.met.api import get_wind_input_from_metar, get_wind_input_from_taf, get_wind_input, \
     METNotAvailable
-from app.adapters.met.query import METARAirportFilesQuery, TAFAirportFilesQuery
+from predicted_runway.adapters.met.query import METARAirportFilesQuery, TAFAirportFilesQuery
 
 
 @pytest.fixture

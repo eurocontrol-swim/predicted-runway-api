@@ -37,9 +37,9 @@ __author__ = "EUROCONTROL (SWIM)"
 
 from typing import Optional
 
-from app.adapters.met.api import get_wind_input
-from app.adapters.airports import get_airport_by_icao
-from app.domain.models import WindInputSource, RunwayPredictionInput, RunwayConfigPredictionInput, \
+from predicted_runway.adapters.met.api import get_wind_input
+from predicted_runway.adapters.airports import get_airport_by_icao
+from predicted_runway.domain.models import WindInputSource, RunwayPredictionInput, RunwayConfigPredictionInput, \
     Timestamp
 
 

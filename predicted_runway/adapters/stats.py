@@ -35,37 +35,30 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
-from app.domain.models import Runway, Airport
+import json
+from pathlib import Path
+
+from predicted_runway.config import RUNWAY_MODEL_STATS_DIR, RUNWAY_CONFIG_MODEL_STATS_DIR
 
 
-class RunwayFactory:
+def _preprocess_content(content: str) -> str:
+    content = content.replace('NaN', 'null')
 
-    @staticmethod
-    def create_from_data(name: str, data: dict) -> Runway:
-        return Runway(
-            name=name,
-            true_bearing=data["true_bearing"],
-            coordinates_geojson=data["coordinates_geojson"]
-        )
+    return content
 
 
-class AirportFactory:
+def _get_stats(path: Path) -> dict:
+    with open(path, 'r') as f:
+        content = f.read()
 
-    @staticmethod
-    def create_from_data(data: dict) -> Airport:
-        airport = Airport(
-            icao=data["icao"],
-            iata=data["iata"],
-            name=data["name"],
-            city=data["city"],
-            state=data["state"],
-            country=data["country"],
-            elevation=data["elevation"],
-            lat=data["lat"],
-            lon=data["lon"],
-            tz=data["tz"],
-            runways=[RunwayFactory.create_from_data(name, data)
-                     for name, data in data.get("runways", {}).items()]
-        )
+    content = _preprocess_content(content)
 
-        return airport
+    return json.loads(content)
+
+
+def get_runway_airport_stats(airport: str) -> dict:
+    return _get_stats(path=RUNWAY_MODEL_STATS_DIR.joinpath(f"{airport}.json"))
+
+
+def get_runway_config_airport_stats(airport: str) -> dict:
+    return _get_stats(path=RUNWAY_CONFIG_MODEL_STATS_DIR.joinpath(f"{airport}.json"))
