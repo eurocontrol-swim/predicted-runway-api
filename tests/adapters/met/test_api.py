@@ -35,14 +35,15 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest import mock
 
 import pytest
 
 from predicted_runway.domain.models import WindInputSource
-from predicted_runway.adapters.met.api import get_wind_input_from_metar, get_wind_input_from_taf, get_wind_input, \
-    METNotAvailable
+from predicted_runway.adapters.met.api import get_wind_input_from_metar, get_wind_input_from_taf, \
+    get_wind_input, \
+    METNotAvailable, get_taf_datetime_range
 from predicted_runway.adapters.met.query import METARAirportFilesQuery, TAFAirportFilesQuery
 
 
@@ -92,7 +93,7 @@ def test_get_wind_from_taf__wind_speed_not_found__returns_none(
                                    before_timestamp=before_timestamp) is None
 
 
-@mock.patch('app.adapters.met.api.get_wind_input_from_metar')
+@mock.patch('predicted_runway.adapters.met.api.get_wind_input_from_metar')
 def test_get_wind_input__found_in_metar__returns_values_and_source(
     mock_get_wind_input_from_metar, airport_icao, before_timestamp
 ):
@@ -101,8 +102,8 @@ def test_get_wind_input__found_in_metar__returns_values_and_source(
            == (10, 10, WindInputSource.METAR)
 
 
-@mock.patch('app.adapters.met.api.get_wind_input_from_taf')
-@mock.patch('app.adapters.met.api.get_wind_input_from_metar')
+@mock.patch('predicted_runway.adapters.met.api.get_wind_input_from_taf')
+@mock.patch('predicted_runway.adapters.met.api.get_wind_input_from_metar')
 def test_get_wind_input__not_found_in_metar__returns_taf_values_and_source(
     mock_get_wind_input_from_metar, mock_get_wind_input_from_taf, airport_icao, before_timestamp
 ):
@@ -112,8 +113,8 @@ def test_get_wind_input__not_found_in_metar__returns_taf_values_and_source(
            == (10, 10, WindInputSource.TAF)
 
 
-@mock.patch('app.adapters.met.api.get_wind_input_from_taf')
-@mock.patch('app.adapters.met.api.get_wind_input_from_metar')
+@mock.patch('predicted_runway.adapters.met.api.get_wind_input_from_taf')
+@mock.patch('predicted_runway.adapters.met.api.get_wind_input_from_metar')
 def test_get_wind_input__not_found_in_neither_source__raises_metnotavailable(
     mock_get_wind_input_from_metar, mock_get_wind_input_from_taf, airport_icao, before_timestamp
 ):
@@ -122,3 +123,23 @@ def test_get_wind_input__not_found_in_neither_source__raises_metnotavailable(
     with pytest.raises(METNotAvailable):
         get_wind_input(airport_icao=airport_icao, before_timestamp=before_timestamp)
 
+
+@pytest.mark.parametrize('expected_range', [
+    (datetime(2022, 3, 18, 12, 0, tzinfo=timezone.utc),
+     datetime(2022, 3, 22, 12, 0, tzinfo=timezone.utc))
+])
+@mock.patch.object(TAFAirportFilesQuery, 'get_datetime_range')
+def test_get_taf_datetime_range(mock_get_datetime_range, expected_range, airport_icao):
+    mock_get_datetime_range.return_value = expected_range
+
+    assert get_taf_datetime_range(airport_icao) == expected_range
+
+
+@mock.patch.object(TAFAirportFilesQuery, 'get_datetime_range')
+def test_get_taf_datetime_range__range_is_none__raises_metnotavailable(
+    mock_get_datetime_range, airport_icao
+):
+    mock_get_datetime_range.return_value = None
+
+    with pytest.raises(METNotAvailable):
+        get_taf_datetime_range(airport_icao)

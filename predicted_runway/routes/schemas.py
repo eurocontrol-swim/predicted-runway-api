@@ -112,8 +112,8 @@ def _validate_wind_speed(value: Any) -> float:
 def _validate_wind_input_source(value: Any) -> str:
     try:
         WindInputSource(value)
-    except ValueError:
-        raise ma.ValidationError('Invalid wind_input_source')
+    except (ValueError, TypeError):
+        raise ma.ValidationError('Invalid wind_input_source', field_name='wind_input_source')
 
     return value
 
@@ -129,6 +129,16 @@ class PredictionInputSchema(ma.Schema):
 class RunwayPredictionInputSchema(PredictionInputSchema):
     origin_icao = ma.fields.Str(required=True, validate=_validate_origin_icao)
 
+    @ma.post_load
+    def validate_different_icaos(self, data, **kwargs):
+        origin_icao = data.get('origin_icao')
+        destination_icao = data.get('destination_icao')
+        if origin_icao == destination_icao:
+            raise ma.ValidationError('origin_icao should be different from destination_icao',
+                                     field_name='origin_icao')
+
+        return data
+
 
 class RunwayConfigPredictionInputSchema(PredictionInputSchema):
     ...
@@ -139,13 +149,13 @@ class RunwayPredictionOutputSchema:
     prediction_input: RunwayPredictionInput
     prediction_output: RunwayPredictionOutput
 
-    def to_api(self) -> dict:
+    def to_api_response(self) -> dict:
         return {
             "prediction_input": self.prediction_input.to_dict(),
             "prediction_output": self.prediction_output.to_geojson(),
         }
 
-    def to_web(self) -> dict:
+    def to_web_response(self) -> dict:
         return {
             "prediction_input": self.prediction_input.to_display_dict(),
             "prediction_output": self.prediction_output.to_geojson(exclude_zero_probas=True),
@@ -160,13 +170,13 @@ class RunwayConfigPredictionOutputSchema:
     prediction_input: RunwayConfigPredictionInput
     prediction_output: RunwayConfigPredictionOutput
 
-    def to_api(self) -> dict:
+    def to_api_response(self) -> dict:
         return {
             "prediction_input": self.prediction_input.to_dict(),
             "prediction_output": self.prediction_output.to_geojson(),
         }
 
-    def to_web(self) -> dict:
+    def to_web_response(self) -> dict:
         return {
             "prediction_input": self.prediction_input.to_display_dict(),
             "prediction_output": self.prediction_output.to_geojson(exclude_zero_probas=True),

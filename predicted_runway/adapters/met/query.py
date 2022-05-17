@@ -35,7 +35,6 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
-import abc
 import json
 from pathlib import Path
 from typing import Optional
@@ -44,7 +43,7 @@ from datetime import timedelta, datetime
 import pandas as pd
 
 
-class AirportFilesQuery(abc.ABC):
+class AirportFilesQuery:
     def __init__(self, files_dir: Path) -> None:
         self.files_dir = files_dir
 
@@ -65,10 +64,6 @@ class AirportFilesQuery(abc.ABC):
         if not reverse_ordered_files:
             return
 
-        if not before_timestamp:
-            last_file, *_ = reverse_ordered_files
-            return last_file
-
         for file in reverse_ordered_files:
             if self.file_has_timestamp(file=file, timestamp=before_timestamp):
                 return file
@@ -80,19 +75,16 @@ class AirportFilesQuery(abc.ABC):
 
     def file_has_timestamp(self, file: Path, timestamp: int) -> bool:
         return self.file_is_before_timestamp(file, timestamp=timestamp) \
-               and self.file_contains_timestamp(file=file, timestamp=timestamp)
+           and self.file_contains_timestamp(file=file, timestamp=timestamp)
 
-    @abc.abstractmethod
     def file_contains_timestamp(self, file: Path, timestamp: int) -> bool:
-        ...
+        raise NotImplementedError()
 
-    @abc.abstractmethod
     def get_wind_speed(self, before_timestamp: Optional[int] = None) -> Optional[float]:
-        ...
+        raise NotImplementedError()
 
-    @abc.abstractmethod
     def get_wind_direction(self, before_timestamp: Optional[int] = None) -> Optional[float]:
-        ...
+        raise NotImplementedError()
 
 
 class TAFAirportFilesQuery(AirportFilesQuery):

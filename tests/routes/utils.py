@@ -35,45 +35,9 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
-import os
-from pathlib import Path
 
-import pytest
+def query_string_from_request_arguments(request_args: dict) -> str:
+    if not request_args:
+        return ""
 
-from predicted_runway.app import create_app
-
-
-def pytest_generate_tests(metafunc):
-    os.environ['SECRET_KEY'] = 'secret'
-
-
-@pytest.fixture(scope='session')
-def test_app():
-    _app = create_app()
-    ctx = _app.app_context()
-    ctx.push()
-
-    yield _app
-
-    ctx.pop()
-
-
-@pytest.fixture(scope='session')
-def test_client(test_app):
-    return test_app.test_client()
-
-
-@pytest.fixture
-def static_test_dir():
-    return Path(__file__).parent.resolve().joinpath('static')
-
-
-@pytest.fixture
-def metar_files_dir(static_test_dir):
-    return static_test_dir.joinpath('metar').joinpath('EHAM')
-
-
-@pytest.fixture
-def taf_files_dir(static_test_dir):
-    return static_test_dir.joinpath('taf').joinpath('EHAM')
-
+    return f"?{'&'.join('='.join([key, str(value)]) for key, value in request_args.items())}"

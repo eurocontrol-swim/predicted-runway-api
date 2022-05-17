@@ -26,7 +26,6 @@ def _configure_jinja(app):
 
 
 def create_app():
-
     connexion_app = connexion.App(__name__)
 
     connexion_app.add_api(Path('openapi.yml'))

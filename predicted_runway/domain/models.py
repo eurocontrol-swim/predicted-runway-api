@@ -81,7 +81,7 @@ class Timestamp:
         return 5 <= self._datetime.month <= 10
 
     def is_workday(self, country: str) -> bool:
-        return self._datetime.day != 6 and self._datetime not in holidays.country_holidays(country)
+        return self._datetime.weekday() != 6 and self._datetime not in holidays.country_holidays(country)
 
 
 @dataclass
@@ -136,7 +136,7 @@ class RunwayPredictionInput:
     origin: Airport
     destination: Airport
     timestamp: Timestamp
-    wind_input_source: WindInputSource
+    wind_input_source: Optional[WindInputSource]
     wind_direction: float
     wind_speed: float
 
@@ -155,7 +155,7 @@ class RunwayPredictionInput:
             "origin_icao": self.origin.icao,
             "destination_icao": self.destination.icao,
             "date_time": str(self.timestamp),
-            "wind_input_source": str(self.wind_input_source),
+            "wind_input_source": str(self.wind_input_source) if self.wind_input_source else '',
             "wind_direction": self.wind_direction,
             "wind_speed": self.wind_speed,
         }
@@ -177,7 +177,7 @@ class RunwayPredictionInput:
 class RunwayConfigPredictionInput:
     destination: Airport
     timestamp: Timestamp
-    wind_input_source: WindInputSource
+    wind_input_source: Optional[WindInputSource]
     wind_direction: float
     wind_speed: float
 

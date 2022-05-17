@@ -37,13 +37,13 @@ __author__ = "EUROCONTROL (SWIM)"
 
 from typing import Optional
 
-from predicted_runway.adapters.met.api import get_wind_input
+from predicted_runway.adapters.met import api as met_api
 from predicted_runway.adapters.airports import get_airport_by_icao
-from predicted_runway.domain.models import WindInputSource, RunwayPredictionInput, RunwayConfigPredictionInput, \
-    Timestamp
+from predicted_runway.domain.models import WindInputSource, RunwayPredictionInput, \
+    RunwayConfigPredictionInput, Timestamp
 
 
-def _hand_wind_input(
+def _handle_wind_input(
     destination_icao: str,
     timestamp: int,
     wind_direction: Optional[float] = None,
@@ -52,7 +52,7 @@ def _hand_wind_input(
 ) -> tuple[float, float, WindInputSource]:
 
     if wind_direction is None and wind_speed is None:
-        wind_direction, wind_speed, wind_input_source = get_wind_input(
+        wind_direction, wind_speed, wind_input_source = met_api.get_wind_input(
             airport_icao=destination_icao,
             before_timestamp=timestamp
         )
@@ -73,7 +73,7 @@ class RunwayPredictionInputFactory:
                wind_input_source: Optional[str] = None
                ):
 
-        wind_direction, wind_speed, wind_input_source = _hand_wind_input(
+        wind_direction, wind_speed, wind_input_source = _handle_wind_input(
             destination_icao, timestamp, wind_direction, wind_speed, wind_input_source
         )
 
@@ -97,7 +97,7 @@ class RunwayConfigPredictionInputFactory:
                wind_input_source: Optional[str] = None
                ):
 
-        wind_direction, wind_speed, wind_input_source = _hand_wind_input(
+        wind_direction, wind_speed, wind_input_source = _handle_wind_input(
             destination_icao, timestamp, wind_direction, wind_speed, wind_input_source
         )
 
