@@ -35,45 +35,36 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
-import os
-from pathlib import Path
+import json
+from functools import lru_cache
+from typing import Optional, Iterable
 
-import pytest
-
-from predicted_runway.app import create_app
-
-
-def pytest_generate_tests(metafunc):
-    os.environ['SECRET_KEY'] = 'secret'
+from predicted_runway.config import ICAO_AIRPORTS_CATALOG_PATH, DESTINATION_ICAOS
+from predicted_runway.domain.factory import AirportFactory
+from predicted_runway.domain.models import Airport
 
 
-@pytest.fixture(scope='session')
-def test_app():
-    _app = create_app()
-    ctx = _app.app_context()
-    ctx.push()
-
-    yield _app
-
-    ctx.pop()
+@lru_cache
+def get_airport_data():
+    with open(ICAO_AIRPORTS_CATALOG_PATH, 'r') as f:
+        return json.load(f)
 
 
-@pytest.fixture(scope='session')
-def test_client(test_app):
-    return test_app.test_client()
+def get_airports(search: Optional[str]) -> Iterable[Airport]:
+    airports = (AirportFactory.create_from_data(data) for _, data in get_airport_data().items())
+
+    if search:
+        airports = (airport for airport in airports if search.lower() in airport.searchable.lower())
+
+    return airports
 
 
-@pytest.fixture
-def static_test_dir():
-    return Path(__file__).parent.resolve().joinpath('static')
+def get_airport_by_icao(icao: str) -> Optional[Airport]:
+    data = get_airport_data().get(icao)
+
+    if data:
+        return AirportFactory.create_from_data(data)
 
 
-@pytest.fixture
-def metar_files_dir(static_test_dir):
-    return static_test_dir.joinpath('metar').joinpath('EHAM')
-
-
-@pytest.fixture
-def taf_files_dir(static_test_dir):
-    return static_test_dir.joinpath('taf').joinpath('EHAM')
-
+def get_destination_airports() -> list[Airport]:
+    return [AirportFactory.create_from_data(get_airport_data()[icao]) for icao in DESTINATION_ICAOS]

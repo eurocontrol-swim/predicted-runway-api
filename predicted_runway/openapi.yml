@@ -1,0 +1,375 @@
+# Copyright 2022 EUROCONTROL
+# ==========================================
+#
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+# following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+#    disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+#    disclaimer in the documentation and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products
+#    derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+# INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+# USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# ==========================================
+#
+# Editorial note: this license is an instance of the BSD license template as provided by the Open Source Initiative:
+# http://opensource.org/licenses/BSD-3-Clause
+#
+# Details on EUROCONTROL: http://www.eurocontrol.int
+
+openapi: 3.0.2
+
+servers:
+  - description: Predicted Runway
+    url: /api/0.1
+info:
+  description: Predicted Runway
+  version: "0.1"
+  title: Predicted Runway API
+
+
+tags:
+  - name: Runway Prediction
+    description: Runway prediction
+  - name: Runway Configuration Prediction
+    description: Runway configuration
+
+paths:
+  /runway-prediction/arrivals/:
+    get:
+      tags:
+        - Runway Prediction
+      summary: predicts the runways in use for specific timestamp and airports
+      operationId: predicted_runway.routes.api.runway_prediction
+      parameters:
+        - in: query
+          required: true
+          name: origin_icao
+          description: the ICAO of the origin airport
+          schema:
+            type: string
+            example: EBBR
+        - in: query
+          required: true
+          name: destination_icao
+          description: the ICAO of the destination airport
+          schema:
+            type: string
+            example: EHAM
+        - in: query
+          required: true
+          name: timestamp
+          description: the desired predition timestamp in seconds since UNIX epoch
+          schema:
+            type: integer
+            example: 1651758627
+        - in: query
+          required: false
+          name: wind_speed
+          description: the wind speed in knots at the time of arrival
+          schema:
+            type: number
+            example: 10.0
+        - in: query
+          required: false
+          name: wind_direction
+          description: the wind direction the time of arrival in degrees
+          schema:
+            type: number
+            example: 180.0
+      responses:
+        '200':
+          description: returns the input used during prediction as well as a GeoJSON representation of the predicted runways
+          content:
+            application/json:
+              schema:
+                  $ref: '#/components/schemas/RunwayConfigPredictionOutput'
+        '400':
+          description: invalid input
+          content:
+            application/json:
+              example: {'error': 'Invalid input'}
+        '409':
+          description: Meteorological information (wind speed and direction) is not available for the given timestamp (provided that wind input is not given by the user)
+          content:
+            application/json:
+              example: {'error': 'There is no meteorological information available for provided timestamp. Please try again with different value.'}
+        '500':
+          description: unexpected error
+          content:
+            application/json:
+                example: {'error': 'Something went wrong during the prediction. Please try again later.'}
+
+  /runway-config-prediction/arrivals/:
+    get:
+      tags:
+        - Runway Configuration Prediction
+      summary: predicts the runways' configuration for specific timestamp and destination airport
+      operationId: predicted_runway.routes.api.runway_config_prediction
+      parameters:
+        - in: query
+          required: true
+          name: destination_icao
+          description: the ICAO of the destination airport
+          schema:
+            type: string
+            example: EHAM
+        - in: query
+          required: true
+          name: timestamp
+          description: the desired predition timestamp in seconds since UNIX epoch
+          schema:
+            type: integer
+            example: 1651758627
+        - in: query
+          required: false
+          name: wind_speed
+          description: the wind speed in knots at the time of arrival
+          schema:
+            type: number
+            example: 10.0
+        - in: query
+          required: false
+          name: wind_direction
+          description: the wind direction the time of arrival in degrees
+          schema:
+            type: number
+            example: 180.0
+      responses:
+        '200':
+          description: returns the input used during prediction as well as a GeoJSON representation of the predicted runway configuration
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RunwayConfigPredictionOutput'
+        '400':
+          description: invalid input
+          content:
+            application/json:
+              example: {'error': 'Invalid input'}
+        '409':
+          description: Meteorological information (wind speed and direction) is not available for the given timestamp (provided that wind input is not given by the user)
+          content:
+            application/json:
+              example: {'error': 'There is no meteorological information available for provided timestamp. Please try again with different value.'}
+        '500':
+          description: unexpected error
+          content:
+            application/json:
+                example: {'error': 'Something went wrong during the prediction. Please try again later.'}
+
+components:
+  schemas:
+    RunwayPredictionOutput:
+      description: Output
+      type: object
+      properties:
+        prediction_input:
+          type: object
+          properties:
+            origin_icao:
+              type: string
+              description: the ICAO of the origin airport
+              example: EBBR
+            destination_icao:
+              type: string
+              description: the ICAO of the destination airport
+              example: EHAM
+            timestmap:
+              type: integer
+              description: the timestamp of the predictiond
+              example: 1651758627
+            wind_speed:
+              type: number
+              description: the wind speed that was used either provided by the user or retrieved from METAR or TAF
+              example: 10.0
+            wind_direction:
+              type: number
+              description: the wind direction that was used either provided by the user or retrieved from METAR or TAF
+              example: 180.0
+            wind_input_source:
+              type: string
+              enum:
+                  - TAF
+                  - METAR
+                  - USER
+              description: where the wind input (speed, direction) was taken from in case of their absence upon request
+              example: TAF
+        prediction_output:
+          type: object
+          properties:
+            type:
+              type: string
+              example: FeatureCollection
+            features:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RunwayGeoJSON'
+
+
+    RunwayConfigPredictionOutput:
+      description: Output
+      type: object
+      properties:
+        prediction_input:
+          type: object
+          properties:
+            destination_icao:
+              type: string
+              description: the ICAO of the destination airport
+              example: EHAM
+            timestmap:
+              type: integer
+              description: the timestamp of the predictiond
+              example: 1651758627
+            wind_speed:
+              type: number
+              description: the wind speed that was used either provided by the user or retrieved from METAR or TAF
+              example: 10.0
+            wind_direction:
+              type: number
+              description: the wind direction that was used either provided by the user or retrieved from METAR or TAF
+              example: 180.0
+            wind_input_source:
+              type: string
+              enum:
+                  - TAF
+                  - METAR
+                  - USER
+              description: where the wind input (speed, direction) was taken from in case of their absence upon request
+              example: TAF
+        prediction_output:
+          type: object
+          properties:
+            type:
+              type: string
+              example: FeatureCollection
+            features:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RunwayConfigGeoJSON'
+
+    RunwayGeoJSON:
+      type: object
+      properties:
+        type:
+          type: string
+          example: Feature
+        properties:
+          type: object
+          properties:
+            probability:
+              type: number
+              example: 0.9
+            runway_name:
+              type: string
+              example: 19R
+            true_bearing:
+              type: number
+              example: 183.2
+        geometry:
+          type: object
+          properties:
+            type:
+              type: string
+              example: LineString
+            coordinates:
+              type: array
+              items:
+                type: array
+                items:
+                    type: number
+              example: [
+                [
+                  4.711725,
+                  52.360258333333334
+                ],
+                [
+                  4.708836111111111,
+                  52.32858055555556
+                ]
+              ]
+
+    RunwayConfigGeoJSON:
+      type: object
+      properties:
+        type:
+          type: string
+          example: Feature
+        properties:
+          type: object
+          properties:
+            probability:
+              type: number
+              example: 0.9
+            runways:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: 18C
+                  true_bearing:
+                    type: number
+                    example: 183.2
+          example: {
+            'probability': 0.9,
+            'runways': [
+                {
+                    'name': 18C,
+                    'true_bearing': 183.2
+                },
+                {
+                    'name': 18R,
+                    'true_bearing': 53.4
+                }
+            ]
+          }
+        geometry:
+          type: object
+          properties:
+            type:
+              type: string
+              example: MultiLineString
+            coordinates:
+              type: array
+              items:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
+              example: [
+                [
+                  [
+                    4.711725,
+                    52.360258333333334
+                  ],
+                  [
+                    4.708836111111111,
+                    52.32858055555556
+                  ]
+                ],
+                [
+                  [
+                    4.8030252777777775,
+                    52.314029166666664
+                  ],
+                  [
+                    4.783484722222222,
+                    52.300373611111105
+                  ]
+                ]
+              ]

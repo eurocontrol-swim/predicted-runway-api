@@ -35,45 +35,30 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
-import os
+import json
 from pathlib import Path
 
-import pytest
-
-from predicted_runway.app import create_app
+from predicted_runway.config import RUNWAY_MODEL_STATS_DIR, RUNWAY_CONFIG_MODEL_STATS_DIR
 
 
-def pytest_generate_tests(metafunc):
-    os.environ['SECRET_KEY'] = 'secret'
+def _preprocess_content(content: str) -> str:
+    content = content.replace('NaN', 'null')
+
+    return content
 
 
-@pytest.fixture(scope='session')
-def test_app():
-    _app = create_app()
-    ctx = _app.app_context()
-    ctx.push()
+def _get_stats(path: Path) -> dict:
+    with open(path, 'r') as f:
+        content = f.read()
 
-    yield _app
+    content = _preprocess_content(content)
 
-    ctx.pop()
+    return json.loads(content)
 
 
-@pytest.fixture(scope='session')
-def test_client(test_app):
-    return test_app.test_client()
+def get_runway_airport_stats(airport: str) -> dict:
+    return _get_stats(path=RUNWAY_MODEL_STATS_DIR.joinpath(f"{airport}.json"))
 
 
-@pytest.fixture
-def static_test_dir():
-    return Path(__file__).parent.resolve().joinpath('static')
-
-
-@pytest.fixture
-def metar_files_dir(static_test_dir):
-    return static_test_dir.joinpath('metar').joinpath('EHAM')
-
-
-@pytest.fixture
-def taf_files_dir(static_test_dir):
-    return static_test_dir.joinpath('taf').joinpath('EHAM')
-
+def get_runway_config_airport_stats(airport: str) -> dict:
+    return _get_stats(path=RUNWAY_CONFIG_MODEL_STATS_DIR.joinpath(f"{airport}.json"))

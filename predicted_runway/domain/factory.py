@@ -35,45 +35,37 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
-import os
-from pathlib import Path
-
-import pytest
-
-from predicted_runway.app import create_app
+from predicted_runway.domain.models import Runway, Airport
 
 
-def pytest_generate_tests(metafunc):
-    os.environ['SECRET_KEY'] = 'secret'
+class RunwayFactory:
+
+    @staticmethod
+    def create_from_data(name: str, data: dict) -> Runway:
+        return Runway(
+            name=name,
+            true_bearing=data["true_bearing"],
+            coordinates_geojson=data["coordinates_geojson"]
+        )
 
 
-@pytest.fixture(scope='session')
-def test_app():
-    _app = create_app()
-    ctx = _app.app_context()
-    ctx.push()
+class AirportFactory:
 
-    yield _app
+    @staticmethod
+    def create_from_data(data: dict) -> Airport:
+        airport = Airport(
+            icao=data["icao"],
+            iata=data["iata"],
+            name=data["name"],
+            city=data["city"],
+            state=data["state"],
+            country=data["country"],
+            elevation=data["elevation"],
+            lat=data["lat"],
+            lon=data["lon"],
+            tz=data["tz"],
+            runways=[RunwayFactory.create_from_data(name, data)
+                     for name, data in data.get("runways", {}).items()]
+        )
 
-    ctx.pop()
-
-
-@pytest.fixture(scope='session')
-def test_client(test_app):
-    return test_app.test_client()
-
-
-@pytest.fixture
-def static_test_dir():
-    return Path(__file__).parent.resolve().joinpath('static')
-
-
-@pytest.fixture
-def metar_files_dir(static_test_dir):
-    return static_test_dir.joinpath('metar').joinpath('EHAM')
-
-
-@pytest.fixture
-def taf_files_dir(static_test_dir):
-    return static_test_dir.joinpath('taf').joinpath('EHAM')
-
+        return airport
