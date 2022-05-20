@@ -39,7 +39,7 @@ import math
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Protocol, Optional, Any
+from typing import Protocol, Any
 
 import holidays
 
@@ -103,7 +103,7 @@ class Airport:
     lat: float
     lon: float
     tz: str
-    runways: Optional[list[Runway]]
+    runways: list[Runway] = None
 
     @property
     def searchable(self):
@@ -113,7 +113,7 @@ class Airport:
     def title(self):
         return f"{self.icao}: {self.name}, {self.city}, {self.state}, {self.country}"
 
-    def get_runway(self, name) -> Optional[Runway]:
+    def get_runway(self, name) -> Runway | None:
         for runway in self.runways:
             if runway.name == name:
                 return runway
@@ -136,9 +136,9 @@ class RunwayPredictionInput:
     origin: Airport
     destination: Airport
     timestamp: Timestamp
-    wind_input_source: Optional[WindInputSource]
     wind_direction: float
     wind_speed: float
+    wind_input_source: WindInputSource = None
 
     def to_dict(self):
         return {
@@ -177,9 +177,9 @@ class RunwayPredictionInput:
 class RunwayConfigPredictionInput:
     destination: Airport
     timestamp: Timestamp
-    wind_input_source: Optional[WindInputSource]
     wind_direction: float
     wind_speed: float
+    wind_input_source: WindInputSource = None
 
     def to_dict(self):
         return {

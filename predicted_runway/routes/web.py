@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 import flask as f
 from marshmallow import ValidationError
@@ -161,7 +160,7 @@ def get_forecast_timestamp_range(destination_icao: str):
     }, 200
 
 
-def _load_runway_prediction_template(result: Optional[dict] = None):
+def _load_runway_prediction_template(result: dict = None):
     destination_airports = airports_api.get_destination_airports()
 
     return f.render_template('runway.html',
@@ -174,7 +173,7 @@ def _load_runway_prediction_template_with_warning(message: str):
     return _load_runway_prediction_template()
 
 
-def _load_runway_config_prediction_template(result: Optional[dict] = None):
+def _load_runway_config_prediction_template(result: dict = None):
     destination_airports = airports_api.get_destination_airports()
 
     return f.render_template('runwayConfig.html',

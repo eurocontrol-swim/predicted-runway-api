@@ -35,8 +35,6 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
-from typing import Optional
-
 from predicted_runway.adapters.met import api as met_api
 from predicted_runway.adapters.airports import get_airport_by_icao
 from predicted_runway.domain.models import WindInputSource, RunwayPredictionInput, \
@@ -46,9 +44,9 @@ from predicted_runway.domain.models import WindInputSource, RunwayPredictionInpu
 def _handle_wind_input(
     destination_icao: str,
     timestamp: int,
-    wind_direction: Optional[float] = None,
-    wind_speed: Optional[float] = None,
-    wind_input_source: Optional[str] = None,
+    wind_direction: float = None,
+    wind_speed: float = None,
+    wind_input_source: str = None,
 ) -> tuple[float, float, WindInputSource]:
 
     if wind_direction is None and wind_speed is None:
@@ -68,9 +66,9 @@ class RunwayPredictionInputFactory:
     def create(origin_icao: str,
                destination_icao: str,
                timestamp: int,
-               wind_direction: Optional[float] = None,
-               wind_speed: Optional[float] = None,
-               wind_input_source: Optional[str] = None
+               wind_direction: float = None,
+               wind_speed: float = None,
+               wind_input_source: str = None
                ):
 
         wind_direction, wind_speed, wind_input_source = _handle_wind_input(
@@ -92,9 +90,9 @@ class RunwayConfigPredictionInputFactory:
     @staticmethod
     def create(destination_icao: str,
                timestamp: int,
-               wind_direction: Optional[float] = None,
-               wind_speed: Optional[float] = None,
-               wind_input_source: Optional[str] = None
+               wind_direction: float = None,
+               wind_speed: float = None,
+               wind_input_source: str = None
                ):
 
         wind_direction, wind_speed, wind_input_source = _handle_wind_input(

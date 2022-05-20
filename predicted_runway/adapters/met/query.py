@@ -37,7 +37,6 @@ __author__ = "EUROCONTROL (SWIM)"
 
 import json
 from pathlib import Path
-from typing import Optional
 from datetime import timedelta, datetime
 
 import pandas as pd
@@ -58,7 +57,7 @@ class AirportFilesQuery:
         with file.open('r', encoding="utf-8") as f:
             return json.load(f)
 
-    def get_file(self, before_timestamp: int) -> Optional[Path]:
+    def get_file(self, before_timestamp: int) -> Path | None:
         reverse_ordered_files = self.list_files(reverse_order=True)
 
         if not reverse_ordered_files:
@@ -80,10 +79,10 @@ class AirportFilesQuery:
     def file_contains_timestamp(self, file: Path, timestamp: int) -> bool:
         raise NotImplementedError()
 
-    def get_wind_speed(self, before_timestamp: Optional[int] = None) -> Optional[float]:
+    def get_wind_speed(self, before_timestamp: int = None) -> float | None:
         raise NotImplementedError()
 
-    def get_wind_direction(self, before_timestamp: Optional[int] = None) -> Optional[float]:
+    def get_wind_direction(self, before_timestamp: int = None) -> float | None:
         raise NotImplementedError()
 
 
@@ -98,7 +97,7 @@ class TAFAirportFilesQuery(AirportFilesQuery):
         return taf_start_time_timestamp <= timestamp <= taf_end_time_timestamp
 
     @staticmethod
-    def _get_forecast_value(forecast: dict, value_key: str) -> Optional[float]:
+    def _get_forecast_value(forecast: dict, value_key: str) -> float | None:
         try:
             result = float(forecast[value_key]['value'])
         except (KeyError, TypeError, ValueError):
@@ -107,7 +106,7 @@ class TAFAirportFilesQuery(AirportFilesQuery):
         return result
 
     def _get_wind_value_from_file(self, file: Path, before_timestamp: int, value_key: str) \
-            -> Optional[float]:
+            -> float | None:
 
         content = self._read_file(file=file)
 
@@ -126,7 +125,7 @@ class TAFAirportFilesQuery(AirportFilesQuery):
 
         return backup_value
 
-    def get_wind_speed(self, before_timestamp: Optional[int] = None) -> Optional[int]:
+    def get_wind_speed(self, before_timestamp: int = None) -> int | None:
         file = self.get_file(before_timestamp=before_timestamp)
 
         if file:
@@ -134,7 +133,7 @@ class TAFAirportFilesQuery(AirportFilesQuery):
                                                   before_timestamp=before_timestamp,
                                                   value_key='wind_speed')
 
-    def get_wind_direction(self, before_timestamp: Optional[int] = None) -> Optional[int]:
+    def get_wind_direction(self, before_timestamp: int = None) -> int | None:
         file = self.get_file(before_timestamp=before_timestamp)
 
         if file:
@@ -142,7 +141,7 @@ class TAFAirportFilesQuery(AirportFilesQuery):
                                                   before_timestamp=before_timestamp,
                                                   value_key='wind_direction')
 
-    def get_datetime_range(self) -> Optional[tuple[datetime, datetime]]:
+    def get_datetime_range(self) -> tuple[datetime, datetime] | None:
         files = self.list_files()
 
         if not files:
@@ -173,7 +172,7 @@ class METARAirportFilesQuery(AirportFilesQuery):
 
         return timestamp_two_hours_ago <= content_timestamp <= timestamp
 
-    def _get_wind_value_from_file(self, file: Path, wind_value: str) -> Optional[float]:
+    def _get_wind_value_from_file(self, file: Path, wind_value: str) -> float | None:
         content = self._read_file(file)
         try:
             result = float(content[wind_value]['value'])
@@ -182,13 +181,13 @@ class METARAirportFilesQuery(AirportFilesQuery):
 
         return result
 
-    def get_wind_speed(self, before_timestamp: Optional[int] = None) -> Optional[float]:
+    def get_wind_speed(self, before_timestamp: int = None) -> float | None:
         file = self.get_file(before_timestamp=before_timestamp)
 
         if file:
             return self._get_wind_value_from_file(file, wind_value='wind_speed')
 
-    def get_wind_direction(self, before_timestamp: Optional[int] = None) -> Optional[float]:
+    def get_wind_direction(self, before_timestamp: int = None) -> float | None:
         file = self.get_file(before_timestamp=before_timestamp)
 
         if file:

@@ -36,7 +36,6 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 __author__ = "EUROCONTROL (SWIM)"
 
 from datetime import datetime
-from typing import Optional
 
 from predicted_runway.config import get_metar_dir_for_airport_icao, get_taf_dir_for_airport_icao
 from predicted_runway.domain.models import WindInputSource
@@ -48,7 +47,7 @@ class METNotAvailable(Exception):
 
 
 def _get_wind_input_from_source(source_query: AirportFilesQuery, before_timestamp: int) \
-        -> Optional[tuple[float, float]]:
+        -> tuple[float, float] | None:
 
     wind_direction = source_query.get_wind_direction(before_timestamp=before_timestamp)
     if wind_direction is not None:
@@ -57,16 +56,14 @@ def _get_wind_input_from_source(source_query: AirportFilesQuery, before_timestam
             return wind_direction, wind_speed
 
 
-def get_wind_input_from_metar(airport_icao: str, before_timestamp: int) -> Optional[tuple[float,
-                                                                                          float]]:
+def get_wind_input_from_metar(airport_icao: str, before_timestamp: int) -> tuple[float, float] | None:
 
     query = METARAirportFilesQuery(files_dir=get_metar_dir_for_airport_icao(airport_icao))
 
     return _get_wind_input_from_source(source_query=query, before_timestamp=before_timestamp)
 
 
-def get_wind_input_from_taf(airport_icao: str, before_timestamp: int) -> Optional[tuple[float,
-                                                                                        float]]:
+def get_wind_input_from_taf(airport_icao: str, before_timestamp: int) -> tuple[float, float] | None:
 
     query = TAFAirportFilesQuery(files_dir=get_taf_dir_for_airport_icao(airport_icao))
 
