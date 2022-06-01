@@ -6,7 +6,7 @@ function formatDate(d) {
 }
 
 function getForecastTimestampRange(airport, callback) {
-  $.ajax({url: `/forecast-timestamp-range/${airport}`, success: callback});
+  $.ajax({url: `/last-taf-end-time/${airport}`, success: callback});
 }
 
 function initMap(center_coordinates) {

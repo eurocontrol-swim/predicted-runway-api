@@ -56,7 +56,6 @@ function updateRpOriginAirports() {
 }
 
 function rpHandleForecastTimestampRange(range) {
-    console.log(range);
     const startDatetime = moment().utc();
     startDatetime.set('minutes', 0);
     startDatetime.set('seconds', 0);
@@ -67,7 +66,6 @@ function rpHandleForecastTimestampRange(range) {
     $rpDateTimeRange.setAttribute('max', rpDateTimeRangeMax.toString());
     $rpDateTimeRange.setAttribute('data-start-timestamp', startDateTimeTimestamp.toString());
     updateRpCurrentTimestamp();
-
 }
 
 function updateRpTimestamps(airport) {

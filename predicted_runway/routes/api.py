@@ -40,15 +40,16 @@ import logging
 from flask import request, jsonify
 from marshmallow import ValidationError
 
+from met_update_db import repo as met_repo
+
 from predicted_runway.domain import predictor
-from predicted_runway.adapters.met.api import METNotAvailable
-from predicted_runway.routes.factory import RunwayPredictionInputFactory, RunwayConfigPredictionInputFactory
+from predicted_runway.routes.factory import RunwayPredictionInputFactory, \
+    RunwayConfigPredictionInputFactory
 from predicted_runway.routes.schemas import RunwayPredictionInputSchema, \
     RunwayConfigPredictionInputSchema, RunwayConfigPredictionOutputSchema, \
     RunwayPredictionOutputSchema
 
-logging.basicConfig(format='[%(asctime)s] - %(levelname)s - %(module)s - %(message)s')
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 def runway_prediction():
@@ -56,13 +57,13 @@ def runway_prediction():
     try:
         validated_input = RunwayPredictionInputSchema().load(request.args)
     except ValidationError as e:
-        logger.exception(e)
+        _logger.exception(e)
         return jsonify({"detail": str(e)}), 400
 
     try:
         prediction_input = RunwayPredictionInputFactory.create(**validated_input)
-    except METNotAvailable as e:
-        logger.exception(e)
+    except met_repo.METNotAvailable as e:
+        _logger.exception(e)
         message = f"There is no meteorological information available for the provided timestamp. " \
                   f"Please try again with different value."
         return jsonify({"detail": message}), 409
@@ -70,7 +71,7 @@ def runway_prediction():
     try:
         prediction_output = predictor.get_runway_prediction_output(prediction_input)
     except Exception as e:
-        logger.exception(e)
+        _logger.exception(e)
         return jsonify({
             "detail": "Something went wrong during the prediction. Please try again later."
         }), 500
@@ -85,13 +86,13 @@ def runway_config_prediction():
     try:
         validated_input = RunwayConfigPredictionInputSchema().load(request.args)
     except ValidationError as e:
-        logger.exception(e)
+        _logger.exception(e)
         return jsonify({"detail": str(e)}), 400
 
     try:
         prediction_input = RunwayConfigPredictionInputFactory.create(**validated_input)
-    except METNotAvailable as e:
-        logger.exception(e)
+    except met_repo.METNotAvailable as e:
+        _logger.exception(e)
         message = f"There is no meteorological information available for the provided timestamp. " \
                   f"Please try again with different value."
         return jsonify({"detail": message}), 409
@@ -99,11 +100,12 @@ def runway_config_prediction():
     try:
         prediction_output = predictor.get_runway_config_prediction_output(prediction_input)
     except Exception as e:
-        logger.exception(e)
+        _logger.exception(e)
         return jsonify({
             "detail": "Something went wrong during the prediction. Please try again later."
         }), 500
 
-    result = RunwayConfigPredictionOutputSchema(prediction_input, prediction_output).to_api_response()
+    result = RunwayConfigPredictionOutputSchema(prediction_input,
+                                                prediction_output).to_api_response()
 
     return jsonify(result), 200

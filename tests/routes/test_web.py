@@ -40,9 +40,9 @@ from datetime import datetime, timezone
 from unittest import mock
 
 import pytest
+from met_update_db import repo as met_repo
 
 from predicted_runway.adapters.airports import get_destination_airports, get_airport_by_icao
-from predicted_runway.adapters.met.api import METNotAvailable
 from predicted_runway.domain.models import WindInputSource, RunwayPredictionOutput, \
     RunwayProbability, RunwayConfigPredictionOutput, RunwayConfigProbability
 from predicted_runway.routes.factory import RunwayPredictionInputFactory, \
@@ -52,7 +52,7 @@ from tests.routes.utils import query_string_from_request_arguments
 RUNWAY_PREDICTION_URL = f'/runway-prediction/arrivals'
 RUNWAY_CONFIG_PREDICTION_URL = f'/runway-config-prediction/arrivals'
 AIRPORTS_DATA_URL = '/airports-data'
-FORECAST_TIMESTAMP_RANGE_URL = '/forecast-timestamp-range'
+LAST_TAF_END_TIME_URL = '/last-taf-end-time'
 
 
 @pytest.mark.parametrize('request_body, expected_messages', [
@@ -238,7 +238,7 @@ def test_runway_prediction__post__met_not_available__renders_template_with_warni
     request_body,
     expected_message
 ):
-    mock_create.side_effect = METNotAvailable()
+    mock_create.side_effect = met_repo.METNotAvailable()
 
     test_client.post(RUNWAY_PREDICTION_URL, data=request_body)
 
@@ -465,7 +465,7 @@ def test_runway_prediction__get__met_not_available__renders_template_with_warnin
     request_args,
     expected_message
 ):
-    mock_create.side_effect = METNotAvailable()
+    mock_create.side_effect = met_repo.METNotAvailable()
 
 
     query_string = query_string_from_request_arguments(request_args)
@@ -790,7 +790,7 @@ def test_runway_config_prediction__post__met_not_available__renders_template_wit
     request_body,
     expected_message
 ):
-    mock_create.side_effect = METNotAvailable()
+    mock_create.side_effect = met_repo.METNotAvailable()
 
     test_client.post(RUNWAY_CONFIG_PREDICTION_URL, data=request_body)
 
@@ -975,7 +975,7 @@ def test_runway_config_prediction__get__met_not_available__renders_template_with
     request_args,
     expected_message
 ):
-    mock_create.side_effect = METNotAvailable()
+    mock_create.side_effect = met_repo.METNotAvailable()
 
 
     query_string = query_string_from_request_arguments(request_args)
@@ -1189,7 +1189,7 @@ def test_airports_data(mock_get_airports, test_client, airports_list, expected_r
 def test_get_forecast_timestamp_range__destination_icao_not_supported__returns_404(
     test_client, invalid_destination_icao, expected_message
 ):
-    response = test_client.get(f"{FORECAST_TIMESTAMP_RANGE_URL}/{invalid_destination_icao}")
+    response = test_client.get(f"{LAST_TAF_END_TIME_URL}/{invalid_destination_icao}")
 
     assert response.status_code == 404
 
@@ -1204,13 +1204,13 @@ def test_get_forecast_timestamp_range__destination_icao_not_supported__returns_4
         {'error': 'No meteorological data available'}
     )
 ])
-@mock.patch('predicted_runway.adapters.met.api.get_taf_datetime_range')
+@mock.patch('met_update_db.repo.get_last_taf_end_time')
 def test_get_forecast_timestamp_range__met_not_available__returns_409(
-    mock_get_taf_datetime_range, test_client, destination_icao, expected_message
+    mock_get_last_taf_end_time, test_client, destination_icao, expected_message
 ):
-    mock_get_taf_datetime_range.side_effect = METNotAvailable()
+    mock_get_last_taf_end_time.side_effect = met_repo.METNotAvailable()
 
-    response = test_client.get(f"{FORECAST_TIMESTAMP_RANGE_URL}/{destination_icao}")
+    response = test_client.get(f"{LAST_TAF_END_TIME_URL}/{destination_icao}")
 
     assert response.status_code == 409
 
@@ -1219,23 +1219,22 @@ def test_get_forecast_timestamp_range__met_not_available__returns_409(
     assert response_data == expected_message
 
 
-@pytest.mark.parametrize('destination_icao, taf_datetime_range, expected_message', [
+@pytest.mark.parametrize('destination_icao, last_taf_end_time, expected_message', [
     (
         'EHAM',
-        (datetime(2022, 5, 19, 12, tzinfo=timezone.utc), datetime(2022, 5, 20, 18, tzinfo=timezone.utc)),
+        datetime(2022, 5, 20, 18, tzinfo=timezone.utc),
         {
-            'start_timestamp': 1652961600,
             'end_timestamp': 1653069600
         }
     )
 ])
-@mock.patch('predicted_runway.adapters.met.api.get_taf_datetime_range')
+@mock.patch('met_update_db.repo.get_last_taf_end_time')
 def test_get_forecast_timestamp_range__no_errors__returns_200_and_the_range(
-    mock_get_taf_datetime_range, test_client, destination_icao, taf_datetime_range, expected_message
+    mock_get_last_taf_end_time, test_client, destination_icao, last_taf_end_time, expected_message
 ):
-    mock_get_taf_datetime_range.return_value = taf_datetime_range
+    mock_get_last_taf_end_time.return_value = last_taf_end_time
 
-    response = test_client.get(f"{FORECAST_TIMESTAMP_RANGE_URL}/{destination_icao}")
+    response = test_client.get(f"{LAST_TAF_END_TIME_URL}/{destination_icao}")
 
     assert response.status_code == 200
 

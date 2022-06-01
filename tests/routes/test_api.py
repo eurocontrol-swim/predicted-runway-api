@@ -39,9 +39,8 @@ import json
 from unittest import mock
 
 import pytest
-
+from met_update_db import repo as met_repo
 from predicted_runway.adapters.airports import get_airport_by_icao
-from predicted_runway.adapters.met.api import METNotAvailable
 from predicted_runway.domain.models import RunwayPredictionOutput, RunwayProbability, \
     WindInputSource, RunwayConfigPredictionOutput, RunwayConfigProbability
 from predicted_runway.routes.factory import RunwayPredictionInputFactory, \
@@ -186,7 +185,7 @@ def test_runway_prediction__invalid_input__returns_400(test_client, request_args
 def test_runway_prediction__met_not_available__returns_409(
     mock_create, test_client, request_args, expected_message
 ):
-    mock_create.side_effect = METNotAvailable()
+    mock_create.side_effect = met_repo.METNotAvailable()
 
     query_string = query_string_from_request_arguments(request_args)
 
@@ -528,7 +527,7 @@ def test_runway_config_prediction__invalid_input__returns_400(
 def test_runway_config_prediction__met_not_available__returns_409(
     mock_create, test_client, request_args, expected_message
 ):
-    mock_create.side_effect = METNotAvailable()
+    mock_create.side_effect = met_repo.METNotAvailable()
 
     query_string = query_string_from_request_arguments(request_args)
 

@@ -48,3 +48,4 @@ tzlocal==4.1
 urllib3==1.26.8
 uWSGI==2.0.20
 Werkzeug==2.0.2
+git+https://git@github.com/eurocontrol-swim/predicted-runway-met-update-db.git

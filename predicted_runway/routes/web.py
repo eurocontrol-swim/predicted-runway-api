@@ -1,22 +1,30 @@
 import logging
 
 import flask as f
+from flask import send_from_directory
 from marshmallow import ValidationError
 
+from met_update_db import repo as met_repo
+
 from predicted_runway.adapters import airports as airports_api
-from predicted_runway.adapters.met import api as met_api
+# from predicted_runway.adapters.met import api as met_api
 from predicted_runway.config import DESTINATION_ICAOS
 from predicted_runway.domain import predictor
-from predicted_runway.routes.factory import RunwayPredictionInputFactory, RunwayConfigPredictionInputFactory
+from predicted_runway.routes.factory import RunwayPredictionInputFactory, \
+    RunwayConfigPredictionInputFactory
 from predicted_runway.routes.schemas import RunwayPredictionInputSchema, \
     RunwayConfigPredictionInputSchema, RunwayPredictionOutputSchema, \
     RunwayConfigPredictionOutputSchema
 
-logging.basicConfig(format='[%(asctime)s] - %(levelname)s - %(module)s - %(message)s')
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 web_blueprint = f.Blueprint('web', __name__)
+
+
+@web_blueprint.route('/static/<path:path>')
+def send_report(path):
+    return send_from_directory('static', path)
 
 
 @web_blueprint.route("/")
@@ -37,7 +45,7 @@ def runway_prediction():
 def _message_invalid_request_exception(exc: Exception) -> str:
     mapper = {
         ValidationError: str(exc),
-        met_api.METNotAvailable:
+        met_repo.METNotAvailable:
             f"There is no meteorological information available for the provided timestamp. "
             f"Please try again with different value."
     }
@@ -65,14 +73,14 @@ def _get_runway_prediction():
     try:
         prediction_input = _runway_prediction_input_from_input_data(input_data=f.request.args)
     except Exception as exc:
-        logger.exception(exc)
+        _logger.exception(exc)
         message = _message_invalid_request_exception(exc)
         return _load_runway_prediction_template_with_warning(message)
 
     try:
         prediction_output = predictor.get_runway_prediction_output(prediction_input)
     except Exception as exc:
-        logger.exception(exc)
+        _logger.exception(exc)
         return _load_runway_prediction_template_with_warning(
             "Something went wrong during the prediction. Please try again later."
         )
@@ -93,14 +101,14 @@ def _get_runway_config_prediction():
     try:
         prediction_input = _runway_config_prediction_input_from_input_data(input_data=f.request.args)
     except Exception as exc:
-        logger.exception(exc)
+        _logger.exception(exc)
         message = _message_invalid_request_exception(exc)
         return _load_runway_config_prediction_template_with_warning(message)
 
     try:
         prediction_output = predictor.get_runway_config_prediction_output(prediction_input)
     except Exception as exc:
-        logger.exception(exc)
+        _logger.exception(exc)
         return _load_runway_config_prediction_template_with_warning(
             "Something went wrong during the prediction. Please try again later."
         )
@@ -115,7 +123,7 @@ def _post_runway_config_prediction():
         prediction_input = _runway_config_prediction_input_from_input_data(
             input_data=dict(f.request.form))
     except Exception as exc:
-        logger.exception(exc)
+        _logger.exception(exc)
         message = _message_invalid_request_exception(exc)
         return _load_runway_config_prediction_template_with_warning(message)
 
@@ -141,8 +149,8 @@ def airports_data(search: str):
     return f.jsonify(result), 200
 
 
-@web_blueprint.route("/forecast-timestamp-range/<string:destination_icao>", methods=['GET'])
-def get_forecast_timestamp_range(destination_icao: str):
+@web_blueprint.route("/last-taf-end-time/<string:destination_icao>", methods=['GET'])
+def get_last_taf_end_time(destination_icao: str):
     if destination_icao not in DESTINATION_ICAOS:
         return {
            "error": f"destination_icao {destination_icao} is not supported. "
@@ -150,13 +158,12 @@ def get_forecast_timestamp_range(destination_icao: str):
         }, 404
 
     try:
-        start_time_datetime, end_time_datetime = met_api.get_taf_datetime_range(destination_icao)
-    except met_api.METNotAvailable:
+        end_time_datetime = met_repo.get_last_taf_end_time(airport_icao=destination_icao)
+    except met_repo.METNotAvailable:
         return {"error": "No meteorological data available"}, 409
 
     return {
-        'start_timestamp': int(start_time_datetime.timestamp()),
-        'end_timestamp': int(end_time_datetime.timestamp()),
+        'end_timestamp': int(end_time_datetime.timestamp())
     }, 200
 
 
@@ -184,5 +191,3 @@ def _load_runway_config_prediction_template(result: dict = None):
 def _load_runway_config_prediction_template_with_warning(message: str):
     f.flash(message, category="warning")
     return _load_runway_config_prediction_template()
-
-
