@@ -1,8 +1,9 @@
-<div class="modal fade" id="modelStatsModal" tabindex="-1" aria-labelledby="modelStatsModalLabel" aria-hidden="true">
+{% set stats = model_stats['runway'] %}
+<div class="modal fade" id="runwayModelStatsModal" tabindex="-1" aria-labelledby="runwayModelStatsModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modelStatsModalLabel">Model statistics | {{ result['stats']['airport'] }}</h5>
+        <h5 class="modal-title" id="runwayModelStatsModalLabel">Runway Model statistics | {{ model_stats['runway']['airport'] }}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -16,19 +17,19 @@
                   </tr>
                   <tr>
                     <td><strong>Estimators</strong></td>
-                    <td>{{ result['stats']['number_estimators'] }}</td>
+                    <td>{{ stats['number_estimators'] }}</td>
                   </tr>
                   <tr>
                     <td><strong>Criterion</strong></td>
-                    <td>{{ result['stats']['criterion'] }}</td>
+                    <td>{{ stats['criterion'] }}</td>
                   </tr>
                   <tr>
                     <td><strong>From date</strong></td>
-                    <td>{{ result['stats']['date_from'] }}</td>
+                    <td>{{ stats['date_from'] }}</td>
                   </tr>
                   <tr>
                     <td><strong>To date</strong></td>
-                    <td>{{ result['stats']['date_to'] }}</td>
+                    <td>{{ stats['date_to'] }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -43,7 +44,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {% for feature in result['stats']['features_importance'] %}
+                  {% for feature in stats['features_importance'] %}
                   <tr>
                     {% if feature[0] == "wind_dir" %}
                         <td><strong>Wind direction</strong></td>
@@ -77,43 +78,43 @@
                 <tbody>
                   <tr>
                     <td><strong>F1 weighted</strong></td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['f1_weighted'] * 100) }}</td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['f1_weighted'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_metar']['f1_weighted'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_taf']['f1_weighted'] * 100) }}</td>
                   </tr>
                   <tr>
                     <td><strong>Balanced accuracy</strong></td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['balanced_accuracy'] * 100) }}</td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['balanced_accuracy'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_metar']['balanced_accuracy'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_taf']['balanced_accuracy'] * 100) }}</td>
                   </tr>
                   <tr>
                     <td><strong>Balanced accuracy over random</strong></td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['balanced_accuracy_over_rand'] * 100) }}</td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['balanced_accuracy_over_rand'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_metar']['balanced_accuracy_over_rand'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_taf']['balanced_accuracy_over_rand'] * 100) }}</td>
                   </tr>
                   <tr>
                     <td><strong>Accuracy</strong></td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['accuracy'] * 100) }}</td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['accuracy'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_metar']['accuracy'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_taf']['accuracy'] * 100) }}</td>
                   </tr>
                   <tr>
                     <td><strong>Recall weighted</strong></td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['recall_weighted'] * 100) }}</td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['recall_weighted'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_metar']['recall_weighted'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_taf']['recall_weighted'] * 100) }}</td>
                   </tr>
                   <tr>
                     <td><strong>Precision weighted</strong></td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['precision_weighted'] * 100) }}</td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['precision_weighted'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_metar']['precision_weighted'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_taf']['precision_weighted'] * 100) }}</td>
                   </tr>
                   <tr>
                     <td><strong>Top 2</strong></td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['top_2'] * 100) }}</td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['top_2'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_metar']['top_2'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_taf']['top_2'] * 100) }}</td>
                   </tr>
                   <tr>
                     <td><strong>ROC AUC</strong></td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_metar']['roc_auc'] * 100) }}</td>
-                    <td>{{ "{:.2f}%".format(result['stats']['test_with_taf']['roc_auc'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_metar']['roc_auc'] * 100) }}</td>
+                    <td>{{ "{:.2f}%".format(stats['test_with_taf']['roc_auc'] * 100) }}</td>
                   </tr>
                 </tbody>
               </table>

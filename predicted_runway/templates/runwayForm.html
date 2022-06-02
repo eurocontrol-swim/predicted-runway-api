@@ -6,7 +6,7 @@
           <h5 class="modal-title" id="rpForm">New Runway Prediction</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form method="POST" action="{{ url_for('web.runway_prediction') }}">
+        <form method="POST" action="{{ url_for('web.arrivals_runway_prediction', destination_icao=destination_airport.icao) }}">
           <div class="modal-body">
             <div class="form-group">
             <div class="mb-3">
@@ -24,15 +24,6 @@
               <datalist id="rpOriginAirportOptions">
               </datalist>
               <input id="rpOriginIcao" name="origin_icao" type="text" hidden required>
-            </div>
-            <div class="mb-3">
-            <label for="rpDestinationIcao" class="form-label">Arriving to</label>
-                <select id="rpDestinationIcao" name="destination_icao" class="form-control" required onchange="rpDestinationAirportSelected()">
-                    <option value="" label=""></option>
-                  {% for airport in destination_airports %}
-                    <option value="{{ airport.icao }}" label="{{ airport.title }}"></option>
-                  {% endfor %}
-                </select>
             </div>
             <div class="mb-3">
               <label for="rpDateTimeRange" class="form-label">Arriving at</label>

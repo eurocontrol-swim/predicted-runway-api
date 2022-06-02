@@ -161,7 +161,7 @@ class RunwayPredictionOutputSchema:
             "prediction_output": self.prediction_output.to_geojson(exclude_zero_probas=True),
             "airport_coordinates": [self.prediction_input.destination.lon,
                                     self.prediction_input.destination.lat],
-            "stats": stats.get_runway_airport_stats(self.prediction_input.destination.icao)
+            # "stats": stats.get_runway_airport_stats(self.prediction_input.destination.icao)
         }
 
 
@@ -182,5 +182,5 @@ class RunwayConfigPredictionOutputSchema:
             "prediction_output": self.prediction_output.to_geojson(exclude_zero_probas=True),
             "airport_coordinates": [self.prediction_input.destination.lon,
                                     self.prediction_input.destination.lat],
-            "stats": stats.get_runway_config_airport_stats(self.prediction_input.destination.icao)
+            # "stats": stats.get_runway_config_airport_stats(self.prediction_input.destination.icao)
         }

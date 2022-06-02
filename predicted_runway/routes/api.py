@@ -42,6 +42,7 @@ from marshmallow import ValidationError
 
 from met_update_db import repo as met_repo
 
+import predicted_runway.config as cfg
 from predicted_runway.domain import predictor
 from predicted_runway.routes.factory import RunwayPredictionInputFactory, \
     RunwayConfigPredictionInputFactory
@@ -52,10 +53,19 @@ from predicted_runway.routes.schemas import RunwayPredictionInputSchema, \
 _logger = logging.getLogger(__name__)
 
 
-def runway_prediction():
+def arrivals_runway_prediction(destination_icao: str):
+    if destination_icao not in cfg.DESTINATION_ICAOS:
+        return jsonify(
+            {
+                "detail": f'destination_icao should be one of {", ".join(cfg.DESTINATION_ICAOS)}'
+            }
+        ), 404
+
+    input_data = dict(request.args)
+    input_data.update({'destination_icao': destination_icao})
 
     try:
-        validated_input = RunwayPredictionInputSchema().load(request.args)
+        validated_input = RunwayPredictionInputSchema().load(input_data)
     except ValidationError as e:
         _logger.exception(e)
         return jsonify({"detail": str(e)}), 400
@@ -81,10 +91,19 @@ def runway_prediction():
     return jsonify(result), 200
 
 
-def runway_config_prediction():
+def arrivals_runway_config_prediction(destination_icao: str):
+    if destination_icao not in cfg.DESTINATION_ICAOS:
+        return jsonify(
+            {
+                "detail": f'destination_icao should be one of {", ".join(cfg.DESTINATION_ICAOS)}'
+            }
+        ), 404
+
+    input_data = dict(request.args)
+    input_data.update({'destination_icao': destination_icao})
 
     try:
-        validated_input = RunwayConfigPredictionInputSchema().load(request.args)
+        validated_input = RunwayConfigPredictionInputSchema().load(input_data)
     except ValidationError as e:
         _logger.exception(e)
         return jsonify({"detail": str(e)}), 400

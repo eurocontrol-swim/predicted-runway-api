@@ -42,6 +42,7 @@ from unittest import mock
 import pytest
 from met_update_db import repo as met_repo
 
+from predicted_runway import routes
 from predicted_runway.adapters.airports import get_destination_airports, get_airport_by_icao
 from predicted_runway.domain.models import WindInputSource, RunwayPredictionOutput, \
     RunwayProbability, RunwayConfigPredictionOutput, RunwayConfigProbability
@@ -49,19 +50,23 @@ from predicted_runway.routes.factory import RunwayPredictionInputFactory, \
     RunwayConfigPredictionInputFactory
 from tests.routes.utils import query_string_from_request_arguments
 
-RUNWAY_PREDICTION_URL = f'/runway-prediction/arrivals'
-RUNWAY_CONFIG_PREDICTION_URL = f'/runway-config-prediction/arrivals'
+
+ARRIVALS_RUNWAY_PREDICTION_URL = '/arrivals/{destination_icao}/runway-prediction'
+ARRIVALS_RUNWAY_CONFIG_PREDICTION_URL = '/arrivals/{destination_icao}/runway-config-prediction'
 AIRPORTS_DATA_URL = '/airports-data'
 LAST_TAF_END_TIME_URL = '/last-taf-end-time'
 
 
+def mock_get_model_stats(airport_icao: str):
+    return {'stats': {}}
+
+
 @pytest.mark.parametrize('request_body, expected_messages', [
     (
         {},
         [
             "'timestamp': ['Missing data for required field.']",
             "'origin_icao': ['Missing data for required field.']",
-            "'destination_icao': ['Missing data for required field.'"
         ]
     ),
     (
@@ -70,13 +75,11 @@ LAST_TAF_END_TIME_URL = '/last-taf-end-time'
         },
         [
             "'timestamp': ['Missing data for required field.']",
-            "'destination_icao': ['Missing data for required field.'"
         ]
     ),
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
         },
         [
             "'timestamp': ['Missing data for required field.']",
@@ -85,7 +88,6 @@ LAST_TAF_END_TIME_URL = '/last-taf-end-time'
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": 'invalid'
         },
         [
@@ -95,7 +97,6 @@ LAST_TAF_END_TIME_URL = '/last-taf-end-time'
     (
         {
             "origin_icao": 'EHAM',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200'
         },
         [
@@ -105,7 +106,6 @@ LAST_TAF_END_TIME_URL = '/last-taf-end-time'
     (
         {
             "origin_icao": 'invalid',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200'
         },
         [
@@ -115,27 +115,6 @@ LAST_TAF_END_TIME_URL = '/last-taf-end-time'
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'invalid',
-            "timestamp": '1650751200'
-        },
-        [
-            "{'destination_icao': ['Should be a string of 4 characters.']}"
-        ]
-    ),
-    (
-        {
-            "origin_icao": 'EBBR',
-            "destination_icao": 'LGAV',
-            "timestamp": '1650751200'
-        },
-        [
-            "{'destination_icao': ['Should be one of EHAM, LEMD, LFPO, LOWW.']}"
-        ]
-    ),
-    (
-        {
-            "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": "invalid"
         },
@@ -146,7 +125,6 @@ LAST_TAF_END_TIME_URL = '/last-taf-end-time'
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": 361.0
         },
@@ -157,7 +135,6 @@ LAST_TAF_END_TIME_URL = '/last-taf-end-time'
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": -1
         },
@@ -168,7 +145,6 @@ LAST_TAF_END_TIME_URL = '/last-taf-end-time'
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": "180",
             "wind_speed": "invalid"
@@ -180,7 +156,6 @@ LAST_TAF_END_TIME_URL = '/last-taf-end-time'
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": 180,
             "wind_speed": -1
@@ -192,14 +167,19 @@ LAST_TAF_END_TIME_URL = '/last-taf-end-time'
 ])
 @mock.patch('flask.render_template')
 @mock.patch('flask.flash')
-def test_runway_prediction__post__invalid_input__renders_template_with_warning(
+def test_arrivals_runway_prediction__post__invalid_input__renders_template_with_warning(
     mock_flash,
     mock_render_template,
     test_client,
+    monkeypatch,
     request_body,
     expected_messages
 ):
-    test_client.post(RUNWAY_PREDICTION_URL, data=request_body)
+    destination_icao='EHAM'
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
+
+    url = ARRIVALS_RUNWAY_PREDICTION_URL.format(destination_icao=destination_icao)
+    test_client.post(url, data=request_body)
 
     mock_flash.assert_called_once()
 
@@ -211,16 +191,16 @@ def test_runway_prediction__post__invalid_input__renders_template_with_warning(
     assert mock_render_template.call_args.args == ('runway.html',)
     assert mock_render_template.call_args.kwargs == dict(
         result=None,
+        model_stats=mock_get_model_stats(destination_icao),
+        destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
-
 
 
 @pytest.mark.parametrize('request_body, expected_message', [
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200'
         },
         f"There is no meteorological information available for the provided timestamp. "
@@ -230,17 +210,21 @@ def test_runway_prediction__post__invalid_input__renders_template_with_warning(
 @mock.patch('flask.render_template')
 @mock.patch('flask.flash')
 @mock.patch.object(RunwayPredictionInputFactory, 'create')
-def test_runway_prediction__post__met_not_available__renders_template_with_warning(
+def test_arrivals_runway_prediction__post__met_not_available__renders_template_with_warning(
     mock_create,
     mock_flash,
     mock_render_template,
     test_client,
+    monkeypatch,
     request_body,
     expected_message
 ):
+    destination_icao = 'EHAM'
     mock_create.side_effect = met_repo.METNotAvailable()
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
 
-    test_client.post(RUNWAY_PREDICTION_URL, data=request_body)
+    url = ARRIVALS_RUNWAY_PREDICTION_URL.format(destination_icao=destination_icao)
+    test_client.post(url, data=request_body)
 
     flashed_messages = mock_flash.call_args.args[0]
     assert expected_message == flashed_messages
@@ -249,16 +233,16 @@ def test_runway_prediction__post__met_not_available__renders_template_with_warni
     assert mock_render_template.call_args.args == ('runway.html',)
     assert mock_render_template.call_args.kwargs == dict(
         result=None,
+        model_stats=mock_get_model_stats(destination_icao),
+        destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
-
 
 
 @pytest.mark.parametrize('request_body', [
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_input_source": WindInputSource.USER.value,
             "wind_direction": 180.0,
@@ -267,16 +251,18 @@ def test_runway_prediction__post__met_not_available__renders_template_with_warni
     )
 ])
 @mock.patch('flask.redirect')
-def test_runway_prediction__post__no_errors__redirects_to_get_endpoint(
+def test_arrivals_runway_prediction__post__no_errors__redirects_to_get_endpoint(
     mock_redirect,
     test_client,
     request_body,
 ):
-    test_client.post(RUNWAY_PREDICTION_URL, data=request_body)
+    destination_icao = 'EHAM'
+    url = ARRIVALS_RUNWAY_PREDICTION_URL.format(destination_icao=destination_icao)
+    test_client.post(url, data=request_body)
 
     query_string = query_string_from_request_arguments(request_body)
 
-    mock_redirect.assert_called_once_with(f"{RUNWAY_PREDICTION_URL}{query_string}")
+    mock_redirect.assert_called_once_with(f"{url}{query_string}")
 
 
 @pytest.mark.parametrize('request_args, expected_messages', [
@@ -285,7 +271,6 @@ def test_runway_prediction__post__no_errors__redirects_to_get_endpoint(
         [
             "'timestamp': ['Missing data for required field.']",
             "'origin_icao': ['Missing data for required field.']",
-            "'destination_icao': ['Missing data for required field.'"
         ]
     ),
     (
@@ -294,13 +279,11 @@ def test_runway_prediction__post__no_errors__redirects_to_get_endpoint(
         },
         [
             "'timestamp': ['Missing data for required field.']",
-            "'destination_icao': ['Missing data for required field.'"
         ]
     ),
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
         },
         [
             "'timestamp': ['Missing data for required field.']",
@@ -309,7 +292,6 @@ def test_runway_prediction__post__no_errors__redirects_to_get_endpoint(
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": 'invalid'
         },
         [
@@ -319,7 +301,6 @@ def test_runway_prediction__post__no_errors__redirects_to_get_endpoint(
     (
         {
             "origin_icao": 'EHAM',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200'
         },
         [
@@ -329,7 +310,6 @@ def test_runway_prediction__post__no_errors__redirects_to_get_endpoint(
     (
         {
             "origin_icao": 'invalid',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200'
         },
         [
@@ -339,27 +319,6 @@ def test_runway_prediction__post__no_errors__redirects_to_get_endpoint(
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'invalid',
-            "timestamp": '1650751200'
-        },
-        [
-            "{'destination_icao': ['Should be a string of 4 characters.']}"
-        ]
-    ),
-    (
-        {
-            "origin_icao": 'EBBR',
-            "destination_icao": 'LGAV',
-            "timestamp": '1650751200'
-        },
-        [
-            "{'destination_icao': ['Should be one of EHAM, LEMD, LFPO, LOWW.']}"
-        ]
-    ),
-    (
-        {
-            "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": "invalid"
         },
@@ -370,7 +329,6 @@ def test_runway_prediction__post__no_errors__redirects_to_get_endpoint(
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": 361.0
         },
@@ -381,7 +339,6 @@ def test_runway_prediction__post__no_errors__redirects_to_get_endpoint(
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": -1
         },
@@ -392,7 +349,6 @@ def test_runway_prediction__post__no_errors__redirects_to_get_endpoint(
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": "180",
             "wind_speed": "invalid"
@@ -404,7 +360,6 @@ def test_runway_prediction__post__no_errors__redirects_to_get_endpoint(
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": 180,
             "wind_speed": -1
@@ -416,17 +371,21 @@ def test_runway_prediction__post__no_errors__redirects_to_get_endpoint(
 ])
 @mock.patch('flask.render_template')
 @mock.patch('flask.flash')
-def test_runway_prediction__get__invalid_input__renders_template_with_warning(
+def test_arrivals_runway_prediction__get__invalid_input__renders_template_with_warning(
     mock_flash,
     mock_render_template,
     test_client,
+    monkeypatch,
     request_args,
     expected_messages
 ):
+    destination_icao = 'EHAM'
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
 
     query_string = query_string_from_request_arguments(request_args)
 
-    test_client.get(f"{RUNWAY_PREDICTION_URL}{query_string}")
+    url = ARRIVALS_RUNWAY_PREDICTION_URL.format(destination_icao=destination_icao)
+    test_client.get(f"{url}{query_string}")
 
     mock_flash.assert_called_once()
 
@@ -438,16 +397,16 @@ def test_runway_prediction__get__invalid_input__renders_template_with_warning(
     assert mock_render_template.call_args.args == ('runway.html',)
     assert mock_render_template.call_args.kwargs == dict(
         result=None,
+        model_stats=mock_get_model_stats(destination_icao),
+        destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
-
 
 
 @pytest.mark.parametrize('request_args, expected_message', [
     (
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200'
         },
         f"There is no meteorological information available for the provided timestamp. "
@@ -457,20 +416,24 @@ def test_runway_prediction__get__invalid_input__renders_template_with_warning(
 @mock.patch('flask.render_template')
 @mock.patch('flask.flash')
 @mock.patch.object(RunwayPredictionInputFactory, 'create')
-def test_runway_prediction__get__met_not_available__renders_template_with_warning(
+def test_arrivals_runway_prediction__get__met_not_available__renders_template_with_warning(
     mock_create,
     mock_flash,
     mock_render_template,
     test_client,
+    monkeypatch,
     request_args,
     expected_message
 ):
+    destination_icao = 'EHAM'
+
     mock_create.side_effect = met_repo.METNotAvailable()
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
 
-
+    url = ARRIVALS_RUNWAY_PREDICTION_URL.format(destination_icao=destination_icao)
     query_string = query_string_from_request_arguments(request_args)
 
-    test_client.get(f"{RUNWAY_PREDICTION_URL}{query_string}")
+    test_client.get(f"{url}{query_string}")
 
     flashed_messages = mock_flash.call_args.args[0]
     assert expected_message == flashed_messages
@@ -479,9 +442,10 @@ def test_runway_prediction__get__met_not_available__renders_template_with_warnin
     assert mock_render_template.call_args.args == ('runway.html',)
     assert mock_render_template.call_args.kwargs == dict(
         result=None,
+        model_stats=mock_get_model_stats(destination_icao),
+        destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
-
 
 
 @pytest.mark.parametrize('request_args, expected_message', [
@@ -499,19 +463,23 @@ def test_runway_prediction__get__met_not_available__renders_template_with_warnin
 @mock.patch('flask.render_template')
 @mock.patch('flask.flash')
 @mock.patch('predicted_runway.domain.predictor.get_runway_prediction_output')
-def test_runway_prediction__get__prediction_error__renders_template_with_warning(
+def test_arrivals_runway_prediction__get__prediction_error__renders_template_with_warning(
     mock_get_runway_prediction_output,
     mock_flash,
     mock_render_template,
     test_client,
+    monkeypatch,
     request_args,
     expected_message
 ):
+    destination_icao = 'EHAM'
     mock_get_runway_prediction_output.side_effect = Exception()
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
 
+    url = ARRIVALS_RUNWAY_PREDICTION_URL.format(destination_icao=destination_icao)
     query_string = query_string_from_request_arguments(request_args)
 
-    test_client.get(f"{RUNWAY_PREDICTION_URL}{query_string}")
+    test_client.get(f"{url}{query_string}")
 
     mock_flash.assert_called_once()
     flashed_messages = mock_flash.call_args.args[0]
@@ -521,15 +489,17 @@ def test_runway_prediction__get__prediction_error__renders_template_with_warning
     assert mock_render_template.call_args.args == ('runway.html',)
     assert mock_render_template.call_args.kwargs == dict(
         result=None,
+        model_stats=mock_get_model_stats(destination_icao),
+        destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
 
 
-@pytest.mark.parametrize('request_args, prediction_output, expected_result', [
+@pytest.mark.parametrize('destination_icao, request_args, prediction_output, expected_result', [
     (
+        'EHAM',
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": 180.0,
             "wind_speed": 10.0
@@ -555,40 +525,44 @@ def test_runway_prediction__get__prediction_error__renders_template_with_warning
             ],
             destination=get_airport_by_icao('EHAM')
         ),
-        {'prediction_input': {'origin_icao': 'EBBR', 'destination_icao': 'EHAM', 'date_time': 'Sat, 23 Apr 2022 22:00:00 UTC', 'wind_input_source': 'from USER', 'wind_direction': 180.0, 'wind_speed': 10.0}, 'prediction_output': {'type': 'FeatureCollection', 'features': [{'type': 'Feature', 'properties': {'runway_name': '6', 'probability': 0.4, 'true_bearing': 57.92}, 'geometry': {'type': 'LineString', 'coordinates': [[4.737225277777778, 52.289105], [4.776925, 52.30435111111111]]}}, {'type': 'Feature', 'properties': {'runway_name': '18C', 'probability': 0.3, 'true_bearing': 183.22}, 'geometry': {'type': 'LineString', 'coordinates': [[4.74003, 52.33139722222223], [4.737683333333333, 52.30583055555555]]}}, {'type': 'Feature', 'properties': {'runway_name': '36C', 'probability': 0.3, 'true_bearing': 3.22}, 'geometry': {'type': 'LineString', 'coordinates': [[4.737683333333333, 52.30583055555555], [4.74003, 52.33139722222223]]}}]}, 'airport_coordinates': [4.7638897896, 52.3086013794], 'stats': {}}
+        {'prediction_input': {'origin_icao': 'EBBR', 'destination_icao': 'EHAM', 'date_time': 'Sat, 23 Apr 2022 22:00:00 UTC', 'wind_input_source': 'from USER', 'wind_direction': 180.0, 'wind_speed': 10.0}, 'prediction_output': {'type': 'FeatureCollection', 'features': [{'type': 'Feature', 'properties': {'runway_name': '6', 'probability': 0.4, 'true_bearing': 57.92}, 'geometry': {'type': 'LineString', 'coordinates': [[4.737225277777778, 52.289105], [4.776925, 52.30435111111111]]}}, {'type': 'Feature', 'properties': {'runway_name': '18C', 'probability': 0.3, 'true_bearing': 183.22}, 'geometry': {'type': 'LineString', 'coordinates': [[4.74003, 52.33139722222223], [4.737683333333333, 52.30583055555555]]}}, {'type': 'Feature', 'properties': {'runway_name': '36C', 'probability': 0.3, 'true_bearing': 3.22}, 'geometry': {'type': 'LineString', 'coordinates': [[4.737683333333333, 52.30583055555555], [4.74003, 52.33139722222223]]}}]}, 'airport_coordinates': [4.7638897896, 52.3086013794]}
     )
 ])
 @mock.patch('flask.render_template')
-@mock.patch('predicted_runway.adapters.stats.get_runway_airport_stats')
 @mock.patch('predicted_runway.domain.predictor.get_runway_prediction_output')
-def test_runway_prediction__get__no_errors__renders_template_with_prediction_output(
+def test_arrivals_runway_prediction__get__no_errors__renders_template_with_prediction_output(
     mock_get_runway_prediction_output,
-    mock_get_runway_airport_stats,
     mock_render_template,
     test_client,
+    monkeypatch,
+    destination_icao,
     request_args,
     prediction_output,
     expected_result
 ):
     mock_get_runway_prediction_output.return_value = prediction_output
-    mock_get_runway_airport_stats.return_value = {}
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
+
+    url = ARRIVALS_RUNWAY_PREDICTION_URL.format(destination_icao=destination_icao)
     query_string = query_string_from_request_arguments(request_args)
 
-    test_client.get(f"{RUNWAY_PREDICTION_URL}{query_string}")
+    test_client.get(f"{url}{query_string}")
 
     mock_render_template.assert_called_once()
     assert mock_render_template.call_args.args == ('runway.html',)
     assert mock_render_template.call_args.kwargs == dict(
         result=expected_result,
+        model_stats=mock_get_model_stats(destination_icao),
+        destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
 
 
-@pytest.mark.parametrize('request_args, wind_input, prediction_output, expected_result', [
+@pytest.mark.parametrize('destination_icao, request_args, wind_input, prediction_output, expected_result', [
     (
+        'EHAM',
         {
             "origin_icao": 'EBBR',
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
         },
         (180.0, 10.0, WindInputSource.TAF),
@@ -613,19 +587,19 @@ def test_runway_prediction__get__no_errors__renders_template_with_prediction_out
             ],
             destination=get_airport_by_icao('EHAM')
         ),
-        {'prediction_input': {'origin_icao': 'EBBR', 'destination_icao': 'EHAM', 'date_time': 'Sat, 23 Apr 2022 22:00:00 UTC', 'wind_input_source': 'from TAF', 'wind_direction': 180.0, 'wind_speed': 10.0}, 'prediction_output': {'type': 'FeatureCollection', 'features': [{'type': 'Feature', 'properties': {'runway_name': '6', 'probability': 0.4, 'true_bearing': 57.92}, 'geometry': {'type': 'LineString', 'coordinates': [[4.737225277777778, 52.289105], [4.776925, 52.30435111111111]]}}, {'type': 'Feature', 'properties': {'runway_name': '18C', 'probability': 0.3, 'true_bearing': 183.22}, 'geometry': {'type': 'LineString', 'coordinates': [[4.74003, 52.33139722222223], [4.737683333333333, 52.30583055555555]]}}, {'type': 'Feature', 'properties': {'runway_name': '36C', 'probability': 0.3, 'true_bearing': 3.22}, 'geometry': {'type': 'LineString', 'coordinates': [[4.737683333333333, 52.30583055555555], [4.74003, 52.33139722222223]]}}]}, 'airport_coordinates': [4.7638897896, 52.3086013794], 'stats': {}}
+        {'prediction_input': {'origin_icao': 'EBBR', 'destination_icao': 'EHAM', 'date_time': 'Sat, 23 Apr 2022 22:00:00 UTC', 'wind_input_source': 'from TAF', 'wind_direction': 180.0, 'wind_speed': 10.0}, 'prediction_output': {'type': 'FeatureCollection', 'features': [{'type': 'Feature', 'properties': {'runway_name': '6', 'probability': 0.4, 'true_bearing': 57.92}, 'geometry': {'type': 'LineString', 'coordinates': [[4.737225277777778, 52.289105], [4.776925, 52.30435111111111]]}}, {'type': 'Feature', 'properties': {'runway_name': '18C', 'probability': 0.3, 'true_bearing': 183.22}, 'geometry': {'type': 'LineString', 'coordinates': [[4.74003, 52.33139722222223], [4.737683333333333, 52.30583055555555]]}}, {'type': 'Feature', 'properties': {'runway_name': '36C', 'probability': 0.3, 'true_bearing': 3.22}, 'geometry': {'type': 'LineString', 'coordinates': [[4.737683333333333, 52.30583055555555], [4.74003, 52.33139722222223]]}}]}, 'airport_coordinates': [4.7638897896, 52.3086013794]}
     )
 ])
 @mock.patch('flask.render_template')
-@mock.patch('predicted_runway.adapters.stats.get_runway_airport_stats')
 @mock.patch('predicted_runway.routes.factory._handle_wind_input')
 @mock.patch('predicted_runway.domain.predictor.get_runway_prediction_output')
-def test_runway_prediction__get__no_errors__wind_input_from_taf__renders_template_with_prediction_output(
+def test_arrivals_runway_prediction__get__no_errors__wind_input_from_taf__renders_template_with_prediction_output(
     mock_get_runway_prediction_output,
     mock__handle_wind_input,
-    mock_get_runway_airport_stats,
     mock_render_template,
     test_client,
+    monkeypatch,
+    destination_icao,
     request_args,
     wind_input,
     prediction_output,
@@ -633,16 +607,19 @@ def test_runway_prediction__get__no_errors__wind_input_from_taf__renders_templat
 ):
     mock_get_runway_prediction_output.return_value = prediction_output
     mock__handle_wind_input.return_value = wind_input
-    mock_get_runway_airport_stats.return_value = {}
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
 
+    url = ARRIVALS_RUNWAY_PREDICTION_URL.format(destination_icao=destination_icao)
     query_string = query_string_from_request_arguments(request_args)
 
-    test_client.get(f"{RUNWAY_PREDICTION_URL}{query_string}")
+    test_client.get(f"{url}{query_string}")
 
     mock_render_template.assert_called_once()
     assert mock_render_template.call_args.args == ('runway.html',)
     assert mock_render_template.call_args.kwargs == dict(
         result=expected_result,
+        model_stats=mock_get_model_stats(destination_icao),
+        destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
 
@@ -652,20 +629,10 @@ def test_runway_prediction__get__no_errors__wind_input_from_taf__renders_templat
         {},
         [
             "'timestamp': ['Missing data for required field.']",
-            "'destination_icao': ['Missing data for required field.'"
         ]
     ),
     (
         {
-            "destination": 'EHAM',
-        },
-        [
-            "'timestamp': ['Missing data for required field.']",
-        ]
-    ),
-    (
-        {
-            "destination_icao": 'EHAM',
             "timestamp": 'invalid'
         },
         [
@@ -674,25 +641,6 @@ def test_runway_prediction__get__no_errors__wind_input_from_taf__renders_templat
     ),
     (
         {
-            "destination_icao": 'invalid',
-            "timestamp": '1650751200'
-        },
-        [
-            "{'destination_icao': ['Should be a string of 4 characters.']}"
-        ]
-    ),
-    (
-        {
-            "destination_icao": 'LGAV',
-            "timestamp": '1650751200'
-        },
-        [
-            "{'destination_icao': ['Should be one of EHAM, LEMD, LFPO, LOWW.']}"
-        ]
-    ),
-    (
-        {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": "invalid"
         },
@@ -702,7 +650,6 @@ def test_runway_prediction__get__no_errors__wind_input_from_taf__renders_templat
     ),
     (
         {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": 361.0
         },
@@ -712,7 +659,6 @@ def test_runway_prediction__get__no_errors__wind_input_from_taf__renders_templat
     ),
     (
         {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": -1
         },
@@ -722,7 +668,6 @@ def test_runway_prediction__get__no_errors__wind_input_from_taf__renders_templat
     ),
     (
         {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": "180",
             "wind_speed": "invalid"
@@ -733,7 +678,6 @@ def test_runway_prediction__get__no_errors__wind_input_from_taf__renders_templat
     ),
     (
         {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": 180,
             "wind_speed": -1
@@ -745,14 +689,20 @@ def test_runway_prediction__get__no_errors__wind_input_from_taf__renders_templat
 ])
 @mock.patch('flask.render_template')
 @mock.patch('flask.flash')
-def test_runway_config_prediction__post__invalid_input__renders_template_with_warning(
+def test_arrivals_runway_config_prediction__post__invalid_input__renders_template_with_warning(
     mock_flash,
     mock_render_template,
     test_client,
+    monkeypatch,
     request_body,
     expected_messages
 ):
-    test_client.post(RUNWAY_CONFIG_PREDICTION_URL, data=request_body)
+    destination_icao = 'EHAM'
+
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
+
+    url = ARRIVALS_RUNWAY_CONFIG_PREDICTION_URL.format(destination_icao=destination_icao)
+    test_client.post(url, data=request_body)
 
     mock_flash.assert_called_once()
 
@@ -764,15 +714,15 @@ def test_runway_config_prediction__post__invalid_input__renders_template_with_wa
     assert mock_render_template.call_args.args == ('runwayConfig.html',)
     assert mock_render_template.call_args.kwargs == dict(
         result=None,
+        model_stats=mock_get_model_stats(destination_icao),
+        destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
-
 
 
 @pytest.mark.parametrize('request_body, expected_message', [
     (
         {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200'
         },
         f"There is no meteorological information available for the provided timestamp. "
@@ -782,17 +732,23 @@ def test_runway_config_prediction__post__invalid_input__renders_template_with_wa
 @mock.patch('flask.render_template')
 @mock.patch('flask.flash')
 @mock.patch.object(RunwayConfigPredictionInputFactory, 'create')
-def test_runway_config_prediction__post__met_not_available__renders_template_with_warning(
+def test_arrivals_runway_config_prediction__post__met_not_available__renders_template_with_warning(
     mock_create,
     mock_flash,
     mock_render_template,
     test_client,
+    monkeypatch,
     request_body,
     expected_message
 ):
+    destination_icao = 'EHAM'
+
     mock_create.side_effect = met_repo.METNotAvailable()
 
-    test_client.post(RUNWAY_CONFIG_PREDICTION_URL, data=request_body)
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
+
+    url = ARRIVALS_RUNWAY_CONFIG_PREDICTION_URL.format(destination_icao=destination_icao)
+    test_client.post(url, data=request_body)
 
     flashed_messages = mock_flash.call_args.args[0]
     assert expected_message == flashed_messages
@@ -801,15 +757,15 @@ def test_runway_config_prediction__post__met_not_available__renders_template_wit
     assert mock_render_template.call_args.args == ('runwayConfig.html',)
     assert mock_render_template.call_args.kwargs == dict(
         result=None,
+        model_stats=mock_get_model_stats(destination_icao),
+        destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
-
 
 
 @pytest.mark.parametrize('request_body', [
     (
         {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_input_source": WindInputSource.USER.value,
             "wind_direction": 180.0,
@@ -818,16 +774,21 @@ def test_runway_config_prediction__post__met_not_available__renders_template_wit
     )
 ])
 @mock.patch('flask.redirect')
-def test_runway_config_prediction__post__no_errors__redirects_to_get_endpoint(
+def test_arrivals_runway_config_prediction__post__no_errors__redirects_to_get_endpoint(
     mock_redirect,
     test_client,
+    monkeypatch,
     request_body,
 ):
-    test_client.post(RUNWAY_CONFIG_PREDICTION_URL, data=request_body)
+    destination_icao = 'EHAM'
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
+
+    url = ARRIVALS_RUNWAY_CONFIG_PREDICTION_URL.format(destination_icao=destination_icao)
+    test_client.post(url, data=request_body)
 
     query_string = query_string_from_request_arguments(request_body)
 
-    mock_redirect.assert_called_once_with(f"{RUNWAY_CONFIG_PREDICTION_URL}{query_string}")
+    mock_redirect.assert_called_once_with(f"{url}{query_string}")
 
 
 @pytest.mark.parametrize('request_args, expected_messages', [
@@ -835,20 +796,10 @@ def test_runway_config_prediction__post__no_errors__redirects_to_get_endpoint(
         {},
         [
             "'timestamp': ['Missing data for required field.']",
-            "'destination_icao': ['Missing data for required field.'"
         ]
     ),
     (
         {
-            "destination": 'EHAM',
-        },
-        [
-            "'timestamp': ['Missing data for required field.']",
-        ]
-    ),
-    (
-        {
-            "destination_icao": 'EHAM',
             "timestamp": 'invalid'
         },
         [
@@ -857,25 +808,6 @@ def test_runway_config_prediction__post__no_errors__redirects_to_get_endpoint(
     ),
     (
         {
-            "destination_icao": 'invalid',
-            "timestamp": '1650751200'
-        },
-        [
-            "{'destination_icao': ['Should be a string of 4 characters.']}"
-        ]
-    ),
-    (
-        {
-            "destination_icao": 'LGAV',
-            "timestamp": '1650751200'
-        },
-        [
-            "{'destination_icao': ['Should be one of EHAM, LEMD, LFPO, LOWW.']}"
-        ]
-    ),
-    (
-        {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": "invalid"
         },
@@ -885,7 +817,6 @@ def test_runway_config_prediction__post__no_errors__redirects_to_get_endpoint(
     ),
     (
         {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": 361.0
         },
@@ -895,7 +826,6 @@ def test_runway_config_prediction__post__no_errors__redirects_to_get_endpoint(
     ),
     (
         {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": -1
         },
@@ -905,7 +835,6 @@ def test_runway_config_prediction__post__no_errors__redirects_to_get_endpoint(
     ),
     (
         {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": "180",
             "wind_speed": "invalid"
@@ -916,7 +845,6 @@ def test_runway_config_prediction__post__no_errors__redirects_to_get_endpoint(
     ),
     (
         {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": 180,
             "wind_speed": -1
@@ -928,17 +856,22 @@ def test_runway_config_prediction__post__no_errors__redirects_to_get_endpoint(
 ])
 @mock.patch('flask.render_template')
 @mock.patch('flask.flash')
-def test_runway_config_prediction__get__invalid_input__renders_template_with_warning(
+def test_arrivals_runway_config_prediction__get__invalid_input__renders_template_with_warning(
     mock_flash,
     mock_render_template,
     test_client,
+    monkeypatch,
     request_args,
     expected_messages
 ):
+    destination_icao = 'EHAM'
 
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
+
+    url = ARRIVALS_RUNWAY_CONFIG_PREDICTION_URL.format(destination_icao=destination_icao)
     query_string = query_string_from_request_arguments(request_args)
 
-    test_client.get(f"{RUNWAY_CONFIG_PREDICTION_URL}{query_string}")
+    test_client.get(f"{url}{query_string}")
 
     mock_flash.assert_called_once()
 
@@ -950,6 +883,8 @@ def test_runway_config_prediction__get__invalid_input__renders_template_with_war
     assert mock_render_template.call_args.args == ('runwayConfig.html',)
     assert mock_render_template.call_args.kwargs == dict(
         result=None,
+        model_stats=mock_get_model_stats(destination_icao),
+        destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
 
@@ -967,20 +902,25 @@ def test_runway_config_prediction__get__invalid_input__renders_template_with_war
 @mock.patch('flask.render_template')
 @mock.patch('flask.flash')
 @mock.patch.object(RunwayConfigPredictionInputFactory, 'create')
-def test_runway_config_prediction__get__met_not_available__renders_template_with_warning(
+def test_arrivals_runway_config_prediction__get__met_not_available__renders_template_with_warning(
     mock_create,
     mock_flash,
     mock_render_template,
     test_client,
+    monkeypatch,
     request_args,
     expected_message
 ):
+    destination_icao = 'EHAM'
+
     mock_create.side_effect = met_repo.METNotAvailable()
 
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
 
+    url = ARRIVALS_RUNWAY_CONFIG_PREDICTION_URL.format(destination_icao=destination_icao)
     query_string = query_string_from_request_arguments(request_args)
 
-    test_client.get(f"{RUNWAY_CONFIG_PREDICTION_URL}{query_string}")
+    test_client.get(f"{url}{query_string}")
 
     mock_flash.assert_called_once()
     flashed_messages = mock_flash.call_args.args[0]
@@ -990,6 +930,8 @@ def test_runway_config_prediction__get__met_not_available__renders_template_with
     assert mock_render_template.call_args.args == ('runwayConfig.html',)
     assert mock_render_template.call_args.kwargs == dict(
         result=None,
+        model_stats=mock_get_model_stats(destination_icao),
+        destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
 
@@ -997,7 +939,6 @@ def test_runway_config_prediction__get__met_not_available__renders_template_with
 @pytest.mark.parametrize('request_args, expected_message', [
     (
         {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": 180.0,
             "wind_speed": 10.0
@@ -1008,19 +949,25 @@ def test_runway_config_prediction__get__met_not_available__renders_template_with
 @mock.patch('flask.render_template')
 @mock.patch('flask.flash')
 @mock.patch('predicted_runway.domain.predictor.get_runway_config_prediction_output')
-def test_runway_config_prediction__get__prediction_error__renders_template_with_warning(
+def test_arrivals_runway_config_prediction__get__prediction_error__renders_template_with_warning(
     mock_get_runway_config_prediction_output,
     mock_flash,
     mock_render_template,
     test_client,
+    monkeypatch,
     request_args,
     expected_message
 ):
+    destination_icao = 'EHAM'
+
     mock_get_runway_config_prediction_output.side_effect = Exception()
 
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
+
+    url = ARRIVALS_RUNWAY_CONFIG_PREDICTION_URL.format(destination_icao=destination_icao)
     query_string = query_string_from_request_arguments(request_args)
 
-    test_client.get(f"{RUNWAY_CONFIG_PREDICTION_URL}{query_string}")
+    test_client.get(f"{url}{query_string}")
 
     mock_flash.assert_called_once()
     flashed_messages = mock_flash.call_args.args[0]
@@ -1030,14 +977,16 @@ def test_runway_config_prediction__get__prediction_error__renders_template_with_
     assert mock_render_template.call_args.args == ('runwayConfig.html',)
     assert mock_render_template.call_args.kwargs == dict(
         result=None,
+        model_stats=mock_get_model_stats(destination_icao),
+        destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
 
 
-@pytest.mark.parametrize('request_args, prediction_output, expected_result', [
+@pytest.mark.parametrize('destination_icao, request_args, prediction_output, expected_result', [
     (
+        'EHAM',
         {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": 180.0,
             "wind_speed": 10.0
@@ -1063,39 +1012,43 @@ def test_runway_config_prediction__get__prediction_error__renders_template_with_
             ],
             destination=get_airport_by_icao('EHAM')
         ),
-        {'airport_coordinates': [4.7638897896, 52.3086013794],'prediction_input': {'date_time': 'Sat, 23 Apr 2022 22:00:00 UTC', 'destination_icao': 'EHAM', 'wind_direction': 180.0, 'wind_input_source': 'from USER', 'wind_speed': 10.0},'prediction_output': {'features': [{'geometry': {'coordinates': [[[4.737225277777778, 52.289105],[4.776925, 52.30435111111111]], [[4.776925, 52.30435111111111],[4.737225277777778, 52.289105]]], 'type': 'MultiLineString'},'properties': {'probability': 0.6, 'runways': [{'name': '6','true_bearing': 57.92}, {'name': '24','true_bearing': 237.95}]},'type': 'Feature'}, {'geometry': {'coordinates': [[[4.74003, 52.33139722222223],[4.737683333333333, 52.30583055555555]], [[4.737683333333333, 52.30583055555555],[4.74003, 52.33139722222223]]], 'type': 'MultiLineString'},'properties': {'probability': 0.3, 'runways': [{'name': '18C','true_bearing': 183.22}, {'name': '36C','true_bearing': 3.22}]},'type': 'Feature'}, {'geometry': {'coordinates': [[[4.776925, 52.30435111111111],[4.737225277777778, 52.289105]]], 'type': 'MultiLineString'},'properties': {'probability': 0.1, 'runways': [{'name': '24','true_bearing': 237.95}]},'type': 'Feature'}],'type': 'FeatureCollection'},'stats': {}}
+        {'airport_coordinates': [4.7638897896, 52.3086013794],'prediction_input': {'date_time': 'Sat, 23 Apr 2022 22:00:00 UTC', 'destination_icao': 'EHAM', 'wind_direction': 180.0, 'wind_input_source': 'from USER', 'wind_speed': 10.0},'prediction_output': {'features': [{'geometry': {'coordinates': [[[4.737225277777778, 52.289105],[4.776925, 52.30435111111111]], [[4.776925, 52.30435111111111],[4.737225277777778, 52.289105]]], 'type': 'MultiLineString'},'properties': {'probability': 0.6, 'runways': [{'name': '6','true_bearing': 57.92}, {'name': '24','true_bearing': 237.95}]},'type': 'Feature'}, {'geometry': {'coordinates': [[[4.74003, 52.33139722222223],[4.737683333333333, 52.30583055555555]], [[4.737683333333333, 52.30583055555555],[4.74003, 52.33139722222223]]], 'type': 'MultiLineString'},'properties': {'probability': 0.3, 'runways': [{'name': '18C','true_bearing': 183.22}, {'name': '36C','true_bearing': 3.22}]},'type': 'Feature'}, {'geometry': {'coordinates': [[[4.776925, 52.30435111111111],[4.737225277777778, 52.289105]]], 'type': 'MultiLineString'},'properties': {'probability': 0.1, 'runways': [{'name': '24','true_bearing': 237.95}]},'type': 'Feature'}],'type': 'FeatureCollection'}}
     )
 ])
 @mock.patch('flask.render_template')
-@mock.patch('predicted_runway.adapters.stats.get_runway_config_airport_stats')
 @mock.patch('predicted_runway.domain.predictor.get_runway_config_prediction_output')
-def test_runway_config_prediction__get__no_errors__renders_template_with_prediction_output(
+def test_arrivals_runway_config_prediction__get__no_errors__renders_template_with_prediction_output(
     mock_get_runway_prediction_output,
-    mock_get_runway_config_airport_stats,
     mock_render_template,
     test_client,
+    monkeypatch,
+    destination_icao,
     request_args,
     prediction_output,
     expected_result
 ):
     mock_get_runway_prediction_output.return_value = prediction_output
-    mock_get_runway_config_airport_stats.return_value = {}
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
+
+    url = ARRIVALS_RUNWAY_CONFIG_PREDICTION_URL.format(destination_icao=destination_icao)
     query_string = query_string_from_request_arguments(request_args)
 
-    test_client.get(f"{RUNWAY_CONFIG_PREDICTION_URL}{query_string}")
+    test_client.get(f"{url}{query_string}")
 
     mock_render_template.assert_called_once()
     assert mock_render_template.call_args.args == ('runwayConfig.html',)
     assert mock_render_template.call_args.kwargs == dict(
         result=expected_result,
+        model_stats=mock_get_model_stats(destination_icao),
+        destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
 
 
-@pytest.mark.parametrize('request_args, wind_input, prediction_output, expected_result', [
+@pytest.mark.parametrize('destination_icao, request_args, wind_input, prediction_output, expected_result', [
     (
+        'EHAM',
         {
-            "destination_icao": 'EHAM',
             "timestamp": '1650751200',
             "wind_direction": 180.0,
             "wind_speed": 10.0
@@ -1122,19 +1075,19 @@ def test_runway_config_prediction__get__no_errors__renders_template_with_predict
             ],
             destination=get_airport_by_icao('EHAM')
         ),
-        {'airport_coordinates': [4.7638897896, 52.3086013794],'prediction_input': {'date_time': 'Sat, 23 Apr 2022 22:00:00 UTC', 'destination_icao': 'EHAM', 'wind_direction': 180.0, 'wind_input_source': 'from TAF', 'wind_speed': 10.0},'prediction_output': {'features': [{'geometry': {'coordinates': [[[4.737225277777778, 52.289105],[4.776925, 52.30435111111111]], [[4.776925, 52.30435111111111],[4.737225277777778, 52.289105]]], 'type': 'MultiLineString'},'properties': {'probability': 0.6, 'runways': [{'name': '6','true_bearing': 57.92}, {'name': '24','true_bearing': 237.95}]},'type': 'Feature'}, {'geometry': {'coordinates': [[[4.74003, 52.33139722222223],[4.737683333333333, 52.30583055555555]], [[4.737683333333333, 52.30583055555555],[4.74003, 52.33139722222223]]], 'type': 'MultiLineString'},'properties': {'probability': 0.3, 'runways': [{'name': '18C','true_bearing': 183.22}, {'name': '36C','true_bearing': 3.22}]},'type': 'Feature'}, {'geometry': {'coordinates': [[[4.776925, 52.30435111111111],[4.737225277777778, 52.289105]]], 'type': 'MultiLineString'},'properties': {'probability': 0.1, 'runways': [{'name': '24','true_bearing': 237.95}]},'type': 'Feature'}],'type': 'FeatureCollection'},'stats': {}}
+        {'airport_coordinates': [4.7638897896, 52.3086013794],'prediction_input': {'date_time': 'Sat, 23 Apr 2022 22:00:00 UTC', 'destination_icao': 'EHAM', 'wind_direction': 180.0, 'wind_input_source': 'from TAF', 'wind_speed': 10.0},'prediction_output': {'features': [{'geometry': {'coordinates': [[[4.737225277777778, 52.289105],[4.776925, 52.30435111111111]], [[4.776925, 52.30435111111111],[4.737225277777778, 52.289105]]], 'type': 'MultiLineString'},'properties': {'probability': 0.6, 'runways': [{'name': '6','true_bearing': 57.92}, {'name': '24','true_bearing': 237.95}]},'type': 'Feature'}, {'geometry': {'coordinates': [[[4.74003, 52.33139722222223],[4.737683333333333, 52.30583055555555]], [[4.737683333333333, 52.30583055555555],[4.74003, 52.33139722222223]]], 'type': 'MultiLineString'},'properties': {'probability': 0.3, 'runways': [{'name': '18C','true_bearing': 183.22}, {'name': '36C','true_bearing': 3.22}]},'type': 'Feature'}, {'geometry': {'coordinates': [[[4.776925, 52.30435111111111],[4.737225277777778, 52.289105]]], 'type': 'MultiLineString'},'properties': {'probability': 0.1, 'runways': [{'name': '24','true_bearing': 237.95}]},'type': 'Feature'}],'type': 'FeatureCollection'}}
     )
 ])
 @mock.patch('flask.render_template')
-@mock.patch('predicted_runway.adapters.stats.get_runway_config_airport_stats')
 @mock.patch('predicted_runway.routes.factory._handle_wind_input')
 @mock.patch('predicted_runway.domain.predictor.get_runway_config_prediction_output')
-def test_runway_config_prediction__get__no_errors__wind_input_from_taf__renders_template_with_prediction_output(
+def test_arrivals_runway_config_prediction__get__no_errors__wind_input_from_taf__renders_template_with_prediction_output(
     mock_get_runway_prediction_output,
     mock__handle_wind_input,
-    mock_get_runway_config_airport_stats,
     mock_render_template,
     test_client,
+    monkeypatch,
+    destination_icao,
     request_args,
     wind_input,
     prediction_output,
@@ -1142,15 +1095,19 @@ def test_runway_config_prediction__get__no_errors__wind_input_from_taf__renders_
 ):
     mock_get_runway_prediction_output.return_value = prediction_output
     mock__handle_wind_input.return_value = wind_input
-    mock_get_runway_config_airport_stats.return_value = {}
+    monkeypatch.setattr(routes.web, 'get_model_stats', mock_get_model_stats)
+
+    url = ARRIVALS_RUNWAY_CONFIG_PREDICTION_URL.format(destination_icao=destination_icao)
     query_string = query_string_from_request_arguments(request_args)
 
-    test_client.get(f"{RUNWAY_CONFIG_PREDICTION_URL}{query_string}")
+    test_client.get(f"{url}{query_string}")
 
     mock_render_template.assert_called_once()
     assert mock_render_template.call_args.args == ('runwayConfig.html',)
     assert mock_render_template.call_args.kwargs == dict(
         result=expected_result,
+        model_stats=mock_get_model_stats(destination_icao),
+        destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
 

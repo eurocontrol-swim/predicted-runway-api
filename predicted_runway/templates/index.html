@@ -38,29 +38,38 @@
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-      <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            {% if destination_airport %}
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="newPredictionMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      {{ destination_airport.icao }} | {{ destination_airport.name }}
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="newPredictionMenu">
+                    <li><h6 class="dropdown-header">Runways In Use</h6></li>
+                    <li><a class="dropdown-item" data-bs-toggle="modal" href="#rpForm">New prediction</a></li>
+                    <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#runwayModelStatsModal" href="#rcpForm">Show model statistics</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><h6 class="dropdown-header">Runways ConfigurationIn Use</h6></li>
+                    <li><a class="dropdown-item" data-bs-toggle="modal" href="#rcpForm">New prediction</a></li>
+                    <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#runwayConfigModelStatsModal" href="#rcpForm">Show model statistics</a></li>
+                  </ul>
+                </li>
+            {% endif %}
+          </ul>
+        <div class="d-flex">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="newPredictionMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                New prediction
+                Destination airport
               </a>
-              <ul class="dropdown-menu" aria-labelledby="newPredictionMenu">
-                <li><a class="dropdown-item" data-bs-toggle="modal" href="#rpForm">Runway</a></li>
-                <li><a class="dropdown-item" data-bs-toggle="modal" href="#rcpForm">Runway configuration</a></li>
+              <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="newPredictionMenu">
+                  {% for airport in destination_airports %}
+                    <li><a class="dropdown-item" href="{{ url_for('web.airport_arrivals', destination_icao=airport.icao) }}">{{ airport.icao }} | {{ airport.name }}</a></li>
+                  {% endfor %}
               </ul>
             </li>
           </ul>
-        <div class="d-flex">
-            {% if result %}
-
-                <button class="btn btn-outline-info btn-sm"
-                        type="button"
-                        data-bs-toggle="modal"
-                        data-bs-target="#modelStatsModal"
-                >
-                    <i class="bi bi-info-circle"></i> Model statistics
-                </button>
-            {% endif %}
         </div>
       </div>
     </div>
@@ -89,10 +98,19 @@
     </footer>
     <script>
         let airplaneIconUrl = '{{ url_for("static", filename="icons/airplane.png") }}';
+        {% if destination_airport %}
+            let destinationIcao = '{{ destination_airport.icao }}'
+        {% endif %}
     </script>
   <script src="{{ url_for('static', filename = 'js/runwayForm.js') }}"></script>
   <script src="{{ url_for('static', filename = 'js/runwayConfigForm.js') }}"></script>
   <script src="{{ url_for('static', filename = 'js/common.js') }}"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename = 'css/app.css') }}">
+
+    {% if model_stats %}
+        {% include 'runwayStats.html' %}
+        {% include 'runwayConfigStats.html' %}
+    {% endif %}
+
 </body>
 </html>

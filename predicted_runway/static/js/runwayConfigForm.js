@@ -3,7 +3,6 @@
 const $rcpDateTimeRange = window.document.getElementById('rcpDateTimeRange');
 const $rcpTimestamp = window.document.getElementById('rcpTimestamp');
 const $rcpDateTimeText = window.document.getElementById('rcpDateTimeText');
-const $rcpDestinationIcao = window.document.getElementById('rcpDestinationIcao');
 const $rcpForm = window.document.getElementById('rcpForm');
 
 function rcpSliderMoved() {
@@ -17,15 +16,8 @@ function updateRcpCurrentTimestamp() {
 }
 
 function resetRcpForm() {
-  $rcpDestinationIcao.value = ' ';
   $rcpTimestamp.value = '';
   $rcpDateTimeRange.value = 0;
-}
-
-function rcpDestinationAirportSelected() {
-  if ($rcpDestinationIcao.value !== " ") {
-    updateRcpTimestamps($rcpDestinationIcao.value);
-  }
 }
 
 function rcpHandleForecastTimestampRange(range) {
@@ -47,4 +39,5 @@ function updateRcpTimestamps(airport) {
 
 $rcpForm.addEventListener('show.bs.modal', function (event) {
   resetRcpForm();
+  updateRcpTimestamps(destinationIcao);
 });

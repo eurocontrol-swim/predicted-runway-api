@@ -56,9 +56,10 @@ def _get_stats(path: Path) -> dict:
     return json.loads(content)
 
 
-def get_runway_airport_stats(airport: str) -> dict:
-    return _get_stats(path=RUNWAY_MODEL_STATS_DIR.joinpath(f"{airport}.json"))
+def get_runway_airport_stats(airport_icao: str) -> dict:
+    return _get_stats(path=RUNWAY_MODEL_STATS_DIR.joinpath(f"{airport_icao}.json"))
 
 
-def get_runway_config_airport_stats(airport: str) -> dict:
-    return _get_stats(path=RUNWAY_CONFIG_MODEL_STATS_DIR.joinpath(f"{airport}.json"))
+def get_runway_config_airport_stats(airport_icao: str) -> dict:
+    return _get_stats(path=RUNWAY_CONFIG_MODEL_STATS_DIR.joinpath(f"{airport_icao}.json"))
+

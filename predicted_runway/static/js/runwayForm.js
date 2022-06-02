@@ -6,7 +6,6 @@ const $rpTimestamp = window.document.getElementById('rpTimestamp');
 const $rpDateTimeText = window.document.getElementById('rpDateTimeText');
 const $rpOriginIcaoListItem = window.document.getElementById('rpOriginIcaoListItem');
 const $rpOriginIcao = window.document.getElementById('rpOriginIcao');
-const $rpDestinationIcao = window.document.getElementById('rpDestinationIcao');
 const $rpForm = window.document.getElementById('rpForm');
 const $rpOriginAirportOptions = window.document.getElementById('rpOriginAirportOptions');
 
@@ -26,15 +25,8 @@ function updateRpCurrentTimestamp() {
 
 function resetRpForm() {
   $rpOriginIcaoListItem.value = '';
-  $rpDestinationIcao.value = ' ';
   $rpTimestamp.value = '';
   $rpDateTimeRange.value = 0;
-}
-
-function rpDestinationAirportSelected() {
-  if ($rpDestinationIcao.value !== " ") {
-    updateRpTimestamps($rpDestinationIcao.value);
-  }
 }
 
 function updateRpOriginAirports() {
@@ -74,4 +66,5 @@ function updateRpTimestamps(airport) {
 
 $rpForm.addEventListener('show.bs.modal', function (event) {
   resetRpForm();
+  updateRpTimestamps(destinationIcao);
 });
