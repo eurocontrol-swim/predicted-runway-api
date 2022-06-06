@@ -15,7 +15,3 @@ COPY requirements.txt /app/requirements.txt
 RUN pip install -r ./requirements.txt
 
 ENV PYTHONPATH /app
-
-COPY wsgi.ini /app/wsgi.ini
-
-CMD ["uwsgi", "wsgi.ini"]
