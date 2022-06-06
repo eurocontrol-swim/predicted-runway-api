@@ -40,7 +40,7 @@ DESTINATION_ICAOS = [
 
 MONGO = {
   "db": os.getenv("MET_UPDATE_DB_NAME", "met-update"),
-  "host": "localhost",
+  "host": os.getenv("MET_UPDATE_DB_HOST", "localhost"),
   "port": 27017
 }
 

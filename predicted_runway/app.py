@@ -35,12 +35,14 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
+from collections import defaultdict
 from os import getenv
 import logging.config
 from pathlib import Path
 
 import jinja2
 import connexion
+import yaml
 from mongoengine import connect
 
 from predicted_runway import config as cfg
@@ -64,10 +66,39 @@ def _configure_mongo():
     connect(**cfg.MONGO)
 
 
+def get_openapi_spec(openapi_path: Path) -> dict:
+    """
+    Evaluates the x-hidden attribute of the paths and prevents them from showing up in the OpenAPi
+    specs page
+    :return:
+    """
+
+    with open(openapi_path, 'r') as f:
+        openapi = yaml.safe_load(f)
+
+    hidden_endpoints = defaultdict(list)
+    for path, methods in openapi["paths"].items():
+        for method, endpoint in methods.items():
+            if endpoint.get("x-hidden"):
+                hidden_endpoints[path].append(method)
+
+    for path, methods in hidden_endpoints.items():
+        for method in methods:
+            del openapi["paths"][path][method]
+
+        if not openapi["paths"][path]:
+            del openapi["paths"][path]
+
+    return openapi
+
+
 def create_app():
     connexion_app = connexion.App(__name__)
 
-    connexion_app.add_api(Path('openapi.yml'))
+    connexion_app.add_api(Path('openapi.yml'), options={"serve_spec": False},)
+    connexion_app.add_url_rule("/openapi.json",
+                               endpoint="/api/0_1./api/0_1_openapi_json",
+                               view_func=lambda: get_openapi_spec(openapi_path=Path('openapi.yml')))
 
     app = connexion_app.app
 

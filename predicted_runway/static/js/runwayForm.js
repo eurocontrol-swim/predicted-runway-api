@@ -37,7 +37,7 @@ function updateRpOriginAirports() {
       return;
   }
 
-  $.ajax({url: `/airports-data/${search_value}`, success: function(res){
+  $.ajax({url: `/api/0.1/airports-data/${search_value}`, success: function(res){
       res.forEach((r) => {
           const option = window.document.createElement('option');
           option.label = r.title;

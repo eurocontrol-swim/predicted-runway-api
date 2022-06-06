@@ -7,7 +7,6 @@ from marshmallow import ValidationError
 from met_update_db import repo as met_repo
 
 from predicted_runway.adapters import airports as airports_api, stats
-from predicted_runway.config import DESTINATION_ICAOS
 from predicted_runway.domain import predictor
 from predicted_runway.routes.factory import RunwayPredictionInputFactory, \
     RunwayConfigPredictionInputFactory
@@ -162,33 +161,6 @@ def _arrivals_runway_config_prediction_post(destination_icao: str):
 
     return f.redirect(f.url_for('web.arrivals_runway_config_prediction',
                                 **prediction_input.to_dict()))
-
-
-@web_blueprint.route("/airports-data/<string:search>", methods=['GET'])
-def airports_data(search: str):
-    airports = airports_api.get_airports(search=search)
-
-    result = [{"title": airport.title} for airport in airports]
-
-    return f.jsonify(result), 200
-
-
-@web_blueprint.route("/last-taf-end-time/<string:destination_icao>", methods=['GET'])
-def get_last_taf_end_time(destination_icao: str):
-    if destination_icao not in DESTINATION_ICAOS:
-        return {
-           "error": f"destination_icao {destination_icao} is not supported. "
-                    f"Please choose one of {', '.join(DESTINATION_ICAOS)}"
-        }, 404
-
-    try:
-        end_time_datetime = met_repo.get_last_taf_end_time(airport_icao=destination_icao)
-    except met_repo.METNotAvailable:
-        return {"error": "No meteorological data available"}, 409
-
-    return {
-        'end_timestamp': int(end_time_datetime.timestamp())
-    }, 200
 
 
 def _load_arrivals_runway_prediction_template(destination_icao: str, result: dict = None):

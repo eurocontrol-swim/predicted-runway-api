@@ -35,8 +35,6 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
-import json
-from datetime import datetime, timezone
 from unittest import mock
 
 import pytest
@@ -50,11 +48,8 @@ from predicted_runway.routes.factory import RunwayPredictionInputFactory, \
     RunwayConfigPredictionInputFactory
 from tests.routes.utils import query_string_from_request_arguments
 
-
 ARRIVALS_RUNWAY_PREDICTION_URL = '/arrivals/{destination_icao}/runway-prediction'
 ARRIVALS_RUNWAY_CONFIG_PREDICTION_URL = '/arrivals/{destination_icao}/runway-config-prediction'
-AIRPORTS_DATA_URL = '/airports-data'
-LAST_TAF_END_TIME_URL = '/last-taf-end-time'
 
 
 def mock_get_model_stats(airport_icao: str):
@@ -1110,91 +1105,3 @@ def test_arrivals_runway_config_prediction__get__no_errors__wind_input_from_taf_
         destination_airport=get_airport_by_icao(destination_icao),
         destination_airports=get_destination_airports()
     )
-
-
-@pytest.mark.parametrize('airports_list, expected_result', [
-    (
-        [
-            get_airport_by_icao('EHAM'),
-            get_airport_by_icao('EBBR')
-        ],
-        [
-            {"title": get_airport_by_icao('EHAM').title},
-            {"title": get_airport_by_icao('EBBR').title}
-        ]
-    )
-])
-@mock.patch('predicted_runway.adapters.airports.get_airports')
-def test_airports_data(mock_get_airports, test_client, airports_list, expected_result):
-
-    mock_get_airports.return_value = airports_list
-    response = test_client.get(f"{AIRPORTS_DATA_URL}/irrelevant")
-
-    assert response.status_code == 200
-
-    response_data = json.loads(response.data)
-
-    assert response_data == expected_result
-
-
-@pytest.mark.parametrize('invalid_destination_icao, expected_message', [
-    (
-        'EBBR',
-        {'error': 'destination_icao EBBR is not supported. Please choose one of EHAM, LEMD, LFPO, LOWW'}
-    )
-])
-def test_get_forecast_timestamp_range__destination_icao_not_supported__returns_404(
-    test_client, invalid_destination_icao, expected_message
-):
-    response = test_client.get(f"{LAST_TAF_END_TIME_URL}/{invalid_destination_icao}")
-
-    assert response.status_code == 404
-
-    response_data = json.loads(response.data)
-
-    assert response_data == expected_message
-
-
-@pytest.mark.parametrize('destination_icao, expected_message', [
-    (
-        'EHAM',
-        {'error': 'No meteorological data available'}
-    )
-])
-@mock.patch('met_update_db.repo.get_last_taf_end_time')
-def test_get_forecast_timestamp_range__met_not_available__returns_409(
-    mock_get_last_taf_end_time, test_client, destination_icao, expected_message
-):
-    mock_get_last_taf_end_time.side_effect = met_repo.METNotAvailable()
-
-    response = test_client.get(f"{LAST_TAF_END_TIME_URL}/{destination_icao}")
-
-    assert response.status_code == 409
-
-    response_data = json.loads(response.data)
-
-    assert response_data == expected_message
-
-
-@pytest.mark.parametrize('destination_icao, last_taf_end_time, expected_message', [
-    (
-        'EHAM',
-        datetime(2022, 5, 20, 18, tzinfo=timezone.utc),
-        {
-            'end_timestamp': 1653069600
-        }
-    )
-])
-@mock.patch('met_update_db.repo.get_last_taf_end_time')
-def test_get_forecast_timestamp_range__no_errors__returns_200_and_the_range(
-    mock_get_last_taf_end_time, test_client, destination_icao, last_taf_end_time, expected_message
-):
-    mock_get_last_taf_end_time.return_value = last_taf_end_time
-
-    response = test_client.get(f"{LAST_TAF_END_TIME_URL}/{destination_icao}")
-
-    assert response.status_code == 200
-
-    response_data = json.loads(response.data)
-
-    assert response_data == expected_message

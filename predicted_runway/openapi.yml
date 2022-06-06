@@ -97,17 +97,17 @@ paths:
           description: invalid input
           content:
             application/json:
-              example: {'error': 'Invalid input'}
+              example: {'detail': 'Invalid input'}
         '409':
           description: Meteorological information (wind speed and direction) is not available for the given timestamp (provided that wind input is not given by the user)
           content:
             application/json:
-              example: {'error': 'There is no meteorological information available for provided timestamp. Please try again with different value.'}
+              example: {'detail': 'There is no meteorological information available for provided timestamp. Please try again with different value.'}
         '500':
           description: unexpected error
           content:
             application/json:
-                example: {'error': 'Something went wrong during the prediction. Please try again later.'}
+                example: {'detail': 'Something went wrong during the prediction. Please try again later.'}
 
   /arrivals/{destination_icao}/runway-config-prediction/:
     get:
@@ -157,17 +157,81 @@ paths:
           description: invalid input
           content:
             application/json:
-              example: {'error': 'Invalid input'}
+              example: {'detail': 'Invalid input'}
         '409':
           description: Meteorological information (wind speed and direction) is not available for the given timestamp (provided that wind input is not given by the user)
           content:
             application/json:
-              example: {'error': 'There is no meteorological information available for provided timestamp. Please try again with different value.'}
+              example: {'detail': 'There is no meteorological information available for provided timestamp. Please try again with different value.'}
         '500':
           description: unexpected error
           content:
             application/json:
-                example: {'error': 'Something went wrong during the prediction. Please try again later.'}
+                example: {'detail': 'Something went wrong during the prediction. Please try again later.'}
+
+  /airports-data/{search}:
+    get:
+      summary: Retrieves airport data based on the search string
+      operationId: predicted_runway.routes.extra.get_airports_data
+      x-hidden: true
+      parameters:
+        - in: path
+          required: true
+          name: search
+          description: search string to match airports
+          schema:
+            type: string
+            example: EH
+      responses:
+        '200':
+          description: returns the data of the matched airports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      example: "EBBR: Brussels Airport, Brussels, Flanders, BE"
+
+  /latest-taf-end-time/{destination_icao}:
+    get:
+      summary: Retrieves the latest TAF endtime from met-update DB
+      operationId: predicted_runway.routes.extra.get_latest_taf_end_time
+      x-hidden: true
+      parameters:
+        - in: path
+          required: true
+          name: destination_icao
+          description: the ICAO of the destination airport
+          schema:
+            type: string
+            example: EHAM
+      responses:
+        '200':
+          description: the end time of the latest retrieved TAF
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    end_timestamp:
+                      type: integer
+                      example: 1651758627
+        '404':
+          description: Unsupported destination_icao
+          content:
+            application/json:
+              example: {'detail': 'Invalid destination_icao LGAV is not supported. Please choose one of EHAM, LEMD, LFPO, LOWW'}
+        '409':
+          description: No meteorological data available in DB
+          content:
+            application/json:
+              example: {'detail': 'No meteorological data available'}
 
 components:
   schemas:

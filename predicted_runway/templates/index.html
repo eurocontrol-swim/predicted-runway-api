@@ -75,9 +75,10 @@
     </div>
   </nav>
 
-  {% include 'runwayForm.html' %}
-  {% include 'runwayConfigForm.html' %}
-
+  {% if destination_airport %}
+      {% include 'runwayForm.html' %}
+      {% include 'runwayConfigForm.html' %}
+  {% endif %}
   <main class="flex-shrink-0">
     <div class="container">
       {% block content %}
