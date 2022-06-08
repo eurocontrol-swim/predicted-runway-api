@@ -47,6 +47,8 @@ from predicted_runway.adapters.airports import get_airport_by_icao
 
 AIRPORTS_DATA_URL = '/api/0.1/airports-data'
 LAST_TAF_END_TIME_URL = '/api/0.1/latest-taf-end-time'
+ARRIVALS_RUNWAY_PREDICTION_STATS = '/api/0.1/arrivals/{destination_icao}/runway-prediction-stats'
+ARRIVALS_RUNWAY_CONFIG_PREDICTION_STATS = '/api/0.1/arrivals/{destination_icao}/runway-config-prediction-stats'
 
 
 @pytest.mark.parametrize('airports_list, expected_result', [
@@ -77,7 +79,7 @@ def test_airports_data(mock_get_airports, test_client, airports_list, expected_r
 @pytest.mark.parametrize('invalid_destination_icao, expected_message', [
     (
         'EBBR',
-        {'detail': 'destination_icao EBBR is not supported. Please choose one of EHAM, LEMD, LFPO, LOWW'}
+        {'detail': 'destination_icao should be one of EHAM, LEMD, LFPO, LOWW'}
     )
 ])
 def test_get_forecast_timestamp_range__destination_icao_not_supported__returns_404(
@@ -95,7 +97,8 @@ def test_get_forecast_timestamp_range__destination_icao_not_supported__returns_4
 @pytest.mark.parametrize('destination_icao, expected_message', [
     (
         'EHAM',
-        {'detail': 'No meteorological data available'}
+        {'detail': "Couldn't determine a future time window because no meteorological data are "
+                   "available at the moment. Please try again later."}
     )
 ])
 @mock.patch('met_update_db.repo.get_last_taf_end_time')
@@ -135,3 +138,73 @@ def test_get_forecast_timestamp_range__no_errors__returns_200_and_the_range(
     response_data = json.loads(response.data)
 
     assert response_data == expected_message
+
+
+@pytest.mark.parametrize('invalid_destination_icao', [
+    'EBBR', 'invalid', 'EHA'
+])
+def test_get_arrivals_runway_prediction_stats__invalid_destination_icao__returns_404(
+    test_client, invalid_destination_icao
+):
+    url = ARRIVALS_RUNWAY_PREDICTION_STATS.format(destination_icao=invalid_destination_icao)
+
+    response = test_client.get(f"{url}")
+
+    assert response.status_code == 404
+
+    response_data = json.loads(response.data)
+
+    assert response_data['detail'] == "destination_icao should be one of EHAM, LEMD, LFPO, LOWW"
+
+
+@mock.patch('predicted_runway.adapters.stats.get_arrivals_runway_airport_stats')
+def test_get_arrivals_runway_prediction_stats__no_errors__returns_200(
+    mock_get_arrivals_runway_airport_stats, test_client
+):
+    expected_stats = {"stats": {}}
+    mock_get_arrivals_runway_airport_stats.return_value = expected_stats
+
+    url = ARRIVALS_RUNWAY_PREDICTION_STATS.format(destination_icao='EHAM')
+
+    response = test_client.get(f"{url}")
+
+    assert response.status_code == 200
+
+    response_data = json.loads(response.data)
+
+    assert response_data == expected_stats
+
+
+@pytest.mark.parametrize('invalid_destination_icao', [
+    'EBBR', 'invalid', 'EHA'
+])
+def test_get_arrivals_runway_config_prediction_stats__invalid_destination_icao__returns_404(
+    test_client, invalid_destination_icao
+):
+    url = ARRIVALS_RUNWAY_CONFIG_PREDICTION_STATS.format(destination_icao=invalid_destination_icao)
+
+    response = test_client.get(f"{url}")
+
+    assert response.status_code == 404
+
+    response_data = json.loads(response.data)
+
+    assert response_data['detail'] == "destination_icao should be one of EHAM, LEMD, LFPO, LOWW"
+
+
+@mock.patch('predicted_runway.adapters.stats.get_arrivals_runway_config_airport_stats')
+def test_get_arrivals_runway_config_prediction_stats__no_errors__returns_200(
+    mock_get_arrivals_runway_airport_stats, test_client
+):
+    expected_stats = {"stats": {}}
+    mock_get_arrivals_runway_airport_stats.return_value = expected_stats
+
+    url = ARRIVALS_RUNWAY_CONFIG_PREDICTION_STATS.format(destination_icao='EHAM')
+
+    response = test_client.get(f"{url}")
+
+    assert response.status_code == 200
+
+    response_data = json.loads(response.data)
+
+    assert response_data == expected_stats

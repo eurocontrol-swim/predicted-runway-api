@@ -49,8 +49,8 @@ def openapi_path():
 
 @pytest.mark.parametrize('expected_paths', [
     [
-        '/arrivals/{destination_icao}/runway-prediction/',
-        '/arrivals/{destination_icao}/runway-config-prediction/'
+        '/arrivals/{destination_icao}/runway-prediction',
+        '/arrivals/{destination_icao}/runway-config-prediction'
     ]
 ])
 def test_get_openapi_spec(expected_paths, openapi_path):

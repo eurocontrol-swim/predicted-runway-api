@@ -38,7 +38,8 @@ __author__ = "EUROCONTROL (SWIM)"
 import json
 from pathlib import Path
 
-from predicted_runway.config import RUNWAY_MODEL_STATS_DIR, RUNWAY_CONFIG_MODEL_STATS_DIR
+from predicted_runway.config import ARRIVALS_RUNWAY_MODEL_STATS_DIR, \
+    ARRIVALS_RUNWAY_CONFIG_MODEL_STATS_DIR
 
 
 def _preprocess_content(content: str) -> str:
@@ -56,10 +57,10 @@ def _get_stats(path: Path) -> dict:
     return json.loads(content)
 
 
-def get_runway_airport_stats(airport_icao: str) -> dict:
-    return _get_stats(path=RUNWAY_MODEL_STATS_DIR.joinpath(f"{airport_icao}.json"))
+def get_arrivals_runway_airport_stats(destination_icao: str) -> dict:
+    return _get_stats(path=ARRIVALS_RUNWAY_MODEL_STATS_DIR.joinpath(f"{destination_icao}.json"))
 
 
-def get_runway_config_airport_stats(airport_icao: str) -> dict:
-    return _get_stats(path=RUNWAY_CONFIG_MODEL_STATS_DIR.joinpath(f"{airport_icao}.json"))
+def get_arrivals_runway_config_airport_stats(destination_icao: str) -> dict:
+    return _get_stats(path=ARRIVALS_RUNWAY_CONFIG_MODEL_STATS_DIR.joinpath(f"{destination_icao}.json"))
 

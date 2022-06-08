@@ -8,10 +8,10 @@ VOLUME ["/data/met", "/data/models"]
 
 WORKDIR /app
 
-COPY ./predicted_runway /app/predicted_runway
-
 COPY requirements.txt /app/requirements.txt
 
 RUN pip install -r ./requirements.txt
+
+COPY ./predicted_runway /app/predicted_runway
 
 ENV PYTHONPATH /app

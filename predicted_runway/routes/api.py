@@ -44,6 +44,7 @@ from met_update_db import repo as met_repo
 
 import predicted_runway.config as cfg
 from predicted_runway.domain import predictor
+from predicted_runway.domain.models import RunwayPredictionInput, RunwayConfigPredictionInput
 from predicted_runway.routes.factory import RunwayPredictionInputFactory, \
     RunwayConfigPredictionInputFactory
 from predicted_runway.routes.schemas import RunwayPredictionInputSchema, \
@@ -53,30 +54,42 @@ from predicted_runway.routes.schemas import RunwayPredictionInputSchema, \
 _logger = logging.getLogger(__name__)
 
 
+def _runway_prediction_input_from_input_data(input_data: dict) -> RunwayPredictionInput:
+    validated_input = RunwayPredictionInputSchema().load(input_data)
+
+    return RunwayPredictionInputFactory.create(**validated_input)
+
+
+def _runway_config_prediction_input_from_input_data(input_data: dict) -> RunwayConfigPredictionInput:
+    validated_input = RunwayConfigPredictionInputSchema().load(input_data)
+
+    return RunwayConfigPredictionInputFactory.create(**validated_input)
+
+
+def _message_invalid_request_exception(exc: Exception) -> tuple[str, int]:
+    mapper = {
+        ValidationError: (str(exc), 400),
+        met_repo.METNotAvailable:
+            (f"There is no meteorological information available for the provided timestamp. "
+             f"Please try again with different value.", 409)
+    }
+    return mapper.get(type(exc), ("Invalid input.", 400))
+
+
 def arrivals_runway_prediction(destination_icao: str):
     if destination_icao not in cfg.DESTINATION_ICAOS:
-        return jsonify(
-            {
-                "detail": f'destination_icao should be one of {", ".join(cfg.DESTINATION_ICAOS)}'
-            }
-        ), 404
+        return jsonify({
+            "detail": f'destination_icao should be one of {", ".join(cfg.DESTINATION_ICAOS)}'
+        }), 404
 
     input_data = dict(request.args)
     input_data.update({'destination_icao': destination_icao})
 
     try:
-        validated_input = RunwayPredictionInputSchema().load(input_data)
-    except ValidationError as e:
-        _logger.exception(e)
-        return jsonify({"detail": str(e)}), 400
-
-    try:
-        prediction_input = RunwayPredictionInputFactory.create(**validated_input)
-    except met_repo.METNotAvailable as e:
-        _logger.exception(e)
-        message = f"There is no meteorological information available for the provided timestamp. " \
-                  f"Please try again with different value."
-        return jsonify({"detail": message}), 409
+        prediction_input = _runway_prediction_input_from_input_data(input_data)
+    except Exception as exc:
+        message, status_code = _message_invalid_request_exception(exc)
+        return jsonify({"detail": message}), status_code
 
     try:
         prediction_output = predictor.get_runway_prediction_output(prediction_input)
@@ -86,35 +99,25 @@ def arrivals_runway_prediction(destination_icao: str):
             "detail": "Something went wrong during the prediction. Please try again later."
         }), 500
 
-    result = RunwayPredictionOutputSchema(prediction_input, prediction_output).to_api_response()
+    result = RunwayPredictionOutputSchema(prediction_input, prediction_output).dump()
 
     return jsonify(result), 200
 
 
 def arrivals_runway_config_prediction(destination_icao: str):
     if destination_icao not in cfg.DESTINATION_ICAOS:
-        return jsonify(
-            {
-                "detail": f'destination_icao should be one of {", ".join(cfg.DESTINATION_ICAOS)}'
-            }
-        ), 404
+        return jsonify({
+            "detail": f'destination_icao should be one of {", ".join(cfg.DESTINATION_ICAOS)}'
+        }), 404
 
     input_data = dict(request.args)
     input_data.update({'destination_icao': destination_icao})
 
     try:
-        validated_input = RunwayConfigPredictionInputSchema().load(input_data)
-    except ValidationError as e:
-        _logger.exception(e)
-        return jsonify({"detail": str(e)}), 400
-
-    try:
-        prediction_input = RunwayConfigPredictionInputFactory.create(**validated_input)
-    except met_repo.METNotAvailable as e:
-        _logger.exception(e)
-        message = f"There is no meteorological information available for the provided timestamp. " \
-                  f"Please try again with different value."
-        return jsonify({"detail": message}), 409
+        prediction_input = _runway_config_prediction_input_from_input_data(input_data)
+    except Exception as exc:
+        message, status_code = _message_invalid_request_exception(exc)
+        return jsonify({"detail": message}), status_code
 
     try:
         prediction_output = predictor.get_runway_config_prediction_output(prediction_input)
@@ -125,6 +128,48 @@ def arrivals_runway_config_prediction(destination_icao: str):
         }), 500
 
     result = RunwayConfigPredictionOutputSchema(prediction_input,
-                                                prediction_output).to_api_response()
+                                                prediction_output).dump()
 
     return jsonify(result), 200
+
+
+def create_runway_prediction_input(destination_icao: str):
+    if destination_icao not in cfg.DESTINATION_ICAOS:
+        return jsonify({
+            "detail": f'destination_icao should be one of {", ".join(cfg.DESTINATION_ICAOS)}'
+        }), 404
+
+    input_data = dict(request.args)
+    input_data['timestamp'] = int(input_data['timestamp'])
+    input_data.update({
+        "destination_icao": destination_icao,
+    })
+
+    try:
+        prediction_input = _runway_prediction_input_from_input_data(input_data)
+    except Exception as exc:
+        message, status_code = _message_invalid_request_exception(exc)
+        return jsonify({"detail": message}), status_code
+
+    return jsonify(**prediction_input.to_dict()), 200
+
+
+def create_runway_config_prediction_input(destination_icao: str):
+    if destination_icao not in cfg.DESTINATION_ICAOS:
+        return jsonify({
+            "detail": f'destination_icao should be one of {", ".join(cfg.DESTINATION_ICAOS)}'
+        }), 404
+
+    input_data = dict(request.args)
+    input_data['timestamp'] = int(input_data['timestamp'])
+    input_data.update({
+        "destination_icao": destination_icao,
+    })
+
+    try:
+        prediction_input = _runway_config_prediction_input_from_input_data(input_data)
+    except Exception as exc:
+        message, status_code = _message_invalid_request_exception(exc)
+        return jsonify({"detail": message}), status_code
+
+    return jsonify(**prediction_input.to_dict()), 200

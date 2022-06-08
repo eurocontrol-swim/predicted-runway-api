@@ -44,7 +44,80 @@ tags:
     description: Runway configuration
 
 paths:
-  /arrivals/{destination_icao}/runway-prediction/:
+  /arrivals/{destination_icao}/runway-prediction-input:
+    get:
+      operationId: predicted_runway.routes.api.create_runway_prediction_input
+      x-hidden: true
+      parameters:
+        - in: path
+          required: true
+          name: destination_icao
+          description: the ICAO of the destination airport
+          schema:
+            type: string
+            example: EHAM
+        - in: query
+          required: true
+          name: origin_icao
+          description: the ICAO of the origin airport
+          schema:
+            type: string
+            example: EBBR
+        - in: query
+          required: true
+          name: timestamp
+          description: the desired predition timestamp in seconds since UNIX epoch
+          schema:
+            type: integer
+            example: 1651758627
+      responses:
+        '200':
+          description: creates the prediction input to be used during prediction
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  origin_icao:
+                    type: string
+                    description: the ICAO of the origin airport
+                    example: EBBR
+                  destination_icao:
+                    type: string
+                    description: the ICAO of the destination airport
+                    example: EHAM
+                  timestmap:
+                    type: integer
+                    description: the timestamp of the predictiond
+                    example: 1651758627
+                  wind_speed:
+                    type: number
+                    description: the wind speed that was used either provided by the user or retrieved from METAR or TAF
+                    example: 10.0
+                  wind_direction:
+                    type: number
+                    description: the wind direction that was used either provided by the user or retrieved from METAR or TAF
+                    example: 180.0
+                  wind_input_source:
+                    type: string
+                    enum:
+                      - TAF
+                      - METAR
+                      - USER
+                    description: where the wind input (speed, direction) was taken from in case of their absence upon request
+                    example: TAF
+        '400':
+          description: invalid input
+          content:
+            application/json:
+              example: {'detail': 'Invalid input'}
+        '409':
+          description: Meteorological information (wind speed and direction) is not available for the given timestamp (provided that wind input is not given by the user)
+          content:
+            application/json:
+              example: {'detail': 'There is no meteorological information available for provided timestamp. Please try again with different value.'}
+
+  /arrivals/{destination_icao}/runway-prediction:
     get:
       tags:
         - Runway Prediction
@@ -109,7 +182,69 @@ paths:
             application/json:
                 example: {'detail': 'Something went wrong during the prediction. Please try again later.'}
 
-  /arrivals/{destination_icao}/runway-config-prediction/:
+  /arrivals/{destination_icao}/runway-config-prediction-input:
+    get:
+      operationId: predicted_runway.routes.api.create_runway_config_prediction_input
+      x-hidden: true
+      parameters:
+        - in: path
+          required: true
+          name: destination_icao
+          description: the ICAO of the destination airport
+          schema:
+            type: string
+            example: EHAM
+        - in: query
+          required: true
+          name: timestamp
+          description: the desired predition timestamp in seconds since UNIX epoch
+          schema:
+            type: integer
+            example: 1651758627
+      responses:
+        '200':
+          description: creates the prediction input to be used during prediction
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  destination_icao:
+                    type: string
+                    description: the ICAO of the destination airport
+                    example: EHAM
+                  timestmap:
+                    type: integer
+                    description: the timestamp of the predictiond
+                    example: 1651758627
+                  wind_speed:
+                    type: number
+                    description: the wind speed that was used either provided by the user or retrieved from METAR or TAF
+                    example: 10.0
+                  wind_direction:
+                    type: number
+                    description: the wind direction that was used either provided by the user or retrieved from METAR or TAF
+                    example: 180.0
+                  wind_input_source:
+                    type: string
+                    enum:
+                      - TAF
+                      - METAR
+                      - USER
+                    description: where the wind input (speed, direction) was taken from in case of their absence upon request
+                    example: TAF
+        '400':
+          description: invalid input
+          content:
+            application/json:
+              example: {'detail': 'Invalid input'}
+        '409':
+          description: Meteorological information (wind speed and direction) is not available for the given timestamp (provided that wind input is not given by the user)
+          content:
+            application/json:
+              example: {'detail': 'There is no meteorological information available for provided timestamp. Please try again with different value.'}
+
+  /arrivals/{destination_icao}/runway-config-prediction:
     get:
       tags:
         - Runway Configuration Prediction
@@ -168,6 +303,58 @@ paths:
           content:
             application/json:
                 example: {'detail': 'Something went wrong during the prediction. Please try again later.'}
+
+  /arrivals/{destination_icao}/runway-prediction-stats:
+    get:
+      summary: returns the stats of the model that is being used for the runway prediction
+      operationId: predicted_runway.routes.extra.get_arrivals_runway_prediction_stats
+      x-hidden: true
+      parameters:
+        - in: path
+          required: true
+          name: destination_icao
+          description: the ICAO of the airport
+          schema:
+            type: string
+            example: EHAM
+      responses:
+        '200':
+          description: the requested stats
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+            description: Unsupported destination_icao
+            content:
+                application/json:
+                    example: { 'detail': 'Invalid destination_icao LGAV is not supported. Please choose one of EHAM, LEMD, LFPO, LOWW' }
+
+  /arrivals/{destination_icao}/runway-config-prediction-stats:
+    get:
+      summary: returns the stats of the model that is being used for the runway configuration prediction
+      operationId: predicted_runway.routes.extra.get_arrivals_runway_config_prediction_stats
+      x-hidden: true
+      parameters:
+        - in: path
+          required: true
+          name: destination_icao
+          description: the ICAO of the airport
+          schema:
+            type: string
+            example: EHAM
+      responses:
+        '200':
+          description: the requested stats
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+            description: Unsupported destination_icao
+            content:
+                application/json:
+                    example: { 'detail': 'Invalid destination_icao LGAV is not supported. Please choose one of EHAM, LEMD, LFPO, LOWW' }
 
   /airports-data/{search}:
     get:

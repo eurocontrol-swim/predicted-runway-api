@@ -44,18 +44,9 @@ import jinja2
 import connexion
 import yaml
 from mongoengine import connect
+from flask_cors import CORS
 
 from predicted_runway import config as cfg
-from predicted_runway.routes.web import web_blueprint
-
-
-def _configure_jinja(app):
-    app.jinja_loader = jinja2.ChoiceLoader([
-        app.jinja_loader,
-        jinja2.FileSystemLoader(['templates']),
-    ])
-
-    return app
 
 
 def _configure_logging():
@@ -93,24 +84,25 @@ def get_openapi_spec(openapi_path: Path) -> dict:
 
 
 def create_app():
+    openapi_path = Path(__file__).parent.joinpath('openapi.yml')
+
     connexion_app = connexion.App(__name__)
 
-    connexion_app.add_api(Path('openapi.yml'), options={"serve_spec": False},)
+    connexion_app.add_api(specification=openapi_path, options={"serve_spec": False},)
     connexion_app.add_url_rule("/openapi.json",
                                endpoint="/api/0_1./api/0_1_openapi_json",
-                               view_func=lambda: get_openapi_spec(openapi_path=Path('openapi.yml')))
+                               view_func=lambda: get_openapi_spec(openapi_path=openapi_path))
 
     app = connexion_app.app
-
-    app.register_blueprint(web_blueprint)
-
-    app = _configure_jinja(app)
 
     app.secret_key = getenv('SECRET_KEY')
 
     _configure_logging()
 
     _configure_mongo()
+
+    # enable CORS
+    CORS(app, resources={r'/*': {'origins': '*'}})
 
     return app
 

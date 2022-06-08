@@ -48,8 +48,10 @@ from predicted_runway.routes.factory import RunwayPredictionInputFactory, \
 from tests.routes import API_BASE_PATH
 from tests.routes.utils import query_string_from_request_arguments
 
-ARRIVALS_RUNWAY_PREDICTION_URL = API_BASE_PATH + '/arrivals/{destination_icao}/runway-prediction/'
-ARRIVALS_RUNWAY_CONFIG_PREDICTION_URL = API_BASE_PATH + '/arrivals/{destination_icao}/runway-config-prediction/'
+ARRIVALS_RUNWAY_PREDICTION_URL = API_BASE_PATH + '/arrivals/{destination_icao}/runway-prediction'
+ARRIVALS_RUNWAY_PREDICTION_INPUT_URL = API_BASE_PATH + '/arrivals/{destination_icao}/runway-prediction-input'
+ARRIVALS_RUNWAY_CONFIG_PREDICTION_URL = API_BASE_PATH + '/arrivals/{destination_icao}/runway-config-prediction'
+ARRIVALS_RUNWAY_CONFIG_PREDICTION_INPUT_URL = API_BASE_PATH + '/arrivals/{destination_icao}/runway-config-prediction-input'
 
 
 @pytest.mark.parametrize('invalid_destination_icao', [
@@ -797,3 +799,259 @@ def test_arrivals_runway_config_prediction__no_errors__wind_input_from_taf__retu
     response_data = json.loads(response.data)
 
     assert response_data == expected_result
+
+
+@pytest.mark.parametrize('invalid_destination_icao', [
+    'EBBR', 'invalid', 'EHA'
+])
+def test_arrivals_runway_prediction_input__invalid_destination_icao__returns_404(
+    test_client, invalid_destination_icao
+):
+    request_args = {
+        "origin_icao": 'EBBR',
+        "timestamp": '1650751200',
+    }
+    query_string = query_string_from_request_arguments(request_args)
+    url = ARRIVALS_RUNWAY_PREDICTION_INPUT_URL.format(destination_icao=invalid_destination_icao)
+
+    response = test_client.get(f"{url}{query_string}")
+
+    assert response.status_code == 404
+
+    response_data = json.loads(response.data)
+
+    assert response_data['detail'] == "destination_icao should be one of EHAM, LEMD, LFPO, LOWW"
+
+
+@pytest.mark.parametrize('request_args, expected_message', [
+    (
+        {},
+        "Missing query parameter 'origin_icao'"
+    ),
+    (
+        {
+            "origin_icao": 'EBBR',
+        },
+        "Missing query parameter 'timestamp'"
+    ),
+    (
+        {
+            "origin_icao": 'EBBR',
+            "timestamp": 'invalid'
+        },
+        "Wrong type, expected 'integer' for query parameter 'timestamp'"
+    ),
+    (
+        {
+            "origin_icao": 'EHAM',
+            "timestamp": '1650751200'
+        },
+        "{'origin_icao': ['origin_icao should be different from destination_icao']}"
+    ),
+    (
+        {
+            "origin_icao": 'invalid',
+            "timestamp": '1650751200'
+        },
+        "{'origin_icao': ['Should be a string of 4 characters.']}"
+    ),
+])
+def test_arrivals_runway_prediction_input__invalid_query_args__returns_400(
+    test_client, request_args, expected_message
+):
+    query_string = query_string_from_request_arguments(request_args)
+    url = ARRIVALS_RUNWAY_PREDICTION_INPUT_URL.format(destination_icao='EHAM')
+
+    response = test_client.get(f"{url}{query_string}")
+
+    assert response.status_code == 400
+
+    response_data = json.loads(response.data)
+
+    assert response_data['detail'] == expected_message
+
+
+@pytest.mark.parametrize('request_args, expected_message', [
+    (
+        {
+            "origin_icao": 'EBBR',
+            "timestamp": '1650751200'
+        },
+        f"There is no meteorological information available for the provided timestamp. "
+        f"Please try again with different value."
+    )
+])
+@mock.patch.object(RunwayPredictionInputFactory, 'create')
+def test_arrivals_runway_prediction_input__met_not_available__returns_409(
+    mock_create, test_client, request_args, expected_message
+):
+    mock_create.side_effect = met_repo.METNotAvailable()
+
+    query_string = query_string_from_request_arguments(request_args)
+    url = ARRIVALS_RUNWAY_PREDICTION_INPUT_URL.format(destination_icao='EHAM')
+
+    response = test_client.get(f"{url}{query_string}")
+
+    assert response.status_code == 409
+
+    response_data = json.loads(response.data)
+
+    assert response_data['detail'] == expected_message
+
+
+@pytest.mark.parametrize('destination_icao, query_args, wind_input, expected_prediction_input', [
+    (
+        'EHAM',
+        {
+            "origin_icao": 'EBBR',
+            "timestamp": '1650751200'
+        },
+        (180.0, 10.0, WindInputSource.TAF),
+        {
+            "origin_icao": "EBBR",
+            "destination_icao": "EHAM",
+            "timestamp": 1650751200,
+            "wind_direction": 180,
+            "wind_speed": 10,
+            "wind_input_source": WindInputSource.TAF.value
+        }
+    )
+])
+@mock.patch('predicted_runway.routes.factory._handle_wind_input')
+def test_arrivals_runway_prediction_input__no_errors__returns_prediction_input(
+        mock_handle_wind_input,
+        test_client,
+        destination_icao,
+        query_args,
+        wind_input,
+        expected_prediction_input
+):
+    mock_handle_wind_input.return_value = wind_input
+
+    query_string = query_string_from_request_arguments(query_args)
+    url = ARRIVALS_RUNWAY_PREDICTION_INPUT_URL.format(destination_icao=destination_icao)
+
+    response = test_client.get(f"{url}{query_string}")
+
+    assert response.status_code == 200
+
+    response_data = json.loads(response.data)
+
+    assert response_data == expected_prediction_input
+
+
+@pytest.mark.parametrize('invalid_destination_icao', [
+    'EBBR', 'invalid', 'EHA'
+])
+def test_arrivals_runway_config_prediction_input__invalid_destination_icao__returns_404(
+    test_client, invalid_destination_icao
+):
+    request_args = {
+        "timestamp": '1650751200',
+        "wind_direction": 180.0,
+        "wind_speed": 10.0
+    }
+    query_string = query_string_from_request_arguments(request_args)
+    url = ARRIVALS_RUNWAY_CONFIG_PREDICTION_INPUT_URL.format(destination_icao=invalid_destination_icao)
+
+    response = test_client.get(f"{url}{query_string}")
+
+    assert response.status_code == 404
+
+    response_data = json.loads(response.data)
+
+    assert response_data['detail'] == "destination_icao should be one of EHAM, LEMD, LFPO, LOWW"
+
+
+@pytest.mark.parametrize('request_args, expected_message', [
+    (
+        {},
+        "Missing query parameter 'timestamp'"
+    ),
+    (
+        {
+            "timestamp": 'invalid'
+        },
+        "Wrong type, expected 'integer' for query parameter 'timestamp'"
+    ),
+])
+def test_arrivals_runway_config_prediction_input__invalid_query_args__returns_400(
+    test_client, request_args, expected_message
+):
+    query_string = query_string_from_request_arguments(request_args)
+    url = ARRIVALS_RUNWAY_CONFIG_PREDICTION_INPUT_URL.format(destination_icao='EHAM')
+
+    response = test_client.get(f"{url}{query_string}")
+
+    assert response.status_code == 400
+
+    response_data = json.loads(response.data)
+
+    assert response_data['detail'] == expected_message
+
+
+@pytest.mark.parametrize('request_args, expected_message', [
+    (
+        {
+            "timestamp": '1650751200'
+        },
+        f"There is no meteorological information available for the provided timestamp. "
+        f"Please try again with different value."
+    )
+])
+@mock.patch.object(RunwayConfigPredictionInputFactory, 'create')
+def test_arrivals_runway_config_prediction_input__met_not_available__returns_409(
+    mock_create, test_client, request_args, expected_message
+):
+    mock_create.side_effect = met_repo.METNotAvailable()
+
+    url = ARRIVALS_RUNWAY_CONFIG_PREDICTION_INPUT_URL.format(destination_icao='EHAM')
+    query_string = query_string_from_request_arguments(request_args)
+
+    response = test_client.get(f"{url}{query_string}")
+
+    assert response.status_code == 409
+
+    response_data = json.loads(response.data)
+
+    assert response_data['detail'] == expected_message
+
+
+@pytest.mark.parametrize('destination_icao, query_args, wind_input, expected_prediction_input', [
+    (
+        'EHAM',
+        {
+            "timestamp": '1650751200'
+        },
+        (180.0, 10.0, WindInputSource.TAF),
+        {
+            "destination_icao": "EHAM",
+            "timestamp": 1650751200,
+            "wind_direction": 180,
+            "wind_speed": 10,
+            "wind_input_source": WindInputSource.TAF.value
+        }
+    )
+])
+@mock.patch('predicted_runway.routes.factory._handle_wind_input')
+def test_arrivals_runway_config_prediction_input__no_errors__returns_prediction_input(
+        mock_handle_wind_input,
+        test_client,
+        destination_icao,
+        query_args,
+        wind_input,
+        expected_prediction_input
+):
+    mock_handle_wind_input.return_value = wind_input
+
+    query_string = query_string_from_request_arguments(query_args)
+    url = ARRIVALS_RUNWAY_CONFIG_PREDICTION_INPUT_URL.format(destination_icao=destination_icao)
+
+    response = test_client.get(f"{url}{query_string}")
+
+    assert response.status_code == 200
+
+    response_data = json.loads(response.data)
+
+    assert response_data == expected_prediction_input
+

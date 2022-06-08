@@ -36,9 +36,10 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 __author__ = "EUROCONTROL (SWIM)"
 
 import flask as f
+from flask import jsonify
 from met_update_db import repo as met_repo
 
-from predicted_runway.adapters import airports as airports_api
+from predicted_runway.adapters import airports as airports_api, stats
 from predicted_runway.config import DESTINATION_ICAOS
 
 
@@ -52,16 +53,38 @@ def get_airports_data(search: str):
 
 def get_latest_taf_end_time(destination_icao: str):
     if destination_icao not in DESTINATION_ICAOS:
-        return {
-           "detail": f"destination_icao {destination_icao} is not supported. "
-                     f"Please choose one of {', '.join(DESTINATION_ICAOS)}"
-        }, 404
+        return jsonify({
+            "detail": f'destination_icao should be one of {", ".join(DESTINATION_ICAOS)}'
+        }), 404
 
     try:
         end_time_datetime = met_repo.get_last_taf_end_time(airport_icao=destination_icao)
     except met_repo.METNotAvailable:
-        return {"detail": "No meteorological data available"}, 409
+        return {"detail": "Couldn't determine a future time window because no meteorological data "
+                          "are available at the moment. Please try again later."}, 409
 
     return {
         'end_timestamp': int(end_time_datetime.timestamp())
     }, 200
+
+
+def get_arrivals_runway_prediction_stats(destination_icao: str):
+    if destination_icao not in DESTINATION_ICAOS:
+        return jsonify({
+            "detail": f'destination_icao should be one of {", ".join(DESTINATION_ICAOS)}'
+        }), 404
+
+    result = stats.get_arrivals_runway_airport_stats(destination_icao=destination_icao)
+
+    return result, 200
+
+
+def get_arrivals_runway_config_prediction_stats(destination_icao: str):
+    if destination_icao not in DESTINATION_ICAOS:
+        return jsonify({
+            "detail": f'destination_icao should be one of {", ".join(DESTINATION_ICAOS)}'
+        }), 404
+
+    result = stats.get_arrivals_runway_config_airport_stats(destination_icao=destination_icao)
+
+    return result, 200
