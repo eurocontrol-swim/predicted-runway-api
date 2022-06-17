@@ -31,12 +31,7 @@ LOGGING = {
 }
 
 
-DESTINATION_ICAOS = [
-    'EHAM',
-    'LEMD',
-    'LFPO',
-    'LOWW'
-]
+DESTINATION_ICAOS = os.getenv('DESTINATION_ICAOS', 'EHAM,LEMD,LFPO,LOWW').split(',')
 
 MONGO = {
   "db": os.getenv("MET_UPDATE_DB_NAME", "met-update"),
