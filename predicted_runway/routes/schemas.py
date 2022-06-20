@@ -42,9 +42,8 @@ from datetime import datetime
 import marshmallow as ma
 
 from predicted_runway.config import DESTINATION_ICAOS
-from predicted_runway.adapters import stats
-from predicted_runway.domain.models import RunwayPredictionInput, WindInputSource, RunwayConfigPredictionInput, \
-    RunwayPredictionOutput, RunwayConfigPredictionOutput
+from predicted_runway.domain.models import RunwayPredictionInput, WindInputSource, \
+    RunwayConfigPredictionInput, RunwayPredictionOutput, RunwayConfigPredictionOutput
 
 
 def _is_valid_icao(icao: str):
@@ -149,19 +148,10 @@ class RunwayPredictionOutputSchema:
     prediction_input: RunwayPredictionInput
     prediction_output: RunwayPredictionOutput
 
-    def to_api_response(self) -> dict:
+    def dump(self) -> dict:
         return {
             "prediction_input": self.prediction_input.to_dict(),
             "prediction_output": self.prediction_output.to_geojson(),
-        }
-
-    def to_web_response(self) -> dict:
-        return {
-            "prediction_input": self.prediction_input.to_display_dict(),
-            "prediction_output": self.prediction_output.to_geojson(exclude_zero_probas=True),
-            "airport_coordinates": [self.prediction_input.destination.lon,
-                                    self.prediction_input.destination.lat],
-            "stats": stats.get_runway_airport_stats(self.prediction_input.destination.icao)
         }
 
 
@@ -170,17 +160,8 @@ class RunwayConfigPredictionOutputSchema:
     prediction_input: RunwayConfigPredictionInput
     prediction_output: RunwayConfigPredictionOutput
 
-    def to_api_response(self) -> dict:
+    def dump(self) -> dict:
         return {
             "prediction_input": self.prediction_input.to_dict(),
             "prediction_output": self.prediction_output.to_geojson(),
-        }
-
-    def to_web_response(self) -> dict:
-        return {
-            "prediction_input": self.prediction_input.to_display_dict(),
-            "prediction_output": self.prediction_output.to_geojson(exclude_zero_probas=True),
-            "airport_coordinates": [self.prediction_input.destination.lon,
-                                    self.prediction_input.destination.lat],
-            "stats": stats.get_runway_config_airport_stats(self.prediction_input.destination.icao)
         }

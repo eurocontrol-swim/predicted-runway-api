@@ -36,7 +36,6 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 __author__ = "EUROCONTROL (SWIM)"
 
 import os
-from pathlib import Path
 
 import pytest
 
@@ -61,19 +60,3 @@ def test_app():
 @pytest.fixture(scope='session')
 def test_client(test_app):
     return test_app.test_client()
-
-
-@pytest.fixture
-def static_test_dir():
-    return Path(__file__).parent.resolve().joinpath('static')
-
-
-@pytest.fixture
-def metar_files_dir(static_test_dir):
-    return static_test_dir.joinpath('metar').joinpath('EHAM')
-
-
-@pytest.fixture
-def taf_files_dir(static_test_dir):
-    return static_test_dir.joinpath('taf').joinpath('EHAM')
-

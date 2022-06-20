@@ -37,7 +37,7 @@ __author__ = "EUROCONTROL (SWIM)"
 
 import json
 from functools import lru_cache
-from typing import Optional, Iterable
+from typing import Iterable
 
 from predicted_runway.config import ICAO_AIRPORTS_CATALOG_PATH, DESTINATION_ICAOS
 from predicted_runway.domain.factory import AirportFactory
@@ -50,7 +50,7 @@ def get_airport_data():
         return json.load(f)
 
 
-def get_airports(search: Optional[str]) -> Iterable[Airport]:
+def get_airports(search: str = None) -> Iterable[Airport]:
     airports = (AirportFactory.create_from_data(data) for _, data in get_airport_data().items())
 
     if search:
@@ -59,7 +59,7 @@ def get_airports(search: Optional[str]) -> Iterable[Airport]:
     return airports
 
 
-def get_airport_by_icao(icao: str) -> Optional[Airport]:
+def get_airport_by_icao(icao: str) -> Airport | None:
     data = get_airport_data().get(icao)
 
     if data:

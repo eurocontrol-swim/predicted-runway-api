@@ -1,4 +1,4 @@
-FROM python:3.9-buster
+FROM python:3.10-bullseye
 
 LABEL maintainer="francisco-javier.crabiffosse.ext@eurocontrol.int"
 
@@ -8,14 +8,10 @@ VOLUME ["/data/met", "/data/models"]
 
 WORKDIR /app
 
-COPY ./predicted_runway /app/predicted_runway
-
 COPY requirements.txt /app/requirements.txt
 
 RUN pip install -r ./requirements.txt
 
+COPY ./predicted_runway /app/predicted_runway
+
 ENV PYTHONPATH /app
-
-COPY wsgi.ini /app/wsgi.ini
-
-CMD ["uwsgi", "wsgi.ini"]
