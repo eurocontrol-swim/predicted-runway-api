@@ -31,6 +31,8 @@ setuptools.setup(
         'scipy==1.8.0',
         'holidays==0.13',
         'connexion[swagger-ui]',
-        'marshmallow'
-    ]
+        'marshmallow',
+        'mongoengine',
+        'flask-cors'
+    ],
 )
