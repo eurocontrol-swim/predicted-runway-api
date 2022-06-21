@@ -33,6 +33,7 @@ setuptools.setup(
         'connexion[swagger-ui]',
         'marshmallow',
         'mongoengine',
-        'flask-cors'
+        'flask-cors',
+        'predicted-runway-met-update-db @ git+https://git@github.com/eurocontrol-swim/predicted-runway-met-update-db.git'
     ],
 )

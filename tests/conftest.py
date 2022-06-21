@@ -35,11 +35,16 @@ Details on EUROCONTROL: http://www.eurocontrol.int
 
 __author__ = "EUROCONTROL (SWIM)"
 
+import json
 import os
+from pathlib import Path
 
 import pytest
 
+import predicted_runway
 from predicted_runway.app import create_app
+from predicted_runway.domain.factory import AirportFactory
+from predicted_runway.domain.models import Airport
 
 
 def pytest_generate_tests(metafunc):
@@ -60,3 +65,21 @@ def test_app():
 @pytest.fixture(scope='session')
 def test_client(test_app):
     return test_app.test_client()
+
+
+
+@pytest.fixture(autouse=True)
+def mock_airports(monkeypatch):
+    monkeypatch.setattr(predicted_runway.adapters.airports, 'ICAO_AIRPORTS_CATALOG_PATH',
+                        Path(__file__).parent.joinpath('static/airports.json'))
+
+
+def _get_airports_data():
+    path = Path(__file__).parent.joinpath('static/airports.json')
+    with open(path, 'r') as f:
+        return json.load(f)
+
+
+def get_airport_by_icao(icao: str) -> Airport:
+    data = _get_airports_data()
+    return AirportFactory.create_from_data(data[icao])

@@ -47,7 +47,10 @@ ARRIVALS_RUNWAY_CONFIG_MODELS_DIR = Path("/data/models/runway_config")
 ARRIVALS_RUNWAY_MODEL_STATS_DIR = Path("/data/stats/runway")
 ARRIVALS_RUNWAY_CONFIG_MODEL_STATS_DIR = Path("/data/stats/runway_config")
 
-ICAO_AIRPORTS_CATALOG_PATH = BASE_DIR.joinpath('/data/airports').joinpath('icao_airports_catalog.json')
+ICAO_AIRPORTS_CATALOG_PATH = os.getenv(
+    'ICAO_AIRPORTS_CATALOG_PATH',
+    BASE_DIR.joinpath('/data/airports').joinpath('icao_airports_catalog.json')
+)
 
 
 def get_runway_model_path(airport_icao: str) -> Path:

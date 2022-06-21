@@ -39,10 +39,10 @@ import datetime
 
 import pytest
 
-from predicted_runway.adapters.airports import get_airport_by_icao
 from predicted_runway.domain.models import Timestamp, Airport, Runway, RunwayPredictionInput, \
     WindInputSource, RunwayConfigPredictionInput, RunwayConfigProbability, RunwayPredictionOutput, \
     RunwayProbability, RunwayConfigPredictionOutput
+from tests.conftest import get_airport_by_icao
 
 
 @pytest.mark.parametrize('value, expected_datetime', [

@@ -41,11 +41,10 @@ from unittest.mock import Mock
 import pytest
 from pandas import DataFrame
 
-from predicted_runway.adapters.airports import get_airport_by_icao
 from predicted_runway.domain.models import RunwayPredictionInput, Timestamp, WindInputSource, \
     RunwayProbability, RunwayConfigProbability
-from predicted_runway.domain.predictor import Predictor, get_runway_prediction_output, \
-    predict_runway, predict_runway_config
+from predicted_runway.domain.predictor import Predictor, predict_runway, predict_runway_config
+from tests.conftest import get_airport_by_icao
 
 
 @pytest.mark.parametrize(

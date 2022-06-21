@@ -42,8 +42,7 @@ from unittest import mock
 import pytest
 from met_update_db import repo as met_repo
 
-from predicted_runway.adapters.airports import get_airport_by_icao
-
+from tests.conftest import get_airport_by_icao
 
 AIRPORTS_DATA_URL = '/api/0.1/airports-data'
 LAST_TAF_END_TIME_URL = '/api/0.1/latest-taf-end-time'

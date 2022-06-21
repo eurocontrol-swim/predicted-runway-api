@@ -40,11 +40,12 @@ from unittest import mock
 
 import pytest
 from met_update_db import repo as met_repo
-from predicted_runway.adapters.airports import get_airport_by_icao
+
 from predicted_runway.domain.models import RunwayPredictionOutput, RunwayProbability, \
     WindInputSource, RunwayConfigPredictionOutput, RunwayConfigProbability
 from predicted_runway.routes.factory import RunwayPredictionInputFactory, \
     RunwayConfigPredictionInputFactory
+from tests.conftest import get_airport_by_icao
 from tests.routes import API_BASE_PATH
 from tests.routes.utils import query_string_from_request_arguments
 
