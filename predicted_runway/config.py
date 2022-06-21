@@ -31,7 +31,7 @@ LOGGING = {
 }
 
 
-DESTINATION_ICAOS = os.getenv('DESTINATION_ICAOS', 'EHAM,LEMD,LFPO,LOWW').split(',')
+DESTINATION_ICAOS = os.getenv("DESTINATION_ICAOS", "EHAM,LEMD,LFPO,LOWW").split(',')
 
 MONGO = {
   "db": os.getenv("MET_UPDATE_DB_NAME", "met-update"),
@@ -39,23 +39,24 @@ MONGO = {
   "port": 27017
 }
 
-BASE_DIR = Path(__file__).parent
+ARRIVALS_RUNWAY_MODELS_DIR = os.getenv("ARRIVALS_RUNWAY_MODELS_DIR", "/data/models/runway")
 
-ARRIVALS_RUNWAY_MODELS_DIR = Path("/data/models/runway")
-ARRIVALS_RUNWAY_CONFIG_MODELS_DIR = Path("/data/models/runway_config")
+ARRIVALS_RUNWAY_CONFIG_MODELS_DIR = os.getenv("ARRIVALS_RUNWAY_CONFIG_MODELS_DIR",
+                                              "/data/models/runway_config")
 
-ARRIVALS_RUNWAY_MODEL_STATS_DIR = Path("/data/stats/runway")
-ARRIVALS_RUNWAY_CONFIG_MODEL_STATS_DIR = Path("/data/stats/runway_config")
+ARRIVALS_RUNWAY_MODEL_STATS_DIR = os.getenv("ARRIVALS_RUNWAY_MODEL_STATS_DIR",
+                                            "/data/stats/runway")
 
-ICAO_AIRPORTS_CATALOG_PATH = os.getenv(
-    'ICAO_AIRPORTS_CATALOG_PATH',
-    BASE_DIR.joinpath('/data/airports').joinpath('icao_airports_catalog.json')
-)
+ARRIVALS_RUNWAY_CONFIG_MODEL_STATS_DIR = os.getenv("ARRIVALS_RUNWAY_CONFIG_MODEL_STATS_DIR",
+                                                   "/data/stats/runway_config")
+
+ICAO_AIRPORTS_CATALOG_PATH = os.getenv("ICAO_AIRPORTS_CATALOG_PATH",
+                                       "/data/airports/icao_airports_catalog.json")
 
 
 def get_runway_model_path(airport_icao: str) -> Path:
-    return ARRIVALS_RUNWAY_MODELS_DIR.joinpath(f'{airport_icao}.pkl').absolute()
+    return Path(ARRIVALS_RUNWAY_MODELS_DIR).joinpath(f'{airport_icao}.pkl').absolute()
 
 
 def get_runway_config_model_path(airport_icao: str) -> Path:
-    return ARRIVALS_RUNWAY_CONFIG_MODELS_DIR.joinpath(f'{airport_icao}.pkl').absolute()
+    return Path(ARRIVALS_RUNWAY_CONFIG_MODELS_DIR).joinpath(f'{airport_icao}.pkl').absolute()

@@ -58,9 +58,11 @@ def _get_stats(path: Path) -> dict:
 
 
 def get_arrivals_runway_airport_stats(destination_icao: str) -> dict:
-    return _get_stats(path=ARRIVALS_RUNWAY_MODEL_STATS_DIR.joinpath(f"{destination_icao}.json"))
+    return _get_stats(
+        path=Path(ARRIVALS_RUNWAY_MODEL_STATS_DIR).joinpath(f"{destination_icao}.json"))
 
 
 def get_arrivals_runway_config_airport_stats(destination_icao: str) -> dict:
-    return _get_stats(path=ARRIVALS_RUNWAY_CONFIG_MODEL_STATS_DIR.joinpath(f"{destination_icao}.json"))
+    return _get_stats(
+        path=Path(ARRIVALS_RUNWAY_CONFIG_MODEL_STATS_DIR).joinpath(f"{destination_icao}.json"))
 

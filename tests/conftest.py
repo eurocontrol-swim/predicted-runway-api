@@ -67,11 +67,10 @@ def test_client(test_app):
     return test_app.test_client()
 
 
-
 @pytest.fixture(autouse=True)
 def mock_airports(monkeypatch):
     monkeypatch.setattr(predicted_runway.adapters.airports, 'ICAO_AIRPORTS_CATALOG_PATH',
-                        Path(__file__).parent.joinpath('static/airports.json'))
+                        Path(__file__).parent.joinpath('static/airports.json').absolute())
 
 
 def _get_airports_data():
