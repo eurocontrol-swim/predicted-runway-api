@@ -11,7 +11,7 @@ setuptools.setup(
     description="Web Application of the InnoHub Predicted Runway In-Use project.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/eurocontrol-swim/predicted-runway-webapp",
+    url="https://github.com/eurocontrol-swim/predicted-runway-api",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -24,7 +24,6 @@ setuptools.setup(
         'pandas>=1.4.0',
         'numpy>=1.22.1',
         'Werkzeug==2.0.2',
-        'uWSGI==2.0.20',
         'tzdata==2021.5',
         'tzlocal==4.1',
         'scikit-learn==1.0.2',
