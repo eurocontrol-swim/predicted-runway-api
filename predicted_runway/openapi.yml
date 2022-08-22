@@ -420,6 +420,19 @@ paths:
             application/json:
               example: {'detail': 'No meteorological data available'}
 
+  /config:
+    get:
+      summary: Retrieves the necessary config info
+      operationId: predicted_runway.routes.extra.get_config
+      x-hidden: true
+      responses:
+        '200':
+          description: the config dictionary
+          content:
+            application/json:
+              schema:
+                type: object
+
 components:
   schemas:
     RunwayPredictionOutput:

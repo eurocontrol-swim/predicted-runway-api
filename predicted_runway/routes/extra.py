@@ -40,7 +40,9 @@ from flask import jsonify
 from met_update_db import repo as met_repo
 
 from predicted_runway.adapters import airports as airports_api, stats
-from predicted_runway.config import DESTINATION_ICAOS
+from predicted_runway.config import DESTINATION_ICAOS, get_runway_model_path, \
+    get_runway_config_model_path
+from predicted_runway.domain.models import Airport
 
 
 def get_airports_data(search: str):
@@ -88,3 +90,28 @@ def get_arrivals_runway_config_prediction_stats(destination_icao: str):
     result = stats.get_arrivals_runway_config_airport_stats(destination_icao=destination_icao)
 
     return result, 200
+
+
+def get_config():
+    config = [
+        _get_airport_config_data(airport_icao=dest_icao)
+        for dest_icao in DESTINATION_ICAOS
+    ]
+
+    return config, 200
+
+
+def _get_airport_config_data(airport_icao: str):
+    airport = airports_api.get_airport_by_icao(airport_icao)
+
+    return {
+        "icao": airport.icao,
+        "name": airport.name,
+        "lon": airport.lon,
+        "lat": airport.lat,
+        "models": {
+            "runway_in_use": get_runway_model_path(airport.icao).exists(),
+            "runway_config": get_runway_config_model_path(airport.icao).exists(),
+        }
+    }
+

@@ -60,3 +60,4 @@ def get_runway_model_path(airport_icao: str) -> Path:
 
 def get_runway_config_model_path(airport_icao: str) -> Path:
     return Path(ARRIVALS_RUNWAY_CONFIG_MODELS_DIR).joinpath(f'{airport_icao}.pkl').absolute()
+

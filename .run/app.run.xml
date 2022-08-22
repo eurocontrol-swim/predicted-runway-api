@@ -7,6 +7,7 @@
       <env name="PYTHONUNBUFFERED" value="1" />
       <env name="MET_UPDATE_DIR" value="/data" />
       <env name="SECRET_KEY" value="alex" />
+      <env name="DESTINATION_ICAOS" value="EHAM,LEMD,LFPO,LOWW,ESPA,LEBL,LTFM,EDDF,EDDB,LFPB,LFPG,LIRF" />
     </envs>
     <option name="SDK_HOME" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/predicted_runway" />
